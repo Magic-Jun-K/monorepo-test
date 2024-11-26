@@ -1,0 +1,37 @@
+{
+  "name": "canvaskit-react-test",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production",
+    "lint:es": "eslint packages/**/*.ts",
+    "lint:style": "stylelint \"(packages|apps)/**/*.css\"",
+    "lint": "pnpm lint:es && pnpm lint:style",
+    "spellcheck": "cspell lint --dot --gitignore --color --cache --show-suggestions \"(packages|apps)/**/*.@(html|js|cjs|mjs|ts|tsx|css|scss|md)\"",
+    "prepare": "husky",
+    "commit": "git-cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "devDependencies": {
+    "eslint": "9.15.0",
+    "@eslint/js": "9.15.0",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.16.0",
+    "cspell": "8.16.0",
+    "stylelint": "16.10.0",
+    "husky": "9.1.7",
+    "commitlint": "19.6.0",
+    "cz-git": "1.10.0",
+    "commitizen": "4.3.1",
+    "@commitlint/config-conventional": "19.6.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
