@@ -3,11 +3,23 @@
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:baiduMap": "webpack serve --env development",
+    "build:baiduMap": "webpack --env production"
   },
   "devDependencies": {
     "webpack": "5.96.1",
-    "webpack-cli": "5.1.4"
+    "webpack-cli": "5.1.4",
+    "webpack-dev-server": "5.1.0",
+    "webpack-merge": "6.0.1",
+    "ts-loader": "9.5.1",
+    "style-loader": "4.0.0",
+    "css-loader": "7.1.2",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "html-webpack-plugin": "5.6.3",
+    "mini-css-extract-plugin": "2.9.2",
+    "sass": "1.81.0",
+    "sass-loader": "16.0.0"
   },
   "peerDependencies": {
     "react": "18.3.1",
