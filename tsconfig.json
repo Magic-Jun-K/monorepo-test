@@ -1,6 +1,23 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "esModuleInterop": true
-  }
+    "target": "ES2015",
+    "lib": ["DOM", "ESNext"],
+    "allowJs": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "paths": {
+      "@miaoma/*": ["./packages/@miaoma/*/src"]
+    }
+  },
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "include": ["packages/**/*"],
+  "exclude": ["node_modules"]
 }
