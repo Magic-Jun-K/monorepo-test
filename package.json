@@ -1,16 +1,17 @@
 {
   "name": "canvaskit-react-test",
   "version": "0.0.1",
+  "packageManager": "pnpm@9.14.2",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack --mode development --watch",
-    "build": "webpack --mode production",
     "lint:es": "eslint packages/**/*.ts",
     "lint:style": "stylelint \"(packages|apps)/**/*.css\"",
     "lint": "pnpm lint:es && pnpm lint:style",
     "spellcheck": "cspell lint --dot --gitignore --color --cache --show-suggestions \"(packages|apps)/**/*.@(html|js|cjs|mjs|ts|tsx|css|scss|md)\"",
     "prepare": "husky",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "dev": "turbo dev:baiduMap",
+    "build": "turbo build:baiduMap"
   },
   "config": {
     "commitizen": {
@@ -28,7 +29,8 @@
     "commitlint": "19.6.0",
     "cz-git": "1.10.0",
     "commitizen": "4.3.1",
-    "@commitlint/config-conventional": "19.6.0"
+    "@commitlint/config-conventional": "19.6.0",
+    "turbo": "2.3.2"
   },
   "keywords": [],
   "author": "",

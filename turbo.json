@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turbo.build/turbo.json",
+  "tasks": {
+    "dev:baiduMap": {
+      "cache": false,
+      "persistent": false
+    },
+    "build:baiduMap": {
+      "cache": false,
+      "persistent": false
+    }
+  }
+}
