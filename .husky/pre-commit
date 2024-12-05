@@ -3,5 +3,5 @@
 
 echo 'husky: pre-commit'
 
-pnpm spellcheck && pnpm lint
-# npx lint-staged
+# pnpm spellcheck && pnpm lint
+npx lint-staged
