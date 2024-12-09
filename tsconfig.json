@@ -1,23 +1,23 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "lib": ["DOM", "ESNext"],
+    "target": "ES2015", // 设置编译后的 JavaScript 版本
+    "lib": ["DOM", "ESNext"], // 指定编译时使用的库（默认包括 ES5）
     "allowJs": true,
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
+    "module": "CommonJS", // 设置模块系统（例如：ES6模块、CommonJS）
+    "esModuleInterop": true, // 使默认导入工作正常（兼容 CommonJS）
+    "forceConsistentCasingInFileNames": true, // 确保文件名的大小写一致
+    "declaration": true, // 生成 .d.ts 类型声明文件
     "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
+    "skipLibCheck": true, // 跳过库文件的类型检查，加快编译速度
+    "strict": true, // 启用所有严格类型检查选项
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "paths": {
-      "@miaoma/*": ["./packages/@miaoma/*/src"]
+      "@common/*": ["./packages/@common/*/src"]
     }
   },
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Base",
-  "include": ["packages/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["packages/**/*"], // 指定 需要 编译的文件
+  "exclude": ["node_modules"] // 指定 不需要 编译的文件
 }
