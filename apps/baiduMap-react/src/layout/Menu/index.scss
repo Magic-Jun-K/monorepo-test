@@ -1,0 +1,17 @@
+.menu-component {
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    display: inline;
+    margin-right: 10px;
+  }
+  
+  a {
+    text-decoration: none;
+    color: #1C222B;
+    font-size: 18px;
+  }
+}

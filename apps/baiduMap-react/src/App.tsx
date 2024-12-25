@@ -1,14 +1,12 @@
 import React from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import MapComponent from './pages/BMapGLCom';
+import { routes } from './router/routes';
 
-import './App.scss';
+import '@/assets/css/index.scss';
 
-function App() {
-  return (
-    <div className="App">
-      <MapComponent />
-    </div>
-  );
-}
+const App: React.FC = () => {
+  const router = createBrowserRouter(routes);
+  return <RouterProvider router={router} />;
+};
 export default App;

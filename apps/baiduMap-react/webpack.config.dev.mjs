@@ -9,9 +9,13 @@ export default {
   mode: 'development',
   devtool: 'source-map', // 方便调试的 Source Map
   devServer: {
-    static: path.resolve(__dirname, 'dist'),
+    static: { 
+      directory: path.resolve(__dirname, 'public'),
+      publicPath: '/', // 设置静态资源的公共路径
+    },
     port: 3000,
     open: true, // 启动时自动打开浏览器
     hot: true, // 热更新
-  },
-}
+    historyApiFallback: true // 处理SPA路由
+  }
+};

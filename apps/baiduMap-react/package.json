@@ -1,13 +1,14 @@
 {
   "name": "baidu-map-react",
   "version": "0.0.1",
+  "description": "测试百度地图",
   "main": "index.js",
   "scripts": {
     "dev:baiduMap": "webpack serve --env development",
     "build:baiduMap": "webpack --env production"
   },
   "devDependencies": {
-    "webpack": "5.96.1",
+    "webpack": "5.97.1",
     "webpack-cli": "5.1.4",
     "webpack-dev-server": "5.1.0",
     "webpack-merge": "6.0.1",
@@ -16,6 +17,7 @@
     "css-loader": "7.1.2",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
+    "@types/node": "22.10.1",
     "html-webpack-plugin": "5.6.3",
     "mini-css-extract-plugin": "2.9.2",
     "sass": "1.81.0",
@@ -24,10 +26,11 @@
   "peerDependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "canvaskit-wasm": "0.39.1"
+    "react-router-dom": "6.28.0",
+    "canvaskit-wasm": "0.39.1",
+    "@common/ui": "workspace:*"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "ISC"
 }
