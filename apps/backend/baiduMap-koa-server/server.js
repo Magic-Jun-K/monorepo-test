@@ -1,59 +1,162 @@
+/**
+ * 主服务器文件
+ * 配置和启动Koa应用服务器
+ */
 const Koa = require('koa');
-const path = require('path');
-const fs = require('fs');
-const koaStatic = require('koa-static');
+const mongoose = require('mongoose');
+const { koaBody } = require('koa-body');
+const { send } = require('@koa/send');
+const helmet = require('koa-helmet');
+const compress = require('koa-compress');
 const cors = require('@koa/cors');
+// const path = require('path');
 
+// 导入配置和工具
+const config = require('./src/config');
+const logger = require('./src/utils/logger');
+const errorHandler = require('./src/middleware/error');
+const rateLimiter = require('./src/middleware/rateLimit');
+
+// 导入路由
+const imageRoutes = require('./src/routes/imageRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const authRoutes = require('./src/routes/authRoutes');
+
+// 创建Koa应用实例
 const app = new Koa();
 
-// 使用 @koa/cors 中间件来允许跨域请求
-app.use(cors({
-  origin: '*',  // 允许所有来源进行跨域请求，或者改成具体的 URL
-}));
+// CORS配置
+app.use(cors(config.cors));
 
-// 提供静态文件服务
-app.use(koaStatic(path.join(__dirname, 'public')));
+// 手动配置 CORS 中间件
+// app.use(async (ctx, next) => {
+//   console.log("测试请求源", ctx.get('Origin'));
+//   ctx.set('Access-Control-Allow-Origin', ctx.get('Origin') || '*'); // Allow the request origin
+//   ctx.set('Access-Control-Allow-Credentials', 'true'); // Allow credentials
+//   ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allowed methods
+//   ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept'); // Allowed headers
 
-// 路由处理静态资源请求
+//   // Handle preflight requests(处理飞行前请求)
+//   if (ctx.method === 'OPTIONS') {
+//     ctx.status = 204; // No content
+//     return;
+//   }
+
+//   await next(); // Proceed to the next middleware(继续下一个中间件)
+// });
+
+// 连接数据库
+mongoose
+  .connect(config.database.url)
+  .then(() => logger.info('Successfully connected to MongoDB'))
+  .catch(err => {
+    logger.error('Error connecting to MongoDB:', err);
+    process.exit(1);
+  });
+
+// 应用中间件
+app.use(errorHandler); // 错误处理必须是第一个中间件
+
+// 安全中间件
+app.use(helmet()); // 设置安全相关的HTTP头
+
+// 自定义头部中间件
+app.use(async (ctx, next) => {
+  ctx.set('X-Timestamp', Date.now());
+  await next();
+});
+// 配置静态资源服务
 app.use(async ctx => {
-  const requestPath = ctx.request.path;
-
-  // 处理 HTML 请求
-  // if (requestPath === '/index.html') {
-  //   ctx.type = 'html';
-  //   ctx.body = fs.createReadStream(path.join(__dirname, 'public', 'index.html'));
-  // }
-
-  // 处理 CSS 请求
-  // else if (requestPath === '/styles.css') {
-  //   ctx.type = 'css';
-  //   ctx.body = fs.createReadStream(path.join(__dirname, 'public', 'styles.css'));
-  // }
-
-  // 处理 JS 请求
-  // else if (requestPath === '/script.js') {
-  //   ctx.type = 'javascript';
-  //   ctx.body = fs.createReadStream(path.join(__dirname, 'public', 'script.js'));
-  // }
-
-  // 处理图片请求
-  if (requestPath === 'image.png') {
-    ctx.type = 'image/jpeg';
-    ctx.body = fs.createReadStream(path.join(__dirname, 'public', 'image.png'));
-  }
-  if (requestPath === 'iconCluster.png') {
-    ctx.type = 'image/jpeg';
-    ctx.body = fs.createReadStream(path.join(__dirname, 'public', 'iconCluster.png'));
-  }
-
-  // 如果请求的资源不存在
-  else {
-    ctx.status = 404;
-    ctx.body = 'Resource not found';
-  }
+  await send(ctx, ctx.path, {
+    root: __dirname + '/public',
+    maxage: 24 * 60 * 60 * 1000 // 24 hours
+  });
 });
 
-// 启动服务
-app.listen(7000, () => {
-  console.log('Server is running at http://localhost:7000');
+// 压缩响应
+app.use(
+  compress({
+    threshold: 2048, // 2kb以上的响应进行压缩
+    gzip: {
+      flush: require('zlib').constants.Z_SYNC_FLUSH
+    },
+    deflate: {
+      flush: require('zlib').constants.Z_SYNC_FLUSH
+    },
+    br: false // 禁用br压缩，因为IE不支持
+  })
+);
+
+// 请求体解析
+app.use(
+  koaBody({
+    multipart: true, // 支持文件上传
+    formidable: {
+      maxFileSize: config.upload.maxSize, // 限制上传文件大小
+      keepExtensions: true, // 保持文件扩展名
+      uploadDir: config.upload.directory // 上传目录
+    },
+    jsonLimit: '10mb', // JSON请求体大小限制
+    formLimit: '10mb' // form请求体大小限制
+  })
+);
+
+// 速率限制
+app.use(rateLimiter);
+
+// 注册路由
+app.use(imageRoutes.routes());
+app.use(imageRoutes.allowedMethods());
+app.use(userRoutes.routes());
+app.use(userRoutes.allowedMethods());
+app.use(authRoutes.routes());
+app.use(authRoutes.allowedMethods());
+
+// 未找到路由的处理
+app.use(async ctx => {
+  ctx.status = 404;
+  ctx.body = {
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: 'The requested resource was not found'
+    }
+  };
 });
+
+// 错误事件监听
+app.on('error', (err, ctx) => {
+  logger.error('Server error:', {
+    error: err.message,
+    stack: err.stack,
+    url: ctx.url,
+    method: ctx.method
+  });
+});
+
+// 启动服务器
+const port = config.server.port;
+app.listen(port, () => {
+  console.log(`服务端启动成功，端口:${port}`);
+  logger.info(`Server is running on port ${port}`);
+  logger.info(`Environment: ${config.server.env}`);
+});
+
+// 优雅关闭
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+async function gracefulShutdown() {
+  logger.info('Received shutdown signal');
+
+  // 关闭数据库连接
+  try {
+    await mongoose.connection.close();
+    logger.info('MongoDB connection closed');
+  } catch (err) {
+    logger.error('Error closing MongoDB connection:', err);
+  }
+
+  // 关闭服务器
+  process.exit(0);
+}
