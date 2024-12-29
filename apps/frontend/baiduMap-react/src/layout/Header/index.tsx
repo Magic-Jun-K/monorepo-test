@@ -6,6 +6,7 @@ import './index.scss';
 
 const menuItems = [
   { path: '/home', name: '首页' },
+  { path: '/form-test', name: '表单测试页' },
   { path: '/baidu-map', name: '百度地图' },
 ];
 
