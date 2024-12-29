@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal } from '@common/ui';
 
 import treeIcon from '@/assets/images/test/car_jf.svg';

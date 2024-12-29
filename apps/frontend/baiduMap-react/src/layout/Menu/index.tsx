@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 import './index.scss';
@@ -13,7 +13,7 @@ interface MenuProps {
   className?: string;
 }
 
-const Menu: React.FC<MenuProps> = ({ items, className = '' }) => {
+const Menu: FC<MenuProps> = ({ items, className = '' }) => {
   return (
     <nav className={`menu-component ${className}`}>
       <ul>

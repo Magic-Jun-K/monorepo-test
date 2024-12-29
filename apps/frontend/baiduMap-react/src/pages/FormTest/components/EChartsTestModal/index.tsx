@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal } from '@common/ui';
 
 import EChartsCom from '@/pages/EChartsCom';

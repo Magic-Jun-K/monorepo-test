@@ -1,13 +1,23 @@
-import React, { useRef, useEffect } from 'react';
+import { FC, useRef, useEffect } from 'react';
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import { TitleComponent, TooltipComponent, GridComponent, DatasetComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
 // 注册必要的组件和图表类型
-echarts.use([BarChart, LineChart, PieChart, TitleComponent, TooltipComponent, GridComponent, DatasetComponent, LegendComponent, CanvasRenderer]);
+echarts.use([
+  BarChart,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  DatasetComponent,
+  LegendComponent,
+  CanvasRenderer
+]);
 
-const EChartsCom: React.FC<{ options: echarts.EChartsCoreOption }> = ({ options }) => {
+const EChartsCom: FC<{ options: echarts.EChartsCoreOption }> = ({ options }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

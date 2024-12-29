@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 import Login from './pages/Login';
@@ -7,7 +7,7 @@ import MapComponent from './pages/BMapGLCom';
 
 import './App.scss';
 
-const App: React.FC = () => {
+const App: FC = () => {
   return (
     <Router>
       <Routes>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 
 import { loadScript } from '@/utils/index';
 import { generateRandomCoordinates } from './utils';
@@ -58,7 +58,7 @@ const loadBMapScript = () => {
   return scriptPromise;
 };
 
-const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
@@ -79,7 +79,7 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
       if (!window.BMapLib) return;
       console.log('测试BMapLib', window.BMapLib);
       BMapLibRef.current = window.BMapLib;
-      
+
       // 初始化地图
       map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
       console.log('测试map', map.current);
@@ -120,17 +120,17 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
       console.log('测试BMapLibRef.current', BMapLibRef.current);
 
       // 构造数据
-      const data = randomPoints.map((item: {lng: number, lat: number}) => {
+      const data = randomPoints.map((item: { lng: number; lat: number }) => {
         return {
           geometry: {
             type: 'Point',
             coordinates: [item.lng, item.lat]
-          },
+          }
           // properties: {
           //     icon: 'http://localhost:7000/image.png'
           // }
-        }
-      })
+        };
+      });
 
       const layer = new window.mapvgl.IconLayer({
         width: 100 / 6,

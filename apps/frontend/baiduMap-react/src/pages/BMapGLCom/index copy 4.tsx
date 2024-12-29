@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 
 import { loadScript, loadCSS } from '@/utils/index';
 import { generateRandomCoordinates } from './utils';
@@ -65,7 +65,7 @@ const loadBMapScript = () => {
   return scriptPromise;
 };
 
-const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
@@ -195,9 +195,9 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
             // 可通过dataItem下面的children属性拿到被聚合的所有点
             console.log('测试iconClusterLayer click', e.dataItem);
             const _point = e.dataItem.geometry.coordinates;
-            map.current.panTo({lng: _point[0], lat: _point[1]});
+            map.current.panTo({ lng: _point[0], lat: _point[1] });
           }
-        },
+        }
         // data: [
         //   {
         //     geometry: {

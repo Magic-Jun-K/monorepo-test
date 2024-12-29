@@ -1,7 +1,7 @@
-/* 
+/*
  * @description: MapVgl 示例：渲染落点
  */
-import React, { useEffect, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 
 // import { loadScript } from '@/utils/index';
 import { generateRandomCoordinates } from '../utils';
@@ -10,7 +10,7 @@ interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
-const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
@@ -55,17 +55,17 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
 
       // 示例：MapV 使用 Canvas 渲染
       // 构造数据
-      const data = randomPoints.map((item: {lng: number, lat: number}) => {
+      const data = randomPoints.map((item: { lng: number; lat: number }) => {
         return {
           geometry: {
             type: 'Point',
             coordinates: [item.lng, item.lat]
-          },
+          }
           // properties: {
           //     icon: 'http://localhost:7000/image.png'
           // }
-        }
-      })
+        };
+      });
 
       const layer = new window.mapvgl.IconLayer({
         width: 100 / 6,

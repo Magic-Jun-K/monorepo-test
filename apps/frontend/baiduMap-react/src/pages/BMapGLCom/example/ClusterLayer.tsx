@@ -1,7 +1,7 @@
-/* 
+/*
  * @description: MapVgl 示例：点聚合图
  */
-import React, { useEffect, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 
 // import { loadScript } from '@/utils/index';
 import { generateRandomCoordinates } from '../utils';
@@ -10,7 +10,7 @@ interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
-const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);

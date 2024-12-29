@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input, Modal } from '@common/ui';
 import { ImageUploader } from '@common/antd-ui';
 

@@ -1,9 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-
+import { FC, useEffect, useRef } from 'react';
 import { loadScript, loadCSS } from '@/utils/index';
 import { generateRandomCoordinates } from './utils';
-// import wenhuaguji from '@/assets/images/test/wenhuaguji.png';
-// const wenhuaguji = require('@/assets/images/test/wenhuaguji.png');
+
+// 从环境变量或配置中获取后端地址
+const API_BASE_URL = 'http://localhost:7000';
+
+// 图标资源URL
+const ICON_CLUSTER = `${API_BASE_URL}/iconCluster.png`;
+const ICON_IMAGE = `${API_BASE_URL}/image.png`;
 
 interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
@@ -65,7 +69,7 @@ const loadBMapScript = () => {
   return scriptPromise;
 };
 
-const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
@@ -116,7 +120,7 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
             coordinates: [item.lng, item.lat]
           },
           properties: {
-            icon: 'http://localhost:7000/image.png',
+            icon: ICON_IMAGE,
             width: 100 / 6,
             height: 153 / 6
           }
@@ -145,9 +149,9 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
       //   },
       //   // 设置非聚合的点的icon
       //   // iconOptions: {
-      //   //     width: 100 / 4,
-      //   //     height: 153 / 4,
-      //   //     icon: 'images/marker.png',
+      //   //   width: 100 / 4,
+      //   //   height: 153 / 4,
+      //   //   icon: 'images/marker.png',
       //   // },
       //   enablePicked: true,
       //   onClick(e: any) {
@@ -186,7 +190,7 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
         },
         enablePicked: true,
         iconExtent: {
-          0: 'http://localhost:7000/iconCluster.png'
+          0: ICON_CLUSTER
           // 1000: 'http://localhost:7000/iconCluster.png',
           // 10000: 'http://localhost:7000/iconCluster.png',
         },
@@ -195,9 +199,9 @@ const MapComponent: React.FC<MapProps> = ({ mapParams }) => {
             // 可通过dataItem下面的children属性拿到被聚合的所有点
             console.log('测试iconClusterLayer click', e.dataItem);
             const _point = e.dataItem.geometry.coordinates;
-            map.current.panTo({lng: _point[0], lat: _point[1]});
+            map.current.panTo({ lng: _point[0], lat: _point[1] });
           }
-        },
+        }
         // data: [
         //   {
         //     geometry: {
