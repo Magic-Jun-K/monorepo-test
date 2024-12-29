@@ -7,5 +7,7 @@ export default defineConfig({
   sourcemap: false,
   clean: true,
   format: ['esm'],
-  outDir: 'es'
+  outDir: 'es',
+  treeshake: true,
+  minify: true
 });
