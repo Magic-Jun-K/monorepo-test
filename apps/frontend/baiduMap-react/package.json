@@ -7,11 +7,22 @@
     "dev:baiduMap": "webpack serve --env development",
     "build:baiduMap": "webpack --env production"
   },
+  "peerDependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.28.0",
+    "canvaskit-wasm": "0.39.1",
+    "@common/ui": "workspace:*",
+    "@common/antd-ui": "workspace:*",
+    "echarts": "5.5.1",
+    "axios": "1.7.9"
+  },
   "devDependencies": {
     "webpack": "5.97.1",
     "webpack-cli": "5.1.4",
     "webpack-dev-server": "5.1.0",
     "webpack-merge": "6.0.1",
+    "webpack-bundle-analyzer": "4.10.2",
     "ts-loader": "9.5.1",
     "style-loader": "4.0.0",
     "css-loader": "7.1.2",
@@ -20,15 +31,13 @@
     "@types/node": "22.10.1",
     "html-webpack-plugin": "5.6.3",
     "mini-css-extract-plugin": "2.9.2",
-    "sass": "1.81.0",
-    "sass-loader": "16.0.0"
-  },
-  "peerDependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-router-dom": "6.28.0",
-    "canvaskit-wasm": "0.39.1",
-    "@common/ui": "workspace:*"
+    "sass": "1.83.0",
+    "sass-loader": "16.0.4",
+    "babel-loader": "9.2.1",
+    "@babel/core": "7.26.0",
+    "@babel/preset-env": "7.26.0",
+    "terser-webpack-plugin": "5.3.11",
+    "swc-loader": "0.2.6"
   },
   "keywords": [],
   "author": "",
