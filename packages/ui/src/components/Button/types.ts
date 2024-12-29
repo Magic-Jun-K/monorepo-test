@@ -1,10 +1,12 @@
+import { ButtonHTMLAttributes, ReactNode } from 'react';
+
 export const buttonVariants = ['filled', 'light', 'outline', 'transparent', 'white', 'subtle', 'default', 'gradient', 'primary'] as const;
 export type ButtonVariant = (typeof buttonVariants)[number];
 
 export const buttonSizes = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export type ButtonSize = (typeof buttonSizes)[number];
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * 按钮的变体
    */
@@ -16,7 +18,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * 按钮内容
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
   /**
    * 是否禁用按钮
    */
@@ -32,9 +34,9 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /**
    * 左侧图标
    */
-  leftIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
   /**
    * 右侧图标
    */
-  rightIcon?: React.ReactNode;
+  rightIcon?: ReactNode;
 }

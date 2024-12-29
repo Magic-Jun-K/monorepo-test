@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 
 import { CommonThemeOverrides } from '../types/theme.types';
 
@@ -14,7 +14,7 @@ export interface CommonThemeProviderProps {
   theme?: CommonThemeOverrides;
 
   /** Your application or part of the application that requires different theme */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function CommonThemeProvider({ theme, children, inherit = true }: CommonThemeProviderProps) {

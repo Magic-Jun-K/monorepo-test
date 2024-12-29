@@ -1,9 +1,9 @@
-import React from 'react';
+import { InputHTMLAttributes, ReactNode } from 'react';
 
 export const inputSizes = ['xs', 'sm', 'md', 'lg'] as const;
 export type InputSize = (typeof inputSizes)[number];
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
    * 输入框大小
    */
@@ -19,11 +19,11 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   /**
    * 左侧图标
    */
-  leftIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
   /**
    * 右侧图标
    */
-  rightIcon?: React.ReactNode;
+  rightIcon?: ReactNode;
   /**
    * 是否撑满父容器宽度
    */

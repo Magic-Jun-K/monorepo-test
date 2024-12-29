@@ -1,24 +1,10 @@
-import React from 'react';
+import { forwardRef, MouseEvent } from 'react';
 import { StyledButton } from './styles';
 import { ButtonProps } from './types';
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'default',
-      size = 'md',
-      children,
-      disabled,
-      loading,
-      fullWidth,
-      leftIcon,
-      rightIcon,
-      onClick,
-      ...props
-    },
-    ref
-  ) => {
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = 'default', size = 'md', children, disabled, loading, fullWidth, leftIcon, rightIcon, onClick, ...props }, ref) => {
+    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
       if (!loading && !disabled && onClick) {
         onClick(event);
       }

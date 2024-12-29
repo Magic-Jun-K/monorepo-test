@@ -1,7 +1,7 @@
-import React from 'react';
+import { HTMLAttributes, ButtonHTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
 
-export const ModalOverlay = styled.div<React.HTMLAttributes<HTMLDivElement>>`
+export const ModalOverlay = styled.div<HTMLAttributes<HTMLDivElement>>`
   position: fixed;
   top: 0;
   left: 0;
@@ -15,13 +15,11 @@ export const ModalOverlay = styled.div<React.HTMLAttributes<HTMLDivElement>>`
   padding: 16px;
 `;
 
-export const ModalContent = styled.div<React.HTMLAttributes<HTMLDivElement> & { width?: number | string }>`
+export const ModalContent = styled.div<HTMLAttributes<HTMLDivElement> & { width?: number | string }>`
   position: relative;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12),
-    0 6px 16px 0 rgba(0, 0, 0, 0.08),
-    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   width: ${({ width }) => (typeof width === 'number' ? `${width}px` : width || '520px')};
@@ -29,7 +27,7 @@ export const ModalContent = styled.div<React.HTMLAttributes<HTMLDivElement> & { 
   max-height: calc(100vh - 32px);
 `;
 
-export const ModalHeader = styled.div<React.HTMLAttributes<HTMLDivElement>>`
+export const ModalHeader = styled.div<HTMLAttributes<HTMLDivElement>>`
   position: relative;
   display: flex;
   align-items: center;
@@ -44,7 +42,7 @@ export const ModalHeader = styled.div<React.HTMLAttributes<HTMLDivElement>>`
   flex-shrink: 0;
 `;
 
-export const ModalBody = styled.div<React.HTMLAttributes<HTMLDivElement>>`
+export const ModalBody = styled.div<HTMLAttributes<HTMLDivElement>>`
   padding: 16px;
   font-size: 14px;
   line-height: 1.5;
@@ -65,13 +63,13 @@ export const ModalBody = styled.div<React.HTMLAttributes<HTMLDivElement>>`
   }
 `;
 
-export const ModalFooter = styled.div<React.HTMLAttributes<HTMLDivElement>>`
+export const ModalFooter = styled.div<HTMLAttributes<HTMLDivElement>>`
   padding: 10px 16px;
   text-align: right;
   background: transparent;
   border-top: 1px solid #f0f0f0;
   flex-shrink: 0;
-  
+
   button + button {
     margin-left: 8px;
   }
@@ -143,7 +141,7 @@ export const ConfirmButton = styled.button`
   }
 `;
 
-export const CloseButton = styled.button<React.ButtonHTMLAttributes<HTMLButtonElement>>`
+export const CloseButton = styled.button<ButtonHTMLAttributes<HTMLButtonElement>>`
   position: absolute;
   top: 50%;
   right: 16px;

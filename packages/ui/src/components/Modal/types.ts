@@ -1,4 +1,4 @@
-import React from 'react';
+import { ReactNode } from 'react';
 
 export interface ModalProps {
   /**
@@ -12,11 +12,11 @@ export interface ModalProps {
   /**
    * 模态框标题
    */
-  title?: React.ReactNode;
+  title?: ReactNode;
   /**
    * 模态框内容
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
   /**
    * 模态框宽度，支持数字（px）或字符串（如 '50%'）
    */
@@ -32,5 +32,5 @@ export interface ModalProps {
   /**
    * 自定义页脚内容
    */
-  footer?: React.ReactNode;
+  footer?: ReactNode;
 }

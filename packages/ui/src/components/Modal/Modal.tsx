@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { FC, useEffect, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ModalProps } from './types';
 import {
@@ -12,7 +12,7 @@ import {
   ConfirmButton,
 } from './styles';
 
-const DefaultFooter: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+const DefaultFooter: FC<{ onClose: () => void }> = ({ onClose }) => (
   <>
     <CancelButton onClick={onClose}>
       取消
@@ -23,7 +23,7 @@ const DefaultFooter: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   </>
 );
 
-export const Modal: React.FC<ModalProps> = ({
+export const Modal: FC<ModalProps> = ({
   isOpen,
   onClose,
   title,
@@ -47,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget && closeOnOverlayClick) {
       onClose();
     }
