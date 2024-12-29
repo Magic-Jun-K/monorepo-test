@@ -1,7 +1,7 @@
 /**
  * 图片上传组件
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import { FC, useState, useCallback, useEffect } from 'react';
 import { Upload, message, Image } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
@@ -52,7 +52,7 @@ const StyledImageUploader = styled.div`
   }
 `;
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({
+export const ImageUploader: FC<ImageUploaderProps> = ({
   value = [],
   onChange,
   maxCount = 5,
