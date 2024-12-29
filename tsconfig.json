@@ -12,9 +12,9 @@
     "strict": true, // 启用所有严格类型检查选项
     "experimentalDecorators": true,
     "moduleResolution": "node",
-    "paths": {
-      "@common/*": ["./packages/@common/*/src"]
-    }
+    // "paths": {
+    //   "@common/*": ["./packages/@common/*/src"]
+    // }
   },
   "$schema": "https://json.schemastore.org/tsconfig",
   "display": "Base",
