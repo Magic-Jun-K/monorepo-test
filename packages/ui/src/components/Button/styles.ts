@@ -1,15 +1,8 @@
 // 所有组件的样式规则全部在这里
 import { css, styled } from 'styled-components';
-import type { ButtonVariant } from './types';
+import type { ButtonSize, ButtonVariant } from './types';
 import { darken, lighten } from '../../core/utils';
 import { VariantColorResolverResult } from '../../core';
-
-// interface VariantColorResolveResult {
-//     background: string
-//     color: string
-//     border: string
-//     hover?: string
-// }
 
 /**
  * 按钮的变体通过一组样式来定义
@@ -67,6 +60,12 @@ const variantMap: Record<ButtonVariant, VariantColorResolverResult> = {
     background: `linear-gradient(45deg, var(--common-primary-color-6), ${lighten('var(--common-primary-color-6)', 0.4)})`,
     hover: `linear-gradient(45deg, var(--common-primary-color-6), ${lighten('var(--common-primary-color-6)', 0.4)})`,
     border: 'none'
+  },
+  primary: {
+    color: '#fff',
+    background: '#1677ff',
+    hover: darken('#1677ff', 0.1),
+    border: 'none'
   }
 };
 
@@ -85,21 +84,59 @@ const ButtonVarsCss = css`
   --button-height-lg: 40px;
   --button-height-xl: 44px;
 `;
-export const StyledButton = styled.button<{ variant?: ButtonVariant }>`
+export const StyledButton = styled.button<{ 
+  variant?: ButtonVariant; 
+  size?: ButtonSize;
+  fullWidth?: boolean;
+}>`
   ${ButtonVarsCss}
 
-  display: inline-block;
+  display: ${props => props.fullWidth ? 'block' : 'inline-block'};
+  width: ${props => props.fullWidth ? '100%' : 'auto'};
   font-weight: 400;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
   user-select: none;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
   border-radius: 0.25rem;
   transition: color 0.15s, background-color 0.15s, border-color 0.15s;
   cursor: pointer;
+
+  /* Size styles */
+  ${props => {
+    switch (props.size) {
+      case 'xs':
+        return css`
+          height: var(--button-height-xs);
+          padding: 0 14px;
+          font-size: 12px;
+        `;
+      case 'sm':
+        return css`
+          height: var(--button-height-sm);
+          padding: 0 18px;
+          font-size: 14px;
+        `;
+      case 'lg':
+        return css`
+          height: var(--button-height-lg);
+          padding: 0 26px;
+          font-size: 16px;
+        `;
+      case 'xl':
+        return css`
+          height: var(--button-height-xl);
+          padding: 0 32px;
+          font-size: 18px;
+        `;
+      default:
+        return css`
+          height: var(--button-height-md);
+          padding: 0 22px;
+          font-size: 14px;
+        `;
+    }
+  }}
 
   /* 变体样式处理 */
   color: ${({ variant }) => getVariantColor(variant).color};
@@ -115,12 +152,27 @@ export const StyledButton = styled.button<{ variant?: ButtonVariant }>`
     opacity: 0.65;
   }
 
-  &.btn-block {
-    display: block;
-    width: 100%;
-  }
-
   &:not(:disabled):hover {
     background: ${props => getVariantColor(props.variant).hover};
+  }
+
+  /* Icon styles */
+  .button-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    &.left {
+      margin-right: 8px;
+    }
+    
+    &.right {
+      margin-left: 8px;
+    }
+  }
+
+  /* Loading spinner */
+  .loading-spinner {
+    margin-right: 8px;
   }
 `;
