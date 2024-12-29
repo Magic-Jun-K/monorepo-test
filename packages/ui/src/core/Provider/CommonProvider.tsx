@@ -1,4 +1,4 @@
-import React from 'react';
+import { ReactNode, FC } from 'react';
 
 import { CommonThemeProvider } from '../ThemeProvider/CommonThemeProvider';
 import { CommonThemeOverrides } from '../types/theme.types';
@@ -15,10 +15,10 @@ export interface CommonProviderProps {
   /**
    * The children to render.
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
-export const CommonProvider: React.FC<CommonProviderProps> = ({ theme, children }) => {
+export const CommonProvider: FC<CommonProviderProps> = ({ theme, children }) => {
   return (
     <CommonContext.Provider value={{}}>
       <CommonThemeProvider theme={theme}>{children}</CommonThemeProvider>
