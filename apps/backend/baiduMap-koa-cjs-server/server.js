@@ -4,11 +4,11 @@
  */
 const Koa = require('koa');
 const mongoose = require('mongoose');
-const { koaBody } = require('koa-body');
+const bodyParser = require('koa-bodyparser');
 const { send } = require('@koa/send');
 const helmet = require('koa-helmet');
 const compress = require('koa-compress');
-const cors = require('@koa/cors');
+// const cors = require('@koa/cors');
 // const path = require('path');
 
 // 导入配置和工具
@@ -26,7 +26,17 @@ const authRoutes = require('./src/routes/authRoutes');
 const app = new Koa();
 
 // CORS配置
-app.use(cors(config.cors));
+// app.use(cors(config.cors));
+
+// Enhanced CORS middleware
+app.use(async (ctx, next) => {
+  ctx.set('Access-Control-Allow-Origin', 'http://localhost:3000'); // Allow all origins
+  ctx.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allow specific methods
+  ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow specific headers
+  ctx.set('Cross-Origin-Resource-Policy', 'cross-origin'); // Allow cross-origin resource sharing
+
+  await next();
+});
 
 // 手动配置 CORS 中间件
 // app.use(async (ctx, next) => {
@@ -68,7 +78,7 @@ app.use(async (ctx, next) => {
 // 配置静态资源服务
 app.use(async ctx => {
   await send(ctx, ctx.path, {
-    root: __dirname + '/public',
+    root: __dirname + '/public/images',
     maxage: 24 * 60 * 60 * 1000 // 24 hours
   });
 });
@@ -88,18 +98,7 @@ app.use(
 );
 
 // 请求体解析
-app.use(
-  koaBody({
-    multipart: true, // 支持文件上传
-    formidable: {
-      maxFileSize: config.upload.maxSize, // 限制上传文件大小
-      keepExtensions: true, // 保持文件扩展名
-      uploadDir: config.upload.directory // 上传目录
-    },
-    jsonLimit: '10mb', // JSON请求体大小限制
-    formLimit: '10mb' // form请求体大小限制
-  })
-);
+app.use(bodyParser());
 
 // 速率限制
 app.use(rateLimiter);
