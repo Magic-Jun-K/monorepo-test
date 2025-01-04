@@ -1,11 +1,12 @@
 {
-  "name": "baidumap-koa-server",
+  "name": "baidumap-koa-pg-server",
   "version": "1.0.0",
-  "description": "Enterprise-level Koa server for BaiduMap project",
-  "main": "server.js",
+  "description": "Enterprise-level Koa server for BaiduMap project with TypeScript and PostgreSQL",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "serve:baiduMap": "node server.js",
-    "start": "nodemon server.js",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
     "test": "jest"
   },
   "dependencies": {
@@ -18,7 +19,9 @@
     "koa-helmet": "8.0.1",
     "koa-ratelimit": "5.1.0",
     "dotenv": "16.4.7",
-    "mongoose": "8.9.2",
+    "pg": "8.13.1",
+    "pg-pool": "3.7.0",
+    "typeorm": "0.3.20",
     "redis": "4.7.0",
     "winston": "3.17.0",
     "sharp": "0.33.5",
@@ -26,8 +29,19 @@
     "formidable": "3.5.2"
   },
   "devDependencies": {
-    "jest": "29.7.0",
-    "nodemon": "3.1.9"
+    "typescript": "5.7.2",
+    "tsx": "4.19.2",
+    "@types/node": "22.10.5",
+    "@types/koa": "2.15.0",
+    "@types/koa__router": "12.0.4",
+    "@types/koa-bodyparser": "4.3.12",
+    "@types/koa-compress": "4.0.6",
+    "@types/koa-helmet": "6.0.8",
+    "@types/koa-ratelimit": "5.0.5",
+    "@types/pg": "8.11.10",
+    "@types/pg-pool": "2.0.6",
+    "@types/formidable": "3.4.5",
+    "jest": "29.7.0"
   },
   "engines": {
     "node": ">=16.0.0"
