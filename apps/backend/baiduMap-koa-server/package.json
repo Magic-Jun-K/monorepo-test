@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "tsx watch src/index.ts",
     "build": "tsc",
     "test": "jest"
   },
@@ -33,6 +33,7 @@
     "tsx": "4.19.2",
     "@types/node": "22.10.5",
     "@types/koa": "2.15.0",
+    "@types/koa__cors": "5.0.0",
     "@types/koa__router": "12.0.4",
     "@types/koa-bodyparser": "4.3.12",
     "@types/koa-compress": "4.0.6",

@@ -1,5 +1,5 @@
 import { Context } from 'koa';
-import ErrorHandler from '../utils/error.js';
+import ErrorHandler from '../utils/error.ts';
 
 class AuthController {
   async login(ctx: Context) {

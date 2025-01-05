@@ -1,6 +1,6 @@
+import Koa from 'koa';
 import { Pool } from 'pg';
 import { RedisClientType } from 'redis';
-import Koa from 'koa';
 
 // Database types
 export type DatabasePool = Pool;

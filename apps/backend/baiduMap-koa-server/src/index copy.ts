@@ -4,11 +4,11 @@
  */
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
+import { send } from '@koa/send';
 import helmet from 'koa-helmet';
 import compress from 'koa-compress';
 import { createClient } from 'redis';
 import { constants } from 'node:zlib';
-import staticFiles from './middleware/staticFiles.ts';
 
 // 导入 types
 import type { AppState, AppContext } from './types/index.ts';
@@ -24,10 +24,12 @@ import cors from './middleware/cors.ts';
 import { connectDatabase, disconnectDatabase, getPool } from './services/database.ts';
 
 // 导入路由
-import registerRoutes from './routes/index.ts';
+import imageRoutes from './routes/imageRoutes.ts';
+import userRoutes from './routes/userRoutes.ts';
+import authRoutes from './routes/authRoutes.ts';
 
 // 创建Koa应用实例
-const app = new Koa<AppState, AppContext>();
+const app: Koa<AppState, AppContext> = new Koa();
 
 // 初始化Redis客户端
 const redisClient = createClient({
@@ -40,7 +42,7 @@ app.use(helmet.default());
 app.use(errorHandler);
 
 // 使用独立的CORS中间件
-app.use(cors);
+app.use(cors());
 
 // 添加数据库连接状态检查
 app.use(async (ctx, next) => {
@@ -58,7 +60,12 @@ app.use(async (ctx, next) => {
 });
 
 // 配置静态资源服务
-app.use(staticFiles());
+app.use(async ctx => {
+  await send(ctx, ctx.path, {
+    root: './public/images',
+    maxage: 86400000 // 24 hours(24 * 60 * 60 * 1000)
+  });
+});
 
 // 压缩响应
 app.use(
@@ -81,7 +88,12 @@ app.use(bodyParser());
 app.use(rateLimiter);
 
 // 注册路由
-registerRoutes(app);
+app.use(imageRoutes.routes());
+app.use(imageRoutes.allowedMethods());
+app.use(userRoutes.routes());
+app.use(userRoutes.allowedMethods());
+app.use(authRoutes.routes());
+app.use(authRoutes.allowedMethods());
 
 // 未找到路由的处理
 app.use(async ctx => {

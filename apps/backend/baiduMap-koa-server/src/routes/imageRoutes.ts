@@ -1,5 +1,5 @@
 import Router from '@koa/router';
-import ImageController from '../controllers/imageController.js';
+import ImageController from '../controllers/imageController.ts';
 
 const router = new Router();
 

@@ -1,5 +1,5 @@
-import type { AppContext, AppError } from '../types/index.js';
-import logger from '../utils/logger.js';
+import type { AppContext, AppError } from '../types/index.ts';
+import logger from '../utils/logger.ts';
 
 /**
  * 错误处理中间件

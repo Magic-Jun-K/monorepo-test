@@ -1,11 +1,11 @@
 import { Context } from 'koa';
 import fs from 'node:fs';
-import { getPool } from '../services/database.js';
-import ImageService from '../services/imageService.js';
-import ErrorHandler from '../utils/error.js';
-import Validation from '../utils/validation.js';
-import logger from '../utils/logger.js';
-import { cache } from '../utils/cache.js';
+import { getPool } from '../services/database.ts';
+import ImageService from '../services/imageService.ts';
+import ErrorHandler from '../utils/error.ts';
+import Validation from '../utils/validation.ts';
+import logger from '../utils/logger.ts';
+import { cache } from '../utils/cache.ts';
 
 class ImageController {
   private pool = getPool();

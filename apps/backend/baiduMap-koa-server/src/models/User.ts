@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
-import Image from './Image.js';
+import Image from './Image.ts';
 
 /**
  * 用户模型

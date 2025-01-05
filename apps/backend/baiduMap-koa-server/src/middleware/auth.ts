@@ -1,4 +1,4 @@
-import type { AppContext } from '../types/index.js';
+import type { AppContext } from '../types/index.ts';
 
 /**
  * 认证中间件

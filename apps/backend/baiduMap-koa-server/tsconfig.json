@@ -17,7 +17,9 @@
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "allowImportingTsExtensions": true, // 允许导入 .ts 文件
+    "noEmit": true, // 只进行类型检查，不生成 .js 文件
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "test"]
