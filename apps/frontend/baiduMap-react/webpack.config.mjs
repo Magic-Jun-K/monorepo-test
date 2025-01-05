@@ -154,24 +154,26 @@ const baseConfig = env => {
         })
       ],
       splitChunks: {
-        chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks。
-        minSize: 20000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割。
-        maxSize: 250000, // 如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
-        minChunks: 1, // 最少有多少个 chunks（模块）共享此模块时才会分割代码。
-        maxAsyncRequests: 30, // 对于异步加载（动态 import）的最大并行请求数。
-        maxInitialRequests: 30, // 入口点的最大并行请求数。
-        automaticNameDelimiter: '~', // 自动生成的 chunk 名称的分隔符。
+        chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
+        // 任何小于 20,000 字节（约 20 KB）的 chunk 都不会被分割出来，而是会保留在它们原来的 chunk 中
+        // 只有当一个 chunk 的大小达到或超过 20 KB 时，Webpack 才会考虑将其分割
+        minSize: 20000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割
+        // maxSize: 250000, // 如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
+        minChunks: 1, // 最少有多少个 chunks（模块）共享此模块时才会分割代码
+        maxAsyncRequests: 30, // 对于异步加载（动态 import）的最大并行请求数
+        maxInitialRequests: 30, // 入口点的最大并行请求数
+        automaticNameDelimiter: '~', // 自动生成的 chunk 名称的分隔符
         cacheGroups: {
           // 用于控制如何形成块的缓存组
           defaultVendors: {
-            test: /[\\/]node_modules[\\/]/, // 过滤条件，匹配 node_modules 文件夹下的模块。
-            priority: -10, // 优先级，决定了一个模块可以属于多个缓存组时的优先选择。数值越高，优先级越高。
-            reuseExistingChunk: true // 如果当前 chunk 中已有这个模块，则重用，而不是创建一个新的 chunk。
+            test: /[\\/]node_modules[\\/]/, // 过滤条件，匹配 node_modules 文件夹下的模块
+            priority: -10, // 优先级，决定了一个模块可以属于多个缓存组时的优先选择。数值越高，优先级越高
+            reuseExistingChunk: true // 如果当前 chunk 中已有这个模块，则重用，而不是创建一个新的 chunk
           },
           default: {
-            minChunks: 2, // 至少有 2 个 chunk 引用时才会生成一个新的 chunk。
-            priority: -20, // 优先级较低的默认组。
-            reuseExistingChunk: true // 重用已经存在的 chunk 而不是创建新的 chunk。
+            minChunks: 2, // 至少有 2 个 chunk 引用时才会生成一个新的 chunk
+            priority: -20, // 优先级较低的默认组
+            reuseExistingChunk: true // 重用已经存在的 chunk 而不是创建新的 chunk
           }
         }
       }
