@@ -8,8 +8,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "module": "ESNext"
+    "module": "ESNext",
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*"], // 指定 需要 编译的文件
+  "include": ["src/**/*", "src/types/*.d.ts", "../../../packages/antd-ui/src/components/ImageUploader"], // 指定 需要 编译的文件
   "exclude": ["node_modules", "build", "public"] // 指定 不需要 编译的文件
 }
