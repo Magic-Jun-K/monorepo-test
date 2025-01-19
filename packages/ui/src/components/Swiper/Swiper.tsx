@@ -1,5 +1,5 @@
 import { FC, useState, useRef, useEffect } from 'react';
-import { Container, SlidesWrapper, Slide, SwiperButton } from './styles';
+import { Container, SlidesWrapper, Slide, PrevButton, NextButton } from './styles';
 import { SwiperProps } from './types';
 
 const slideWidth = 100;
@@ -109,12 +109,8 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
         ))}
       </SlidesWrapper>
 
-      <SwiperButton onClick={prevSlide} style={{ left: '10px' }}>
-        {'<'}
-      </SwiperButton>
-      <SwiperButton onClick={nextSlide} style={{ right: '10px' }}>
-        {'>'}
-      </SwiperButton>
+      <PrevButton onClick={prevSlide} />
+      <NextButton onClick={nextSlide} />
     </Container>
   );
 };

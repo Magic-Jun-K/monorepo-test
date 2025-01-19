@@ -21,17 +21,37 @@ export const SwiperButton = styled.div`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  border: none;
-  margin: 0 24px;
   cursor: pointer;
   z-index: 1;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  font-size: 32px;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-top: 5px solid #fff;
+  border-left: 5px solid #fff;
   display: flex;
   justify-content: center;
   align-items: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 4rem;
+    height: 4rem;
+    display: block;
+  }
+
+  &:hover {
+    border-top-color: rgb(255, 105, 0);
+    border-left-color: rgb(255, 105, 0);
+  }
+`;
+
+export const PrevButton = styled(SwiperButton)`
+  left: 4rem;
+  transform: rotate(-45deg) translateY(-50%);
+`;
+
+export const NextButton = styled(SwiperButton)`
+  right: 4rem;
+  transform: rotate(135deg) translateY(-50%);
 `;
