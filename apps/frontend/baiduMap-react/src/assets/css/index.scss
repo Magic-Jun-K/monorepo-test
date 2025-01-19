@@ -6,19 +6,43 @@ html, body, #root {
   min-width: 320px;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: $font-color;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-width: 900px;
-  overflow: hidden;
+  // overflow: auto;
 }
 
 .App {
   width: 100%;
   height: 100%;
   position: relative;
+}
+
+/* 全局滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

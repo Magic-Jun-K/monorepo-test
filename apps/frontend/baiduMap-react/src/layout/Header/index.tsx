@@ -11,7 +11,7 @@ const menuItems = [
 export default () => {
   return (
     <div className={styles['Header']}>
-      <h1>测试系统</h1>
+      <h1>Eggshell</h1>
       <div className={styles['Header-body']}>
         <div className={styles['Header-right-menu']}>
           <Menu items={menuItems} />

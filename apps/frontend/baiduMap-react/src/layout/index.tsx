@@ -1,16 +1,15 @@
 import { Outlet } from 'react-router-dom';
 
 import Header from './Header';
-
-import './index.scss';
+import LayoutBody from './LayoutBody';
 
 export default () => {
   return (
     <>
       <Header />
-      <div className="layout-body">
+      <LayoutBody>
         <Outlet />
-      </div>
+      </LayoutBody>
     </>
   );
 };
