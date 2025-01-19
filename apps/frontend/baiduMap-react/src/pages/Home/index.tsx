@@ -1,16 +1,32 @@
-// import { useEffect } from 'react';
-import { Button } from '@common/ui';
+import { FC } from 'react';
 
-import treeIcon from '@/assets/images/test/car_jf.svg';
-import One from '@/assets/images/test/one.png';
+import { Swiper } from '@common/ui';
+import { BASE_URL } from '@/config';
+import styles from './index.module.scss';
 
-export default () => {
+const swiperArray = [
+  <img src={`${BASE_URL}/images/robot1.webp`} />,
+  <img src={`${BASE_URL}/images/robot2.webp`} />,
+  <img src={`${BASE_URL}/images/robot3.webp`} />
+];
+const Home: FC = () => {
   return (
-    <div>
-      <h1>首页</h1>
-      <Button>测试按钮</Button>
-      <img src={treeIcon} alt="" />
-      <img src={One} alt="" />
-    </div>
+    <>
+      <Swiper className={styles.swiper} loop autoPlay>
+        {swiperArray}
+      </Swiper>
+      <div className={styles.showImages}>
+        <h2>展示图片</h2>
+        <img src={`${BASE_URL}/images/robot1.webp`} />
+        <img src={`${BASE_URL}/images/robot2.webp`} />
+        <img src={`${BASE_URL}/images/robot3.webp`} />
+        <img src={`${BASE_URL}/images/robot4.webp`} />
+        <img src={`${BASE_URL}/images/robot5.webp`} />
+        <img src={`${BASE_URL}/images/robot6.webp`} />
+        <img src={`${BASE_URL}/images/robot7.webp`} />
+        <img src={`${BASE_URL}/images/robot8.webp`} />
+      </div>
+    </>
   );
 };
+export default Home;
