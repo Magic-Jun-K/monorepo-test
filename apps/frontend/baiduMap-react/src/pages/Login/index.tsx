@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/components/Toast';
 
+import LoginTabs from './components/LoginTabs';
+import FormInput from './components/FormInput';
+import FormButton from './components/FormButton';
+import RegisterText from './components/RegisterText';
+import { encrypt } from '@/utils/hashWasm';
+import * as api from '@/services';
+import { AuthType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
 import styles from './index.module.scss';
 
-type AuthType = 'login' | 'register';
 type LoginType = 'phone' | 'account';
 
 export default () => {
@@ -11,49 +20,72 @@ export default () => {
   const [loginType, setLoginType] = useState<LoginType>('account');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
-  interface FormData {
-    username?: string;
-    phone?: string;
-    password: string;
-    confirmPassword?: string;
-    code?: string;
-    remember?: string;
-  }
+  const form = useForm<FormData>({
+    resolver: zodResolver(authType === 'login' ? (loginType === 'account' ? loginSchema : phoneLoginSchema) : registerSchema),
+    defaultValues: {
+      username: '',
+      phone: '',
+      password: '',
+      code: '',
+      remember: false
+    }
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = form;
+
+  const onSubmit = async (data: FormData) => {
+    console.log('测试onSubmit data', data);
     setLoading(true);
+    const encryptedPassword = await encrypt(data.password);
+
+    if (!encryptedPassword) return;
+
     try {
-      const formData = new FormData(e.currentTarget);
-      const data: FormData = {
-        username: formData.get('username')?.toString(),
-        phone: formData.get('phone')?.toString(),
-        password: formData.get('password')?.toString() || '',
-        confirmPassword: formData.get('confirmPassword')?.toString(),
-        code: formData.get('code')?.toString(),
-        remember: formData.get('remember')?.toString()
-      };
-      
-      // Basic validation
-      if (authType === 'register' && data.password !== data.confirmPassword) {
-        alert('两次输入的密码不一致');
-        return;
-      }
-
       if (loginType === 'phone' && !/^1[3-9]\d{9}$/.test(data.phone || '')) {
-        alert('请输入有效的手机号');
+        addToast({ message: '请输入有效的手机号', type: 'error' });
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      navigate('/');
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Login error:', error.message);
+      const res: any = await api[authType]({ ...data, password: encryptedPassword });
+      console.log('测试onSubmit response', res);
+
+      // Handle successful response(处理成功响应)
+      if (res.success) {
+        if (authType === 'login') {
+          localStorage.setItem('token', res.data.access_token);
+
+          const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
+          navigate(redirectUrl);
+        } else {
+          addToast({ message: '注册成功，请登录', type: 'success' });
+          setAuthType('login');
+        }
+      } else {
+        addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
       }
-      alert('登录失败，请稍后重试');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.response) {
+        // Handle structured error response(处理结构化错误响应)
+        const { status, data } = error.response;
+        if (status === 403) {
+          addToast({ message: '访问被拒绝，请检查您的权限', type: 'error' });
+        } else {
+          const { message, detail } = data || {};
+          addToast({ message: message || detail || `请求失败，状态码：${status}`, type: 'error' });
+        }
+      } else if (error.message) {
+        // Handle generic error(处理一般错误)
+        addToast({ message: error.message, type: 'error' });
+      } else {
+        addToast({ message: '登录失败，请稍后重试', type: 'error' });
+      }
     } finally {
       setLoading(false);
     }
@@ -62,152 +94,123 @@ export default () => {
   return (
     <div className={styles.loginContainer}>
       <div className={styles.loginBox}>
-        {authType === 'login' && (
-          <div className={styles.tabs}>
-            <div
-              className={`${styles.tab} ${loginType === 'account' ? styles.active : ''}`}
-              onClick={() => setLoginType('account')}
-            >
-              <span>账号登录</span>
-            </div>
-            <div
-              className={`${styles.tab} ${loginType === 'phone' ? styles.active : ''}`}
-              onClick={() => setLoginType('phone')}
-            >
-              <span>手机登录</span>
-            </div>
-          </div>
-        )}
+        {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />}
 
         {authType === 'login' ? (
           <>
             {loginType === 'account' ? (
-              <form className={styles.form} onSubmit={handleSubmit}>
-                <div className={styles.formGroup}>
-                  {/* <label htmlFor="username">用户名</label> */}
-                  <input
-                    id="username"
-                    type="text"
-                    placeholder="请输入用户名"
-                    required
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  {/* <label htmlFor="password">密码</label> */}
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="请输入密码"
-                    required
-                  />
-                </div>
+              <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                <FormInput
+                  control={control}
+                  name="username"
+                  type="text"
+                  placeholder="请输入用户名"
+                  rules={{ required: '用户名不能为空' }}
+                  error={errors.username}
+                />
+                <FormInput
+                  control={control}
+                  name="password"
+                  type="password"
+                  placeholder="请输入密码"
+                  rules={{ required: '密码不能为空' }}
+                  error={errors.password}
+                />
+
                 <div className={styles.remember}>
-                  <label>
-                    <input type="checkbox" />
-                    记住我
-                  </label>
+                  <Controller
+                    name="remember"
+                    control={control}
+                    render={({ field }) => (
+                      <label>
+                        <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                        记住我
+                      </label>
+                    )}
+                  />
                   <a href="#" className={styles.forgot}>
                     忘记密码
                   </a>
                 </div>
-                <button type="submit" disabled={loading} className={styles.submitButton}>
-                  {loading ? '登录中...' : '登录'}
-                </button>
+
+                <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             ) : (
-              <form className={styles.form} onSubmit={handleSubmit}>
+              <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+                <FormInput
+                  control={control}
+                  name="phone"
+                  type="tel"
+                  placeholder="请输入手机号"
+                  rules={{
+                    required: '手机号不能为空',
+                    pattern: {
+                      value: /^1[3-9]\d{9}$/,
+                      message: '请输入有效的手机号'
+                    }
+                  }}
+                  error={errors.phone}
+                />
+
                 <div className={styles.formGroup}>
-                  {/* <label htmlFor="phone">手机号</label> */}
-                  <input
-                    id="phone"
-                    type="tel"
-                    pattern="^1[3-9]\d{9}$"
-                    placeholder="请输入手机号"
-                    required
+                  <Controller
+                    name="code"
+                    control={control}
+                    rules={{ required: '验证码不能为空' }}
+                    render={({ field }) => (
+                      <div className={styles.codeInput}>
+                        <input {...field} type="text" placeholder="请输入验证码" className={errors.code ? styles.error : ''} />
+                        <button type="button" className={styles.getCodeButton}>
+                          获取验证码
+                        </button>
+                      </div>
+                    )}
                   />
+                  {errors.code && <span className={styles.errorMessage}>{errors.code.message}</span>}
                 </div>
-                <div className={styles.formGroup}>
-                  {/* <label htmlFor="code">验证码</label> */}
-                  <div className={styles.codeInput}>
-                    <input
-                      id="code"
-                      type="text"
-                      placeholder="请输入验证码"
-                      required
-                    />
-                    <button type="button" className={styles.getCodeButton}>
-                      获取验证码
-                    </button>
-                  </div>
-                </div>
-                <button type="submit" disabled={loading} className={styles.submitButton}>
-                  {loading ? '登录中...' : '登录'}
-                </button>
+
+                <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             )}
           </>
         ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.formGroup}>
-              <label htmlFor="username">用户名</label>
-              <input
-                id="username"
-                type="text"
-                placeholder="请输入用户名"
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="phone">手机号</label>
-              <input
-                id="phone"
-                type="tel"
-                pattern="^1[3-9]\d{9}$"
-                placeholder="请输入手机号"
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="password">密码</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="请输入密码"
-                required
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="confirmPassword">确认密码</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="请再次输入密码"
-                required
-              />
-            </div>
-            <button type="submit" disabled={loading} className={styles.submitButton}>
-              {loading ? '注册中...' : '立即注册'}
-            </button>
+          <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+            <FormInput
+              control={control}
+              name="username"
+              type="text"
+              placeholder="请输入用户名"
+              rules={{ required: '用户名不能为空' }}
+              error={errors.username}
+            />
+            <FormInput
+              control={control}
+              name="phone"
+              type="tel"
+              placeholder="请输入手机号"
+              rules={{
+                required: '手机号不能为空',
+                pattern: {
+                  value: /^1[3-9]\d{9}$/,
+                  message: '请输入有效的手机号'
+                }
+              }}
+              error={errors.phone}
+            />
+            <FormInput
+              control={control}
+              name="password"
+              type="password"
+              placeholder="请输入密码"
+              rules={{ required: '密码不能为空' }}
+              error={errors.password}
+            />
+
+            <FormButton loading={loading}>{loading ? '注册中...' : '注册'}</FormButton>
           </form>
         )}
 
-        <div className={styles.registerText}>
-          {authType === 'login' ? (
-            <>
-              没有账号？
-              <a href="#" onClick={() => setAuthType('register')}>
-                立即注册
-              </a>
-            </>
-          ) : (
-            <>
-              已有账号？
-              <a href="#" onClick={() => setAuthType('login')}>
-                立即登录
-              </a>
-            </>
-          )}
-        </div>
+        <RegisterText authType={authType} setAuthType={setAuthType} />
       </div>
     </div>
   );
