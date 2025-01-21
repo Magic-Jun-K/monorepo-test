@@ -16,6 +16,12 @@ export default {
     port: 3000,
     open: true, // 启动时自动打开浏览器
     hot: true, // 热更新
-    historyApiFallback: true // 处理SPA路由
+    historyApiFallback: true, // 处理SPA路由
+    proxy: [{
+      context: ['/api'],
+      target: 'http://localhost:7000',
+      changeOrigin: true,
+      pathRewrite: { '^/api': '' }
+    }]
   }
 };
