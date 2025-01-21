@@ -13,6 +13,7 @@ import { AppController } from './app.controller';
 import { AppService, PgService } from './app.service';
 import { DetailModule } from './module/detail/detail.module';
 import { FileModule } from './module/file/file.module';
+import { AuthModule } from './module/auth/auth.module';
 import database from './config/database';
 
 @Module({
@@ -30,6 +31,7 @@ import database from './config/database';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // 静态资源目录
     }),
+    AuthModule,
     DetailModule,
     FileModule,
   ], // 需要导入的模块
