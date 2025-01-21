@@ -4,7 +4,7 @@
 import { Module } from '@nestjs/common';
 import { DetailController } from './detail.controller';
 import { DetailService } from './detail.service';
-import { PgService } from 'src/app.service';
+import { PgService } from '../../app.service';
 
 @Module({
   imports: [],
