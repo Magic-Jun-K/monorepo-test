@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020", // 设置编译后的 JavaScript 版本
+    "useDefineForClassFields": true, // 启用 useDefineForClassFields
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // 指定编译时使用的库（默认包括 ES5）
+    "module": "ESNext", // 设置模块系统（例如：ES6模块、CommonJS）
+    "skipLibCheck": true, // 跳过库文件的类型检查，加快编译速度
+    // "allowJs": true, // 允许使用 JavaScript
+
+    /* Bundler mode(打包器模式) */
+    "moduleResolution": "bundler", // 设置模块解析器
+    "allowImportingTsExtensions": true, // 允许导入 .ts 文件
+    "isolatedModules": true, // 启用隔离模块
+    "moduleDetection": "force", // 强制模块检测
+    "noEmit": true, // 只进行类型检查，不生成 .js 文件
+    "jsx": "react-jsx", // 设置 JSX 解析
+
+    /* Linting(代码检查) */
+    "strict": true, // 启用所有严格类型检查选项
+    "noUnusedLocals": true, // 禁用未使用的本地变量
+    "noUnusedParameters": true, // 禁用未使用的参数
+    "noFallthroughCasesInSwitch": true // 禁用不必要的 switch 语句穿透
+  }
+}

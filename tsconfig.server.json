@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs", // 设置模块系统（例如：ES6模块、CommonJS）
+    "declaration": true, // 生成 .d.ts 类型声明文件
+    "removeComments": true, // 移除注释
+    "emitDecoratorMetadata": true, // 允许在装饰器中使用元数据
+    "experimentalDecorators": true, // 允许使用实验性的装饰器
+    "allowSyntheticDefaultImports": true, // 允许使用默认导入
+    "target": "ES2021", // 设置目标环境
+    "sourceMap": true, // 生成 .map 文件
+    "incremental": true, // 允许增量编译
+    "skipLibCheck": true, // 跳过库检查
+    "strictNullChecks": false, // 禁用严格的空检查
+    "noImplicitAny": false, // 禁用隐式的 any 类型
+    "strictBindCallApply": false, // 禁用严格的 bind, call, and apply 方法
+    "forceConsistentCasingInFileNames": false, // 禁用强制一致的文件名大小写
+    "noFallthroughCasesInSwitch": false // 禁用 switch 语句中的 fallthrough
+  }
+}

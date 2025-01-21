@@ -1,23 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2015", // 设置编译后的 JavaScript 版本
-    "lib": ["DOM", "ESNext"], // 指定编译时使用的库（默认包括 ES5）
-    "allowJs": true,
-    "module": "CommonJS", // 设置模块系统（例如：ES6模块、CommonJS）
-    "esModuleInterop": true, // 使默认导入工作正常（兼容 CommonJS）
-    "forceConsistentCasingInFileNames": true, // 确保文件名的大小写一致
+    "target": "ES2018", // 设置编译后的 JavaScript 版本
+    "alwaysStrict": false, // 启用严格模式
     "declaration": true, // 生成 .d.ts 类型声明文件
-    "resolveJsonModule": true,
-    "skipLibCheck": true, // 跳过库文件的类型检查，加快编译速度
+    "declarationMap": true, // 生成 .d.ts.map 类型声明文件
+    "downlevelIteration": true, // 将迭代器转换为普通对象
+    "importHelpers": true, // 允许导入帮助器
+    "inlineSources": true, // 启用行内源映射
+    "isolatedModules": true, // 启用隔离模块
+    "lib": ["ESNext"], // 指定编译时使用的库（默认包括 ES5）
+    "moduleResolution": "node", // 设置模块解析器
+    "noErrorTruncation": true, // 禁用错误截断
+    "noFallthroughCasesInSwitch": true, // 禁用 switch 语句中的 fallthrough
+    "noImplicitReturns": true, // 禁用隐式返回
+    "noUnusedLocals": false, // 禁用未使用的本地变量
+    "noUnusedParameters": false, // 禁用未使用的参数
+    "preserveWatchOutput": true, // 保留 watch 模式的输出
+    "sourceMap": true, // 生成 .map 文件
     "strict": true, // 启用所有严格类型检查选项
-    "experimentalDecorators": true,
-    "moduleResolution": "node",
-    // "paths": {
-    //   "@common/*": ["./packages/@common/*/src"]
-    // }
+    "strictBindCallApply": false, // 禁用严格的 bind、call 和 apply 方法检查
+    "noUncheckedIndexedAccess": true // 禁用未检查的索引访问
   },
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Base",
   "include": ["packages/**/*"], // 指定 需要 编译的文件
   "exclude": ["node_modules"] // 指定 不需要 编译的文件
 }
