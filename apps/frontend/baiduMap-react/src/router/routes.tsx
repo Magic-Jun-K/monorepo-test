@@ -1,8 +1,5 @@
-import React from 'react';
-
 import Login from '../pages/Login';
 import Layout from '../layout';
-// import MapComponent from '../pages/BMapGLCom';
 
 // 路由映射表
 export const routes = [
@@ -15,12 +12,22 @@ export const routes = [
     element: <Layout />,
     children: [
       {
-        path: '/home',
+        index: true, // 当访问根路径时，默认渲染 Home 组件
         lazy: async () => {
           const data = await import('../pages/Home');
           const Home = data.default;
           return {
             element: <Home />
+          };
+        }
+      },
+      {
+        path: '/form-test',
+        lazy: async () => {
+          const data = await import('../pages/FormTest');
+          const FormTest = data.default;
+          return {
+            element: <FormTest />
           };
         }
       },
