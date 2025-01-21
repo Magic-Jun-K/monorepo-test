@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
-import { File } from './entities/file.entity';
+import { File } from '../../entities/file.entity';
 
 @Module({
   imports: [

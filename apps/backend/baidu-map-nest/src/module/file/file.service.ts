@@ -11,7 +11,7 @@ import {
 import { join } from 'node:path';
 import { Response } from 'express';
 
-import { File } from './entities/file.entity';
+import { File } from '../../entities/file.entity';
 
 @Injectable()
 export class FileService {
