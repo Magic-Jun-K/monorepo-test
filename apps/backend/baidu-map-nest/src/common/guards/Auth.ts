@@ -14,16 +14,21 @@ export class AuthGuard implements CanActivate {
     我将创建一个新的装饰器文件，并修改文件控制器以使用它。
   */
   canActivate(context: ExecutionContext): boolean | Promise<boolean> {
+    // 允许公开的接口
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isPublic) {
+    if (isPublic) return true;
+
+    const req = context.switchToHttp().getRequest();
+    
+    // Allow access to register endpoint(允许访问注册端点)
+    if (req.originalUrl === '/admin/register' || req.originalUrl === '/auth/login') {
       return true;
     }
 
-    const req = context.switchToHttp().getRequest();
     // 不是开放的接口，就需要验证 token
     return req.originalUrl === '/' || !!req.header('token');
   }
