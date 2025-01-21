@@ -7,10 +7,12 @@ export default tseslint.config({
   // 那些文件需要用这个配置
   files: ['**/*.{ts,tsx,js}'],
   // 那些文件不用这个配置
-  ignores: ['apps/**/*/{tmp,.dumi}/**/*', '*.js', '**/*/build/**/*', '**/*/es/**/*', '**/*/dist/**/*'],
+  ignores: ['apps/**/*/{tmp,.dumi}/**/*', '*.js', '**/*/build/**/*', '**/*/es/**/*', '**/*/dist/**/*', 'apps/**/*/public/**/*'],
   // 自定义规则配置
   rules: {
-    'no-console': 'off'
+    'no-console': 'off',
+    '@typescript-eslint/no-require-imports': 'off',
+    '@typescript-eslint/no-explicit-any': 'off'
   },
   // 语言选项
   languageOptions: {

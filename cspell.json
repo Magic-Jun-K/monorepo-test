@@ -19,6 +19,8 @@
     "**/language/**",
     "**/language.ts",
     "**/package.json",
-    "eslint.config.js"
+    "eslint.config.js",
+    "commitlint.config.js",
+    "apps/**/**/public/**/*"
   ]
 }
