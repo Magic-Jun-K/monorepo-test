@@ -55,18 +55,29 @@ const baseConfig = env => {
       rules: [
         {
           test: /\.(ts|tsx)$/,
-          use: [
-            {
-              loader: 'babel-loader',
-              options: {
-                presets: ['@babel/preset-env'],
-                cacheDirectory: true
-              }
-            },
-            'ts-loader'
-          ],
+          use: {
+            loader: 'ts-loader',
+            options: {
+              // 加快构建速度，跳过类型检查
+              transpileOnly: true
+            }
+          },
           exclude: /node_modules/
         },
+        // {
+        //   test: /\.(ts|tsx)$/,
+        //   use: [
+        //     {
+        //       loader: 'babel-loader',
+        //       options: {
+        //         presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
+        //         cacheDirectory: true
+        //       }
+        //     },
+        //     'ts-loader'
+        //   ],
+        //   exclude: /node_modules/
+        // },
         // {
         //   test: /\.(ts|tsx)$/,
         //   use: [
