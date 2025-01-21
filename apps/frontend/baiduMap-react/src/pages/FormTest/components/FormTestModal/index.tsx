@@ -17,7 +17,7 @@ export default (props: Props) => {
       onClose={onCancel}
     >
       <Input />
-      <ImageUploader imageService={imageService} maxCount={5} onChange={urls => console.log('上传的图片URLs:', urls)} />
+      <ImageUploader imageService={imageService} maxCount={5} onChange={(urls: string[]) => console.log('上传的图片URLs:', urls)} />
     </Modal>
   );
 };
