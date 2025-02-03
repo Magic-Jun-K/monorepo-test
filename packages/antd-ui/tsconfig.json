@@ -5,7 +5,8 @@
     "module": "esnext",
     // "moduleResolution": "node",
     "baseUrl": ".",
-    "declaration": true
+    "declaration": true,
+    "rootDir": "./src", // 明确指定 rootDir 为当前项目的 src 目录
   },
   "include": ["src"]
 }
