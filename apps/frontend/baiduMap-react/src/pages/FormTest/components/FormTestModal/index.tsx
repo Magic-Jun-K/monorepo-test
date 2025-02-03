@@ -1,5 +1,6 @@
-import { Input, Modal } from '@common/ui';
-import { ImageUploader } from '@common/antd-ui';
+// import { Input, Modal } from '@eggshell/ui';
+import { ImageUploader } from '@eggshell/antd-ui';
+import { Input, Modal } from '@eggshell/unocss-ui';
 
 import { imageService } from '@/services/imageService';
 
@@ -13,8 +14,8 @@ export default (props: Props) => {
   return (
     <Modal
       title="测试表单模态框"
-      isOpen={visible}
-      onClose={onCancel}
+      visible={visible}
+      onCancel={onCancel}
     >
       <Input />
       <ImageUploader imageService={imageService} maxCount={5} onChange={(urls: string[]) => console.log('上传的图片URLs:', urls)} />

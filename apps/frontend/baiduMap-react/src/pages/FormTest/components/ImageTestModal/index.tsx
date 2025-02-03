@@ -1,4 +1,4 @@
-import { Modal } from '@common/ui';
+import { Modal } from '@eggshell/ui';
 
 import treeIcon from '@/assets/images/test/car_jf.svg';
 import One from '@/assets/images/test/one.png';

@@ -1,4 +1,4 @@
-import { Modal } from '@common/ui';
+import { Modal } from '@eggshell/ui';
 
 import EChartsCom from '@/pages/EChartsCom';
 
