@@ -1,16 +1,16 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.client.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "composite": true,
-    "isolatedModules": true,
+    "composite": true, // 启用复合模式
+    "rootDir": "./src", // 明确指定 rootDir 为当前项目的 src 目录
+    "esModuleInterop": true, // 禁用 CommonJS 和 ES 模块之间的互操作性
+    "declarationDir": "build/types", // 将 .d.ts 输出到独立目录
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
-    "module": "ESNext",
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "src/types/*.d.ts", "../../../packages/antd-ui/src/components/ImageUploader"], // 指定 需要 编译的文件
+  "include": ["src/**/*", "src/types/*.d.ts"], // 指定 需要 编译的文件
   "exclude": ["node_modules", "build", "public"] // 指定 不需要 编译的文件
 }
