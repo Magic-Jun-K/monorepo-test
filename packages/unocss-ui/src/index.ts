@@ -1,0 +1,9 @@
+import '@unocss/reset/tailwind.css';
+import 'virtual:uno.css';  // 开发时使用
+
+// 组件导出
+export * from './components/Button';
+export * from './components/Input';
+export * from './components/Modal';
+export * from './components/Select';
+export * from './components/Swiper';
