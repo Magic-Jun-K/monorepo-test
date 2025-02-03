@@ -8,7 +8,7 @@ export const useSafeCommonTheme = () => useContext(CommonThemeContext) || DEFAUL
 export const useCommonTheme = () => {
   const ctx = useContext(CommonThemeContext);
   if (!ctx) {
-    throw new Error('@common/ui: CommonProvider was not found in component tree, make sure you have it in your app');
+    throw new Error('@eggshell/ui: CommonProvider was not found in component tree, make sure you have it in your app');
   }
 
   return ctx;

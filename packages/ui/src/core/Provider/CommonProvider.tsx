@@ -26,4 +26,4 @@ export const CommonProvider: FC<CommonProviderProps> = ({ theme, children }) => 
   );
 };
 
-CommonProvider.displayName = '@common/ui/CommonProvider';
+CommonProvider.displayName = '@eggshell/ui/CommonProvider';

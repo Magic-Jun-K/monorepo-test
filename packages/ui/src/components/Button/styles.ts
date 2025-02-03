@@ -21,9 +21,9 @@ const variantMap: Record<ButtonVariant, VariantColorResolverResult> = {
   },
   filled: {
     color: '#fff',
-    background: 'var(--common-primary-color-6)',
-    hover: darken('var(--common-primary-color-6)', 0.01),
-    border: `1px solid var(--common-primary-color-6)`
+    background: 'var(--eggshell-primary-color-6)',
+    hover: darken('var(--eggshell-primary-color-6)', 0.01),
+    border: `1px solid var(--eggshell-primary-color-6)`
   },
   light: {
     color: '#383838',
@@ -32,13 +32,13 @@ const variantMap: Record<ButtonVariant, VariantColorResolverResult> = {
     border: '1px solid #e9ecef'
   },
   outline: {
-    color: 'var(--common-primary-color-6)',
+    color: 'var(--eggshell-primary-color-6)',
     background: 'transparent',
     hover: lighten('#f5f5f5', 0.01),
-    border: `1px solid var(--common-primary-color-6)`
+    border: `1px solid var(--eggshell-primary-color-6)`
   },
   transparent: {
-    color: 'var(--common-primary-color-6)',
+    color: 'var(--eggshell-primary-color-6)',
     background: 'transparent',
     hover: 'transparent',
     border: 'none'
@@ -57,8 +57,8 @@ const variantMap: Record<ButtonVariant, VariantColorResolverResult> = {
   },
   gradient: {
     color: '#fff',
-    background: `linear-gradient(45deg, var(--common-primary-color-6), ${lighten('var(--common-primary-color-6)', 0.4)})`,
-    hover: `linear-gradient(45deg, var(--common-primary-color-6), ${lighten('var(--common-primary-color-6)', 0.4)})`,
+    background: `linear-gradient(45deg, var(--eggshell-primary-color-6), ${lighten('var(--eggshell-primary-color-6)', 0.4)})`,
+    hover: `linear-gradient(45deg, var(--eggshell-primary-color-6), ${lighten('var(--eggshell-primary-color-6)', 0.4)})`,
     border: 'none'
   },
   primary: {

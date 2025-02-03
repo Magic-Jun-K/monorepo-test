@@ -24,4 +24,4 @@ export function CommonThemeProvider({ theme, children, inherit = true }: CommonT
   return <CommonThemeContext.Provider value={mergedTheme}>{children}</CommonThemeContext.Provider>;
 }
 
-CommonThemeProvider.displayName = '@common/ui/CommonThemeProvider';
+CommonThemeProvider.displayName = '@eggshell/ui/CommonThemeProvider';
