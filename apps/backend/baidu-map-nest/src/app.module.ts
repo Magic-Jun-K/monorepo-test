@@ -30,6 +30,26 @@ import database from './config/database';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // 静态资源目录
+      serveStaticOptions: {
+        // 强缓存配置（1年，immutable）
+        cacheControl: true,
+        maxAge: 31536000000, // 毫秒单位，这里设置了1年缓存
+        immutable: true, // 标记资源不可变
+        // 显式覆盖 Cache-Control 头（可选）
+        // setHeaders: (res, path) => {
+        //   res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        // },
+
+        // 其他高级配置（如 ETag、压缩）
+        etag: true,
+        lastModified: true,
+        setHeaders: (res, path) => {
+          // 针对特定文件类型定制头（可选）
+          if (path.endsWith('.br')) {
+            res.setHeader('Content-Encoding', 'br');
+          }
+        },
+      },
     }),
     AuthModule,
     DetailModule,
