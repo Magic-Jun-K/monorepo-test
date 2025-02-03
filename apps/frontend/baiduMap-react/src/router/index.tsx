@@ -1,15 +1,31 @@
+import { createBrowserRouter } from 'react-router-dom';
+
 import Login from '../pages/Login';
 import Layout from '../layout';
+import AuthRoute from './AuthRoute';
+
+// 这里是为了解决 react-router-dom 的类型问题
+ 
+type PickRouter<T> = T extends (...args: any[]) => infer R ? R : never;
+
+type A = typeof createBrowserRouter;
+
+export const loadComponent = (path: string) => {
+  return async () => {
+    const module = await import(/* @vite-ignore */ `../pages/${path}`);
+    return { element: <module.default /> };
+  };
+};
 
 // 路由映射表
-export const routes = [
-  {
-    path: '/login',
-    element: <Login />
-  },
+export const router: PickRouter<A> = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <AuthRoute>
+        <Layout />
+      </AuthRoute>
+    ),
     children: [
       {
         index: true, // 当访问根路径时，默认渲染 Home 组件
@@ -20,16 +36,18 @@ export const routes = [
             element: <Home />
           };
         }
+        // lazy: loadComponent('Home')
       },
       {
-        path: '/form-test',
+        path: 'form-test',
         lazy: async () => {
           const data = await import('../pages/FormTest');
           const FormTest = data.default;
           return {
             element: <FormTest />
           };
-        }
+        },
+        // lazy: loadComponent('FormTest')
       },
       {
         path: '/baidu-map',
@@ -40,7 +58,13 @@ export const routes = [
             element: <MapComponent />
           };
         }
+        // lazy: loadComponent('BMapGLCom')
       }
     ]
+  },
+  {
+    path: '/account/login',
+    // path: '/login',
+    element: <Login />
   }
-];
+]);

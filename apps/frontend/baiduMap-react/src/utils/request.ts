@@ -23,8 +23,9 @@ request.interceptors.response.use(
   },
   error => {
     if (error.response.status === 401) {
-      // window.location.href = '/account/login';
-      window.location.href = '/login';
+      localStorage.removeItem('token'); // 清除过期 token
+      window.location.href = '/account/login';
+      // window.location.href = '/login';
     }
     return Promise.reject(error);
   }
