@@ -1,8 +1,13 @@
+/**
+ * @file Button.tsx
+ * @description 按钮组件
+ */
 import { clsx } from 'clsx';
+import { forwardRef } from 'react';
 
 import { ButtonProps } from './types';
 
-export const Button = ({
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   type = 'primary',
   size = 'md',
   danger = false,
@@ -11,7 +16,7 @@ export const Button = ({
   className,
   htmlType = 'button', // 默认类型为 button
   ...props
-}: ButtonProps) => {
+}, ref) => {
   const baseClasses = 'inline-flex items-center justify-center rounded font-medium transition-colors';
 
   const variantClasses = clsx({
@@ -30,6 +35,7 @@ export const Button = ({
 
   return (
     <button
+      ref={ref}
       type={htmlType} // 使用原生 type 属性
       className={clsx(baseClasses, variantClasses, sizeClasses, className)}
       {...props}
@@ -38,4 +44,4 @@ export const Button = ({
       {children}
     </button>
   );
-};
+});

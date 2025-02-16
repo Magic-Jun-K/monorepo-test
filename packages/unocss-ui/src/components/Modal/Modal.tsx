@@ -1,3 +1,7 @@
+/**
+ * @file Modal.tsx
+ * @description 模态框组件
+ */
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 

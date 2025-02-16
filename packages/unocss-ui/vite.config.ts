@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import UnoCSS from 'unocss/vite';
-import { presetUno, presetAttributify } from 'unocss';
+import UnoCSS from '@unocss/vite';
+import { presetUno, presetAttributify, transformerDirectives } from 'unocss';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
 
@@ -13,6 +13,11 @@ export default defineConfig({
         presetUno(),
         presetAttributify()
       ],
+      // 启用 class 转换
+      transformers: [
+        transformerDirectives() // 启用指令转换器
+      ],
+      // 自定义规则
       rules: [
         ['flex-center', { display: 'flex', 'align-items': 'center', 'justify-content': 'center' }]
       ]

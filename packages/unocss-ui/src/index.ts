@@ -7,3 +7,6 @@ export * from './components/Input';
 export * from './components/Modal';
 export * from './components/Select';
 export * from './components/Swiper';
+export * from './components/AutoComplete';
+export * from './components/Dropdown';
+export * from './components/Menu';

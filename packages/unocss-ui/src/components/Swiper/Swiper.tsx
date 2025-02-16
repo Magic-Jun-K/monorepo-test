@@ -1,3 +1,7 @@
+/**
+ * @file Swiper.tsx
+ * @description 轮播图组件
+ */
 import { FC, useState, useRef, useEffect, Children, useCallback } from 'react';
 import { SwiperProps } from './types';
 
@@ -70,6 +74,21 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
 
   return (
     <div className={`relative w-full h-full overflow-hidden ${className || ''}`}>
+      {/* 导航按钮容器 */}
+      <div className="flex justify-between items-center absolute inset-0 pointer-events-none">
+        {/* 上一张按钮 */}
+        <div
+          onClick={prevSlide}
+          className="relative ml-16 w-6 h-6 border-t-5 border-l-5 border-white rotate-[-45deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto"
+        />
+
+        {/* 下一张按钮 */}
+        <div
+          onClick={nextSlide}
+          className="relative mr-16 w-6 h-6 border-t-5 border-l-5 border-white rotate-[135deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto"
+        />
+      </div>
+
       {/* 轮播容器 */}
       <div
         ref={containerRef}
@@ -83,18 +102,6 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
           <div className="flex-[0_0_100%] box-border">{child}</div>
         ))}
       </div>
-
-      {/* 上一张按钮 */}
-      <div
-        onClick={prevSlide}
-        className="absolute left-16 top-1/2 -translate-y-1/2 w-6 h-6 border-t-5 border-l-5 border-white rotate-[-45deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block"
-      />
-
-      {/* 下一张按钮 */}
-      <div
-        onClick={nextSlide}
-        className="absolute right-16 top-1/2 -translate-y-1/2 w-6 h-6 border-t-5 border-l-5 border-white rotate-[135deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block"
-      />
     </div>
   );
 };

@@ -1,3 +1,7 @@
+/**
+ * @file Select.tsx
+ * @description 选择器组件
+ */
 import { useState, useRef, useEffect } from 'react';
 
 import type { SelectProps } from './types';
