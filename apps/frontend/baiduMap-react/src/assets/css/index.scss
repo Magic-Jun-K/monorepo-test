@@ -1,9 +1,9 @@
 $font-color: #1C222B; // 字体颜色
 
 html, body, #root {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
-  min-width: 320px;
+  min-width: 360px;
 }
 
 #root {
@@ -19,6 +19,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-width: 900px;
+  font-family: 'SmileySans-Oblique', sans-serif; // sans-serif 是浏览器默认字体
   // overflow: auto;
 }
 

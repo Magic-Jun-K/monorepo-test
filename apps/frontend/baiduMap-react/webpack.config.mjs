@@ -118,13 +118,13 @@ const baseConfig = env => {
             {
               loader: 'css-loader',
               options: {
-                importLoaders: 1,
+                importLoaders: 1, // 指定在 css-loader 处理之前，先应用几个 loader
                 modules: {
-                  mode: 'local',
-                  localIdentName: '[local]--[hash:base64:5]',
-                  auto: true,
-                  namedExport: false,
-                  exportLocalsConvention: 'camelCase'
+                  mode: 'local', // 指定使用局部样式名
+                  localIdentName: '[local]--[hash:base64:5]', // 指定局部样式名的格式
+                  auto: true, // 自动生成类名
+                  namedExport: false, // 指定是否使用命名导出
+                  exportLocalsConvention: 'camelCase' // 指定导出的局部变量名格式
                 }
               }
             },
@@ -159,6 +159,14 @@ const baseConfig = env => {
               }
             }
           ]
+        },
+        {
+          test: /\.(woff2?|ttf)$/i,
+          type: 'asset/resource',
+          generator: {
+            filename: 'fonts/[name].[contenthash:8][ext]' 
+          },
+          include: path.resolve(__dirname, 'src/assets/fonts')
         }
       ]
     },
@@ -176,17 +184,17 @@ const baseConfig = env => {
         deleteOriginalAssets: false, // 保留原始文件用于fallback
         loader: false, // 禁用默认loader
         severityError: 'warning',
-        concurrency: 4,
+        concurrency: 4, // 并发数
         minimizer: {
-          implementation: ImageMinimizerPlugin.sharpMinify,
+          implementation: ImageMinimizerPlugin.sharpMinify, // 使用 sharp 压缩
           options: {
             encodeOptions: {
-              jpeg: { quality: 85, mozjpeg: true },
-              webp: { quality: 80, lossless: false }
+              jpeg: { quality: 85, mozjpeg: true }, // 压缩JPEG图片
+              webp: { quality: 80, lossless: false } // 压缩WebP图片
             },
             resize: {
-              width: 1920,
-              withoutEnlargement: true
+              width: 1920, // 压缩宽度
+              withoutEnlargement: true // 不放大图片
             }
           },
           filter: source => source.byteLength > 1024 * 1024 // 大于1M的图片进行压缩

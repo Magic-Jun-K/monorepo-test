@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'SmileySans-Oblique'; // 字体名称
+  // 字体文件路径
+  // src: url('@/assets/fonts/SmileySans-Oblique.ttf') format('truetype');
+  // src: url('@/assets/fonts/SmileySans-Oblique.ttf.woff2') format('woff2');
+  src: url('@/assets/fonts/SmileySans-Oblique.woff2') format('woff2'), url('@/assets/fonts/SmileySans-Oblique.ttf') format('truetype');
+  font-weight: normal; // 字体粗细
+  font-style: normal; // 斜体
+  font-display: swap; // 字体在网页加载时不会闪烁
+}
