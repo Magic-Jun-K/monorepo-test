@@ -1,0 +1,65 @@
+.menu {
+  @apply box-border m-0 p-0 text-base list-none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 垂直菜单选中指示条 */
+.menu-item-selected-bar {
+  @apply absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 transform bg-blue-600;
+}
+/* 垂直模式 */
+.menu-vertical {
+  @apply border-r border-solid border-gray-200;
+}
+
+.menu-item {
+  @apply flex items-center px-4 py-2 cursor-pointer transition-colors;
+}
+
+.menu-item-vertical {
+  @apply pl-6;
+}
+
+.menu-item-selected {
+  @apply bg-blue-50 text-blue-600;
+}
+
+.menu-item-danger {
+  @apply text-red-500 hover:bg-red-50;
+}
+
+.menu-item-disabled {
+  @apply text-gray-400 cursor-not-allowed;
+}
+
+/* 子菜单样式 */
+.submenu-content {
+  @apply min-w-[160px] py-1 border border-gray-200 rounded-md;
+  left: 100%;
+  top: 0;
+}
+
+.submenu-content-vertical {
+  @apply pl-4 border-l border-gray-200 ml-2;
+}
+
+.submenu-title {
+  @apply flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100;
+}
+
+/* 子菜单箭头动画 */
+.submenu-arrow {
+  @apply inline-block w-2 h-2 transition-transform;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+.submenu-open .submenu-arrow {
+  transform: rotate(135deg);
+}
+
+/* 分组样式 */
+.menu-group-title {
+  @apply px-4 py-2 text-gray-500 uppercase tracking-wide;
+}

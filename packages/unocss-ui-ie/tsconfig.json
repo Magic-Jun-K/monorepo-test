@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.client.json",
+  "compilerOptions": {
+    "noEmit": false, // 不需要禁用编译，因为 dts 插件会生成类型声明
+    "emitDeclarationOnly": true, // 只生成类型声明
+    "outDir": "build/es/types", // 生成的 .d.ts 文件输出目录
+    "jsx": "react-jsx",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "noUncheckedSideEffectImports": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "build", "public"]
+}
