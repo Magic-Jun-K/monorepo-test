@@ -1,4 +1,4 @@
-import { Modal } from '@eggshell/ui';
+import { Modal } from '@eggshell/unocss-ui';
 
 import EChartsCom from '@/pages/EChartsCom';
 
@@ -10,7 +10,7 @@ export default (props: Props) => {
   const { visible, onCancel } = props;
 
   return (
-    <Modal title="测试ECharts模态框" isOpen={visible} onClose={onCancel}>
+    <Modal title="测试ECharts模态框" visible={visible} onCancel={onCancel}>
       <EChartsCom />
     </Modal>
   );
