@@ -16,12 +16,11 @@ class MapLoader {
   loadScript() {
     const AK = 'VyYLcISnIl9Pkivq8WD8TmNMjzkP76mZ';
     const BMap_URL = '//api.map.baidu.com/api?v=3.0&type=webgl&ak=' + AK + '&callback=onBMapCallback';
-    return new Promise((resolve, reject) => {
-      // 如果已加载直接返回
-      if (typeof window.BMapGL !== 'undefined') {
-        resolve(window.BMapGL);
-        return true;
-      }
+      return new Promise((resolve, reject) => {
+        // 如果已加载直接返回
+        if (typeof window.BMapGL !== 'undefined') {
+          return resolve(window.BMapGL);
+        }
       console.log('测试window', window);
       console.log('初始化百度地图脚本...');
       // 百度地图异步加载回调处理

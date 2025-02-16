@@ -10,8 +10,6 @@ import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
 import * as api from '@/services';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { login } from '@/store/authSlice';
 import { AuthType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
 import styles from './index.module.scss';
 
@@ -23,11 +21,6 @@ export default () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
-
-  const dispatch = useAppDispatch();
-  const { status, error } = useAppSelector(state => state.auth);
-  console.log('Login status', status);
-  console.log('Login error', error);
 
   const form = useForm<FormData>({
     resolver: zodResolver(authType === 'login' ? (loginType === 'account' ? loginSchema : phoneLoginSchema) : registerSchema),
@@ -65,13 +58,6 @@ export default () => {
       // Handle successful response(处理成功响应)
       if (res.success) {
         if (authType === 'login') {
-          dispatch(
-            login({
-              username: data.username,
-              password: data.password
-            })
-          );
-
           localStorage.setItem('token', res.data.access_token);
 
           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';

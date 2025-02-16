@@ -48,7 +48,7 @@ export default () => {
     };
 
     const result: string[][] = [];
-    for (let i = 0; i < 1000000; i++) {
+    for (let i = 0; i < 100000; i++) {
       const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
       const city = cities[Math.floor(Math.random() * cities.length)];
@@ -126,7 +126,7 @@ export default () => {
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '924px' }}>
+      <div style={{ height: '900px' }}>
         <DataEditor
           width="100%"
           rows={data.length}
@@ -135,7 +135,7 @@ export default () => {
           getCellContent={getCellContent}
           headerHeight={42} // 表头高度
           rowHeight={42} // 行高
-          rowMarkers="both" // 显示行号
+          // rowMarkers="both" // 显示行号
           freezeColumns={1} // 冻结第一列
           theme={{
             bgIconHeader: '#7D5DFF',
@@ -144,7 +144,7 @@ export default () => {
             fgIconHeader: '#FFF',
             baseFontStyle: '24px',
             headerFontStyle: '600 24px',
-            fontFamily: 'SmileySans-Oblique'
+            fontFamily: 'Arial, sans-serif'
           }}
           fillHandle={false} // 不显示填充手柄
           verticalBorder={true} // 显示垂直边框

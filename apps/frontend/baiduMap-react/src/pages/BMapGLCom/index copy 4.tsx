@@ -1,9 +1,11 @@
 import { FC, useEffect, useRef } from 'react';
-
 import { loadScript, loadCSS } from '@/utils/index';
 import { generateRandomCoordinates } from './utils';
-// import wenhuaguji from '@/assets/images/test/wenhuaguji.png';
-// const wenhuaguji = require('@/assets/images/test/wenhuaguji.png');
+import { BASE_URL } from '@/config';
+
+// 图标资源URL
+const ICON_CLUSTER = `${BASE_URL}/images/iconCluster.png`;
+const ICON_IMAGE = `${BASE_URL}/images/image.png`;
 
 interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
@@ -116,7 +118,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
             coordinates: [item.lng, item.lat]
           },
           properties: {
-            icon: 'http://localhost:7000/image.png',
+            icon: ICON_IMAGE,
             width: 100 / 6,
             height: 153 / 6
           }
@@ -145,9 +147,9 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
       //   },
       //   // 设置非聚合的点的icon
       //   // iconOptions: {
-      //   //     width: 100 / 4,
-      //   //     height: 153 / 4,
-      //   //     icon: 'images/marker.png',
+      //   //   width: 100 / 4,
+      //   //   height: 153 / 4,
+      //   //   icon: 'images/marker.png',
       //   // },
       //   enablePicked: true,
       //   onClick(e: any) {
@@ -186,7 +188,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
         },
         enablePicked: true,
         iconExtent: {
-          0: 'http://localhost:7000/iconCluster.png'
+          0: ICON_CLUSTER
           // 1000: 'http://localhost:7000/iconCluster.png',
           // 10000: 'http://localhost:7000/iconCluster.png',
         },

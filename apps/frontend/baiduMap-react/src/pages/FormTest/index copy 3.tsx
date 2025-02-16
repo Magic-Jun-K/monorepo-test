@@ -64,30 +64,28 @@ export default () => {
   const getCellContent = useCallback(
     (cell: readonly [number, number]): GridCell => {
       const [row, col] = cell;
-      // console.log("测试col, row",col, row, data[0], data[col]);
 
-      if (row === 0) {
-        const dataValue = (col + 1).toString() ?? '';
-        // 第一列显示序号
+      if (col === 0) { // 第一列（序号列）
         return {
           kind: GridCellKind.Text,
-          allowOverlay: true,
+          allowOverlay: false,
           readonly: true,
-          displayData: dataValue,
-          data: dataValue
-        };
-      } else {
-        // 按照列索引直接从数据数组中获取数据
-        const dataValue = data[col]?.[row - 1] ?? '';
-        return {
-          kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: false,
-          displayData: dataValue,
-          data: dataValue,
-          allowWrapping: true
+          displayData: (row + 1).toString(),
+          data: (row + 1).toString(),
+          style: "normal"
         };
       }
+
+      // 其他列需要减1，因为数据数组不包含序号列
+      const dataValue = data[row]?.[col - 1] ?? '';
+      return {
+        kind: GridCellKind.Text,
+        allowOverlay: true,
+        readonly: false,
+        displayData: dataValue,
+        data: dataValue,
+        style: "normal"
+      };
     },
     [data]
   );
@@ -135,7 +133,7 @@ export default () => {
           getCellContent={getCellContent}
           headerHeight={42} // 表头高度
           rowHeight={42} // 行高
-          rowMarkers="both" // 显示行号
+          // rowMarkers="both" // 显示行号
           freezeColumns={1} // 冻结第一列
           theme={{
             bgIconHeader: '#7D5DFF',
@@ -144,7 +142,7 @@ export default () => {
             fgIconHeader: '#FFF',
             baseFontStyle: '24px',
             headerFontStyle: '600 24px',
-            fontFamily: 'SmileySans-Oblique'
+            fontFamily: 'Arial, sans-serif'
           }}
           fillHandle={false} // 不显示填充手柄
           verticalBorder={true} // 显示垂直边框

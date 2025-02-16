@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Button } from '@eggshell/unocss-ui';
 import { DataEditor, GridCell, GridCellKind } from '@glideapps/glide-data-grid';
 import '@glideapps/glide-data-grid/dist/index.css';
@@ -20,16 +20,43 @@ export default () => {
   const [isOpenECharts, setIsOpenECharts] = useState(false); // 是否打开ECharts模态框
   const [isOpenForm, setIsOpenForm] = useState(false); // 是否打开表单模态框
 
-  // 定义表格列状态
-  const [columns, setColumns] = useState<Column[]>([
+  // 初始列设置（宽度值为参考值）
+  const initialColumns: Column[] = [
     { title: '序号', width: 120, id: 'index' },
     { title: '姓名', width: 150, id: 'name' },
     { title: '年龄', width: 100, id: 'age' },
     { title: '地址', width: 300, id: 'address' },
     { title: '电话', width: 200, id: 'phone' }
-  ]);
+  ];
 
-  // 生成随机数据并存储
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // 当容器宽度变化时，重新计算各列宽度
+    const recalcColumns = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        console.log('containerWidth', containerWidth);
+        // 计算初始总宽度
+        const totalFixedWidth = initialColumns.reduce((sum, col) => sum + col.width, 0);
+        // 计算缩放比例
+        const scaleFactor = containerWidth / totalFixedWidth;
+        // 更新每个列的宽度
+        const newColumns = initialColumns.map(col => ({
+          ...col,
+          width: Math.floor(col.width * scaleFactor)
+        }));
+        console.log('newColumns', newColumns);
+        setColumns(newColumns);
+      }
+    };
+    recalcColumns();
+    window.addEventListener('resize', recalcColumns);
+    return () => window.removeEventListener('resize', recalcColumns);
+  }, []);
+
+  // 生成随机数据（数据每行仅包含：姓名、年龄、地址、电话）
   const data = useMemo(() => {
     const firstNames = ['张', '李', '王', '刘', '陈', '杨', '黄', '赵', '吴', '周'];
     const lastNames = ['伟', '芳', '娜', '秀英', '敏', '静', '丽', '强', '磊', '洋'];
@@ -48,7 +75,7 @@ export default () => {
     };
 
     const result: string[][] = [];
-    for (let i = 0; i < 1000000; i++) {
+    for (let i = 0; i < 100000; i++) {
       const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
       const city = cities[Math.floor(Math.random() * cities.length)];
@@ -60,43 +87,30 @@ export default () => {
     return result;
   }, []);
 
-  // 修改获取单元格内容的函数
+  // 根据单元格位置返回对应的 GridCell
   const getCellContent = useCallback(
     (cell: readonly [number, number]): GridCell => {
       const [row, col] = cell;
-      // console.log("测试col, row",col, row, data[0], data[col]);
-
-      if (row === 0) {
-        const dataValue = (col + 1).toString() ?? '';
-        // 第一列显示序号
-        return {
-          kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: true,
-          displayData: dataValue,
-          data: dataValue
-        };
-      } else {
-        // 按照列索引直接从数据数组中获取数据
-        const dataValue = data[col]?.[row - 1] ?? '';
-        return {
-          kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: false,
-          displayData: dataValue,
-          data: dataValue,
-          allowWrapping: true
-        };
-      }
+      // 这里我们直接假设数据数组每行数据从左到右与 columns 顺序一致
+      const dataValue = data[row]?.[col] ?? '';
+      return {
+        kind: GridCellKind.Text,
+        allowOverlay: true,
+        readonly: false,
+        displayData: dataValue,
+        data: dataValue,
+        // 使用官方默认 style（可选）
+        style: 'normal'
+      };
     },
     [data]
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column, newSize: number, colIndex: number) => {
+  const handleColumnResize = useCallback((_column: any, newSize: number, colIndex: number) => {
     setColumns(prevColumns => {
-      const newColumns = [...prevColumns] as Column[];
-      newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize } as Column;
+      const newColumns = [...prevColumns];
+      newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize };
       return newColumns;
     });
   }, []);
@@ -114,7 +128,7 @@ export default () => {
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div ref={containerRef} className={styles.container}>
       <div style={{ paddingBottom: '20px' }}>
         <Button type="primary" onClick={() => setIsOpenImage(true)}>
           图片测试按钮
@@ -126,16 +140,14 @@ export default () => {
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '924px' }}>
+      <div style={{ height: '900px' }}>
         <DataEditor
           width="100%"
           rows={data.length}
-          // columns={columns}
           columns={sortableCols}
           getCellContent={getCellContent}
           headerHeight={42} // 表头高度
           rowHeight={42} // 行高
-          rowMarkers="both" // 显示行号
           freezeColumns={1} // 冻结第一列
           theme={{
             bgIconHeader: '#7D5DFF',
@@ -144,7 +156,7 @@ export default () => {
             fgIconHeader: '#FFF',
             baseFontStyle: '24px',
             headerFontStyle: '600 24px',
-            fontFamily: 'SmileySans-Oblique'
+            fontFamily: 'Arial, sans-serif'
           }}
           fillHandle={false} // 不显示填充手柄
           verticalBorder={true} // 显示垂直边框

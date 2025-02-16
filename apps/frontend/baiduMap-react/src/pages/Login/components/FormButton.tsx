@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { Button } from '@eggshell/unocss-ui';
+
 import styles from '../index.module.scss';
 
 interface FormButtonProps {
@@ -8,12 +10,12 @@ interface FormButtonProps {
 
 export default function FormButton({ children, loading }: FormButtonProps) {
   return (
-    <button 
-      type="submit" 
+    <Button 
+      htmlType="submit" 
       disabled={loading} 
       className={styles.submitButton}
     >
       {children}
-    </button>
+    </Button>
   );
 }
