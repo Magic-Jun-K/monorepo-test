@@ -1,0 +1,20 @@
+{
+  "extends": "../../../tsconfig.client.json",
+  "compilerOptions": {
+    "composite": true, // 启用复合模式
+    "target": "ES5",
+    "lib": ["ES5", "ES6", "DOM", "DOM.Iterable"], // 指定编译时使用的库（默认包括 ES5）
+    "rootDir": "./src", // 明确指定 rootDir 为当前项目的 src 目录
+    "esModuleInterop": true, // 禁用 CommonJS 和 ES 模块之间的互操作性
+    "declarationDir": "build/types", // 将 .d.ts 输出到独立目录
+    "allowJs": true,
+    "importHelpers": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+  },
+  "include": ["src/**/*", "src/types/*.d.ts"], // 指定 需要 编译的文件
+  "exclude": ["node_modules", "build", "public"] // 指定 不需要 编译的文件
+}
