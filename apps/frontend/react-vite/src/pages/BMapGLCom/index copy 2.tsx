@@ -1,0 +1,134 @@
+import { FC, useEffect, useRef } from 'react';
+
+import { loadScript, loadCSS } from '@/utils/index';
+import { generateRandomCoordinates } from './utils';
+// import wenhuaguji from '@/assets/images/test/wenhuaguji.png';
+
+interface MapProps {
+  mapParams?: { center: { lng: number; lat: number }; zoom: number };
+}
+
+declare global {
+  interface Window {
+    BMapGL: any;
+    BMapLib: any;
+    onBMapCallback: any;
+    // BMAP_SATELLITE_MAP: any;
+    mapv: any;
+  }
+}
+
+let scriptPromise: Promise<any> | null = null;
+const loadBMapScript = () => {
+  const AK = 'VyYLcISnIl9Pkivq8WD8TmNMjzkP76mZ';
+  // const BMap_URL = `//api.map.baidu.com/api?v=3.0&type=webgl&ak=${AK}&libraries=DrawingManager,Heatmap&callback=onBMapCallback`;
+  const BMap_URL = `//api.map.baidu.com/api?v=3.0&type=webgl&ak=${AK}&callback=onBMapCallback`;
+
+  console.log('测试scriptPromise', scriptPromise);
+
+  if (scriptPromise) {
+    console.log('百度地图脚本已加载，返回已加载的 Promise');
+    return scriptPromise;
+  }
+
+  if (!scriptPromise) {
+    scriptPromise = new Promise((resolve, reject) => {
+      console.log('初始化百度地图脚本...');
+      // 百度地图异步加载回调处理
+      window.onBMapCallback = function () {
+        console.log('百度地图脚本初始化成功...');
+        console.log('测试onBMapCallback', window.BMapGL);
+        resolve(window.BMapGL);
+      };
+
+      loadScript(BMap_URL)
+        .then(() => {
+          if (!window.BMapGL) {
+            reject(new Error('BMapGL is not defined after script load'));
+          }
+        })
+        .catch(err => {
+          console.error('百度地图加载失败', err);
+        });
+      /* BMapGLLib */
+      setTimeout(() => {
+        loadCSS('https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.css');
+        loadScript('https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.js');
+      }, 3000);
+    });
+  }
+  return scriptPromise;
+};
+
+const MapComponent: FC<MapProps> = ({ mapParams }) => {
+  const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
+  const mapRef = useRef<HTMLDivElement>(null);
+  const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
+  const map = useRef<typeof window.BMapGL | null>(null);
+  const BMapLibRef = useRef<typeof window.BMapLib | null>(null);
+
+  useEffect(() => {
+    console.log('测试mapv', window.mapv);
+    const init = async () => {
+      const BMapGL = await loadBMapScript();
+      console.log('测试BMapGL', BMapGL);
+      console.log('测试window.BMapGL999', window.BMapGL);
+      // 检查百度地图API是否加载完成
+      if (!window.BMapGL) return;
+      BMapGLRef.current = window.BMapGL;
+
+      // if (!window.BMapLib) return;
+      // console.log('测试BMapLib', window.BMapLib);
+      // BMapLibRef.current = window.BMapLib;
+
+      // 初始化地图
+      map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
+      console.log('测试map', map.current);
+      const centerPoint = new BMapGLRef.current.Point(center.lng, center.lat); // 2.设置中心点坐标
+      map.current.centerAndZoom(centerPoint, zoom); // 3.设置中心点和缩放级别
+      map.current.enableScrollWheelZoom(true); // 4.启用滚轮缩放
+      // map.current.setMapType(window.BMAP_SATELLITE_MAP); // 设置地图类型为卫星模式
+
+      const scaleCtrl = new BMapGLRef.current.ScaleControl(); // 比例尺控件
+      map.current.addControl(scaleCtrl); // 5.添加比例尺控件
+
+      // const marker = new BMapGLRef.current.Marker({ lng: 113.32769, lat: 23.12522 }); // 创建标注
+      // map.current.addOverlay(marker); // 将标注添加到地图中
+      // marker.addEventListener('click', function () {
+      //   alert('点击了标注');
+      // });
+
+      const markers: any = [];
+      // 生成随机落点
+      const randomPoints = generateRandomCoordinates(113.25167, 113.42317, 23.10791, 23.09372, 10000); // 生成100个随机坐标
+
+      randomPoints.forEach(({ lng, lat }) => {
+        const point = new BMapGLRef.current.Point(lng, lat);
+        const marker = new BMapGLRef.current.Marker(point);
+        markers.push(marker);
+        map.current.addOverlay(marker); // 将标记添加到地图上
+      });
+
+      // 使用 Canvas Overlay 来渲染标注
+      // const canvasOverlay = new CanvasOverlay(randomPoints);
+      // map.current.addOverlay(canvasOverlay); // 添加Canvas图层
+      console.log('测试BMapLibRef.current', BMapLibRef.current);
+
+      // 在地图上创建一个聚合器实例
+      // const markerClusterer = new BMapLibRef.current.MarkerClusterer(map.current, {});
+
+      // 将标记点加入聚合器
+      // markerClusterer.addMarkers(markers);
+    };
+    init();
+
+    // 在组件卸载时，销毁地图实例
+    return () => {
+      map.current = null;
+    };
+  }, []);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
+};
+
+export default MapComponent;
