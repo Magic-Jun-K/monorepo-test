@@ -23,13 +23,14 @@ export default defineConfig({
       ]
     }),
     react({
+      jsxRuntime: 'automatic',
       babel: {
         plugins: [
           // 添加Babel运行时配置
           [
             '@babel/plugin-transform-runtime',
             {
-              corejs: 3,
+              corejs: 3, // @babel/runtime-corejs3
               absoluteRuntime: true, // 重要：启用绝对路径解析
               version: '7.26.9'
             }
@@ -50,17 +51,27 @@ export default defineConfig({
     outDir: 'build/es',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
+      // formats: ['es', 'cjs'],
       formats: ['es'],
+      // fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: [
+        'react',
+        'react-dom'
+      ],
       output: {
+        // preserveModules: true,
+        // preserveModulesRoot: 'src',
+        // entryFileNames: '[name].[format].js',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM'
         },
-        assetFileNames: 'index.css' // 指定输出文件的名称
+        assetFileNames: 'index.css', // 指定输出文件的名称
+        // format: 'es',
+        // exports: 'named'
       }
     },
     cssCodeSplit: false // 是否将 CSS 代码分割为单独的文件
