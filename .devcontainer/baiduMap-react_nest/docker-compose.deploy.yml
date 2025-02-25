@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/baidu-map-nest1/Dockerfile
+    environment:
+      POSTGRES_URL: postgres://user:pass@db:5432/nest1
+    depends_on:
+      - db
+    ports:
+      - "3001:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/baiduMap-react1/Dockerfile
+    ports:
+      - "8001:80"
+    environment:
+      API_URL: http://backend:3000
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: nest1
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data_nest1:/var/lib/postgresql/data
+
+volumes:
+  postgres_data_nest1:

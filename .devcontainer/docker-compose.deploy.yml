@@ -1,0 +1,27 @@
+include: docker-compose.yml
+
+services:
+  eggshell-baiduMap-server:
+    image: bitnami/node:latest
+    container_name: eggshell-baiduMap-server
+    ports:
+      - '7000:7000'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ../apps/backend/baidu-map-nest/dist:/app/backend/baidu-map-nest/dist
+      - ../apps/backend/baidu-map-nest/package.json:/app/backend/baidu-map-nest/package.json
+      - ../apps/backend/baidu-map-nest/pnpm-lock.yaml:/app/backend/baidu-map-nest/pnpm-lock.yaml # 必须挂载lock文件
+    depends_on:
+      - eggshell-baiduMap-postgresql
+    command: sh -c "npm install -g pnpm && pnpm install --prod && node dist/main.js"
+  
+  # eggshell-baiduMap-caddy:
+  #   image: caddy:latest
+  #   container_name: eggshell-baiduMap-caddy
+  #   ports:
+  #     - '80:80'
+  #     - '443:443'
+  #   volumes:
+  #     - ./caddy:/etc/caddy
+  #     - ../apps/frontend/baiduMap-react/build:/app/frontend/baiduMap-react/build
