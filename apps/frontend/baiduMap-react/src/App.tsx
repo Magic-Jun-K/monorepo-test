@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 
 import { ToastProvider } from '@/components/Toast';
 import { router } from './router/index';
-import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
+// import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { store } from '@/store/store';
 
 import '@/assets/css/index.scss';
@@ -22,8 +22,8 @@ const App: FC = () => {
     });
 
     // if (process.env.NODE_ENV === 'production') {
-    initWebVitals();
-    initPerformanceChecker();
+    // initWebVitals();
+    // initPerformanceChecker();
     // }
   }, []);
 

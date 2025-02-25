@@ -1,7 +1,4 @@
-import { ImageUploader } from '@eggshell/antd-ui';
 import { Input, Modal, Select } from '@eggshell/unocss-ui';
-
-import { imageService } from '@/services/imageService';
 
 interface Props {
   visible: boolean;
@@ -18,7 +15,6 @@ export default (props: Props) => {
     >
       <Input />
       <Select options={[{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }]} />
-      <ImageUploader imageService={imageService} maxCount={5} onChange={(urls: string[]) => console.log('上传的图片URLs:', urls)} />
     </Modal>
   );
 };

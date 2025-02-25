@@ -10,7 +10,7 @@ import CSSMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import ImageMinimizerPlugin from 'image-minimizer-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
-import devConfig from './webpack.config.dev.mjs';
+// import devConfig from './webpack.config.dev.mjs';
 const prodConfig = { mode: 'production' };
 
 // 模拟 CommonJS 的 __dirname
@@ -42,6 +42,29 @@ function parseEnvFile() {
 // 读取 .env 文件中的所有环境变量
 const envVariables = parseEnvFile();
 
+const devConfig = {
+  mode: 'development',
+  devtool: 'source-map', // 方便调试的 Source Map
+  devServer: {
+    static: {
+      directory: path.resolve(__dirname, 'public'),
+      publicPath: '/' // 设置静态资源的公共路径
+    },
+    port: 3000,
+    open: true, // 启动时自动打开浏览器
+    hot: true, // 热更新
+    historyApiFallback: true, // 处理SPA路由
+    proxy: [
+      {
+        context: ['/api'],
+        target: 'http://localhost:7000',
+        changeOrigin: true,
+        pathRewrite: { '^/api': '' }
+      }
+    ]
+  }
+};
+
 const baseConfig = env => {
   const isProd = env?.production;
   console.log('测试当前环境：', env, isProd);
@@ -70,16 +93,13 @@ const baseConfig = env => {
         // },
         // {
         //   test: /\.(ts|tsx)$/,
-        //   use: [
-        //     {
-        //       loader: 'babel-loader',
-        //       options: {
-        //         presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
-        //         cacheDirectory: true
-        //       }
-        //     },
-        //     'ts-loader'
-        //   ],
+        //   use: {
+        //     loader: 'babel-loader',
+        //     options: {
+        //       presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
+        //       cacheDirectory: true
+        //     }
+        //   },
         //   exclude: /node_modules/
         // },
         {
@@ -164,7 +184,7 @@ const baseConfig = env => {
           test: /\.(woff2?|ttf)$/i,
           type: 'asset/resource',
           generator: {
-            filename: 'fonts/[name].[contenthash:8][ext]' 
+            filename: 'fonts/[name].[contenthash:8][ext]'
           },
           include: path.resolve(__dirname, 'src/assets/fonts')
         }
@@ -218,8 +238,12 @@ const baseConfig = env => {
               drop_console: true, // 移除 console
               drop_debugger: true, // 移除 debugger
               ecma: 2015
+            },
+            format: {
+              comments: false // 移除注释
             }
-          }
+          },
+          extractComments: false // 不生成.LICENSE.txt文件
         }),
         new CSSMinimizerPlugin({
           parallel: true,
