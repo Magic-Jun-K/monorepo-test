@@ -6,7 +6,7 @@
       "persistent": false
     },
     "dev:baiduMap": {
-      "dependsOn": [],
+      "dependsOn": ["start:dev"],
       "cache": true,
       "persistent": false
     },
@@ -14,9 +14,5 @@
       "cache": true,
       "persistent": false
     }
-  },
-  "remoteCache": {
-    "enabled": true,
-    "signature": true
   }
 }

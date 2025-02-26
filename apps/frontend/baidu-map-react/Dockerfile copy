@@ -3,6 +3,15 @@ FROM node:20-alpine AS builder
 # 设置容器内工作目录
 WORKDIR /app
 
+# 检查网络连接
+# RUN echo "Checking network connectivity..." && \
+#     apk add --no-cache curl && \
+#     echo "Testing DNS resolution for registry.npmmirror.com:" && \
+#     nslookup registry.npmmirror.com || echo "DNS lookup failed" && \
+#     echo "Testing HTTP connection to registry.npmmirror.com:" && \
+#     curl -I --connect-timeout 10 https://registry.npmmirror.com && \
+#     echo "Network check completed"
+
 # 1、优先复制包管理文件（利用Docker缓存层）
 # 复制monorepo根目录的必要文件
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -30,11 +39,17 @@ COPY apps/frontend/baiduMap-react/tsconfig.json \
 # 4、构建前端应用（构建优化）
 ENV NODE_ENV=production \
     GENERATE_SOURCEMAP=false
+# RUN --mount=type=cache,target=.turbo \
+#     pnpm build --filter @frontend/baidu-map-react \
+#     --cache-dir=.turbo \
+#     --force
 RUN --mount=type=cache,target=.turbo \
+    echo "Starting build process..." && \
     pnpm build --filter @frontend/baidu-map-react \
-    --output-logs=errors-only \
     --cache-dir=.turbo \
-    --force
+    --force && \
+    -- --stats-error-details && \
+    echo "Build process completed"
 
 # 阶段2：使用Nginx作为Web服务器
 FROM nginx:1.27-alpine
