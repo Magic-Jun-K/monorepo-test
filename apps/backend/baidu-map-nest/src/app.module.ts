@@ -14,6 +14,7 @@ import { AppService, PgService } from './app.service';
 import { DetailModule } from './module/detail/detail.module';
 import { FileModule } from './module/file/file.module';
 import { AuthModule } from './module/auth/auth.module';
+import { ImageModule } from './module/image/image.module';
 import database from './config/database';
 
 @Module({
@@ -54,6 +55,7 @@ import database from './config/database';
     AuthModule,
     DetailModule,
     FileModule,
+    ImageModule
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
