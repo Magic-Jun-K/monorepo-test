@@ -9,6 +9,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 import CSSMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import ImageMinimizerPlugin from 'image-minimizer-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import os from 'node:os';
 
 // import devConfig from './webpack.config.dev.mjs';
 const prodConfig = { mode: 'production' };
@@ -67,7 +68,9 @@ const devConfig = {
 
 const baseConfig = env => {
   const isProd = env?.production;
+  const analyzeMode = env?.ANALYZE === 'true';
   console.log('测试当前环境：', env, isProd);
+  console.log('测试env.ANALYZE', env.ANALYZE);
 
   return {
     entry: path.resolve(__dirname, 'src/index.tsx'),
@@ -104,33 +107,43 @@ const baseConfig = env => {
         // },
         {
           test: /\.(ts|tsx)$/,
-          use: {
-            loader: 'swc-loader', // 替换ts-loader为更快的SWC
-            options: {
-              jsc: {
-                parser: {
-                  syntax: 'typescript',
-                  tsx: true
-                },
-                transform: {
-                  react: {
-                    runtime: 'automatic'
-                  }
-                },
-                minify: isProd
-                  ? {
-                      compress: {
-                        drop_console: true, // 移除console.log
-                        drop_debugger: true, // 移除debugger
-                        unused: true, // 移除未使用的代码
-                        dead_code: true // 移除死代码
-                      },
-                      mangle: true // 混淆变量名
+          use: [
+            {
+              loader: 'thread-loader',
+              options: {
+                workers: os.cpus().length - 1, // CPU 核心数减一
+                // 开发模式下，设置Infinity保持线程存活（避免频繁重启）
+                poolTimeout: isProd ? 2000 : Infinity
+              }
+            },
+            {
+              loader: 'swc-loader', // 替换ts-loader为更快的SWC
+              options: {
+                jsc: {
+                  parser: {
+                    syntax: 'typescript',
+                    tsx: true
+                  },
+                  transform: {
+                    react: {
+                      runtime: 'automatic'
                     }
-                  : undefined
+                  },
+                  minify: isProd
+                    ? {
+                        compress: {
+                          drop_console: true, // 移除console.log
+                          drop_debugger: true, // 移除debugger
+                          unused: true, // 移除未使用的代码
+                          dead_code: true // 移除死代码
+                        },
+                        mangle: true // 混淆变量名
+                      }
+                    : undefined
+                }
               }
             }
-          },
+          ],
           exclude: /node_modules/
         },
         {
@@ -166,8 +179,10 @@ const baseConfig = env => {
           test: /\.(jpe?g|png|webp|gif)$/i,
           type: 'asset/resource',
           generator: {
-            filename: 'images/[contenthash:8][ext]'
+            filename: 'images/[hash][ext]',
+            publicPath: './'
           },
+          exclude: /node_modules/,
           parser: {
             dataUrlCondition: {
               maxSize: 4 * 1024 // 4KB以下转base64
@@ -199,8 +214,12 @@ const baseConfig = env => {
                   options: {
                     svgoConfig: {
                       plugins: [
-                        { name: 'removeViewBox', active: false } // 移除 viewBox
-                        // { name: 'convertColors', params: { currentColor: true } } // 转换颜色
+                        { name: 'removeViewBox', active: false }, // 移除 viewBox
+                        { name: 'removeTitle' }, // 移除<title>
+                        { name: 'removeDesc' }, // 移除<desc>
+                        { name: 'removeEmptyAttrs' }, // 移除空属性
+                        { name: 'collapseGroups' }, // 合并分组
+                        { name: 'convertPathData' } // 优化路径数据
                       ]
                     }
                   }
@@ -241,43 +260,45 @@ const baseConfig = env => {
           filename: 'css/[name].[contenthash:8].css',
           chunkFilename: 'css/[id].[contenthash:8].css'
         }),
-      new ImageMinimizerPlugin({
-        deleteOriginalAssets: false, // 不删除原文件
-        minimizer: {
-          implementation: ImageMinimizerPlugin.sharpMinify,
-          options: {
-            encodeOptions: {
-              jpeg: {
-                quality: 85, // 设置压缩质量 (100 接近无损)
-                mozjpeg: true, // 启用 mozjpeg 优化算法
-                progressive: true // 渐进式加载
+      isProd &&
+        new ImageMinimizerPlugin({
+          test: /\.(jpe?g|png|webp|gif)$/i, // 排除 SVG
+          deleteOriginalAssets: false, // 不删除原文件
+          minimizer: {
+            implementation: ImageMinimizerPlugin.sharpMinify,
+            options: {
+              encodeOptions: {
+                jpeg: {
+                  quality: 80, // 设置压缩质量 (100 接近无损)
+                  mozjpeg: true, // 启用 mozjpeg 优化算法
+                  progressive: true // 渐进式加载
+                },
+                png: {
+                  quality: 85, // 设置压缩质量 (100 接近无损)
+                  compressionLevel: 9, // PNG压缩级别最高（0-9）
+                  effort: 9 // 优化力度最大（0-10）
+                },
+                webp: {
+                  quality: 80, // WebP 质量（需小于100才能触发有损压缩）
+                  lossless: false, // 关闭无损模式以减小体积
+                  nearLossless: true // 近无损模式
+                }
               },
-              png: {
-                quality: 90, // 设置压缩质量 (100 接近无损)
-                compressionLevel: 9, // PNG压缩级别最高（0-9）
-                effort: 10, // 优化力度最大（0-10）
-                palette: true // 启用调色板优化
-              },
-              webp: {
-                // lossless: true, // WEBP无损模式
-                // nearLossless: false, // 关闭近无损模式（避免冲突）
-                quality: 85, // WebP 质量（需小于100才能触发有损压缩）
-                lossless: false, // 关闭无损模式以减小体积
-                nearLossless: true, // 近无损模式
-                alphaQuality: 90, // 透明度质量最高 (最高100)
-                effort: 6 // 优化力度（0-6）
-              }
-            },
-            // 大于1KB且未被转成base64的图片才压缩
-            filter: source => source.byteLength > 1024
+              // 大于4KB且未被转成base64的图片才压缩
+              filter: source => source.byteLength > 4096
+            }
           }
-        }
-      }),
+        }),
       // 使用 DefinePlugin 注入环境变量
       new DefinePlugin({
         'process.env': JSON.stringify(envVariables) // 直接传入读取到的环境变量
       }),
-      isProd && new BundleAnalyzerPlugin()
+      isProd &&
+        new BundleAnalyzerPlugin({
+          analyzerMode: analyzeMode ? 'server' : 'disabled', // 分析模式，'server' 或 'disabled'
+          openAnalyzer: analyzeMode, // 不自动打开报告页面
+          generateStatsFile: false // 不生成stats文件
+        })
     ],
     optimization: {
       // 压缩
@@ -286,7 +307,6 @@ const baseConfig = env => {
       runtimeChunk: 'single', // 添加运行时单独打包
       moduleIds: 'deterministic', // 保持模块id稳定
       minimizer: [
-        // 使用TerserPlugin
         new TerserPlugin({
           parallel: true,
           terserOptions: {
@@ -319,29 +339,68 @@ const baseConfig = env => {
         chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
         // 任何小于 20,000 字节（约 20 KB）的 chunk 都不会被分割出来，而是会保留在它们原来的 chunk 中
         // 只有当一个 chunk 的大小达到或超过 20 KB 时，Webpack 才会考虑将其分割
-        minSize: 20000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割
-        maxSize: 100000, // 允许更大的chunk尺寸。如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
-        minChunks: 1, // 最少有多少个 chunks（模块）共享此模块时才会分割代码
-        maxAsyncRequests: 30, // 对于异步加载（动态 import）的最大并行请求数
-        maxInitialRequests: 30, // 入口点的最大并行请求数
+        minSize: 60000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割
+        maxSize: 250000, // 允许更大的chunk尺寸。如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
+        minChunks: 2, // 最少有多少个 chunks（模块）共享此模块时才会分割代码
+        maxAsyncRequests: 20, // 对于异步加载（动态 import）的最大并行请求数
+        maxInitialRequests: 20, // 入口点的最大并行请求数
         automaticNameDelimiter: '~', // 自动生成的 chunk 名称的分隔符
         cacheGroups: {
           reactVendor: {
             test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
-            name: 'react-vendor',
-            priority: 40, // 最高优先级确保独立打包
+            name: 'react-core',
+            priority: 70, // 最高优先级确保独立打包
+            chunks: 'all',
             reuseExistingChunk: true, // 重用已经存在的 chunk
-            enforce: true // 强制分离
+            enforce: true, // 强制分离
+            minSize: 250000,
+            maxSize: 500000 // 新增最大尺寸限制
           },
           dataGridVendor: {
             test: /[\\/]node_modules[\\/]@glideapps[\\/]/,
-            name: 'data-grid-vendor',
-            priority: 30
+            name: 'data-grid',
+            priority: 60,
+            reuseExistingChunk: true,
+            minSize: 80000,
+            enforce: true
+          },
+          stylesVendor: {
+            name: 'styles',
+            test: /\.(css|scss)$/,
+            chunks: 'all',
+            enforce: true,
+            priority: 55,
+            minSize: 30000
+          },
+          // 新增 echarts 独立包
+          echartsVendor: {
+            test: /[\\/]node_modules[\\/]echarts[\\/]/,
+            name: 'echarts',
+            priority: 45,
+            enforce: true
+          },
+          // 优化 axios 单独打包
+          axiosVendor: {
+            test: /[\\/]node_modules[\\/]axios[\\/]/,
+            name: 'axios',
+            priority: 40,
+            reuseExistingChunk: true
+          },
+          corejs: {
+            test: /[\\/]node_modules[\\/]core-js[\\/]/,
+            name: 'core-js',
+            priority: 30,
+            enforce: true,
+            reuseExistingChunk: true, // 增加重用
+            chunks: 'async' // 仅异步加载
           },
           lodashVendor: {
             test: /[\\/]node_modules[\\/]lodash[\\/]/,
-            name: 'lodash-vendor',
-            priority: 20
+            name: 'lodash',
+            priority: 25,
+            enforce: true,
+            reuseExistingChunk: true, // 增加重用
+            chunks: 'async' // 仅异步加载
           },
           uiVendor: {
             test: /[\\/]node_modules[\\/]@eggshell[\\/]/,
@@ -352,19 +411,9 @@ const baseConfig = env => {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             priority: -10,
-            reuseExistingChunk: true
-          },
-          asyncVendors: {
-            test: /[\\/]node_modules[\\/]/,
-            chunks: 'async', // 专门处理异步加载的模块
-            name: 'async-vendors',
-            priority: -5
-          },
-          styles: {
-            name: 'styles',
-            test: /\.(css|scss)$/,
-            chunks: 'all',
-            enforce: true // 强制分离样式文件
+            reuseExistingChunk: true,
+            minSize: 150000,
+            maxSize: 300000
           }
           // 用于控制如何形成块的缓存组
           // defaultVendors: {
@@ -388,11 +437,13 @@ const baseConfig = env => {
     },
     cache: {
       type: 'filesystem',
-      version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
+      // version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
+      version: `${process.env.NODE_ENV}-${Date.now()}`, // 添加时间戳强制刷新缓存
       cacheDirectory: path.resolve(__dirname, '.webpack_temp_cache'),
       buildDependencies: {
         config: [__filename]
-      }
+      },
+      allowCollectingMemory: true // 允许内存回收
     },
     watchOptions: {
       ignored: /node_modules/
