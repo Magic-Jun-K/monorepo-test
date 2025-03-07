@@ -1,40 +1,47 @@
-# 阶段1：构建前端应用
+# 阶段1：基础环境
 FROM node:20-slim AS base
-RUN npm i -g pnpm
+RUN npm i -g pnpm@9.15.6
+RUN pnpm config set registry https://registry.npmmirror.com
 # 设置pnpm环境变量
 ENV PNPM_HOME="/pnpm"
 # 设置pnpm路径
 ENV PATH="$PNPM_HOME:$PATH"
 
-FROM base AS build
-COPY . /app
+# 阶段2：安装依赖
+FROM base AS deps
 # 设置容器内工作目录
 WORKDIR /app
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-# RUN pnpm deploy --filter=baidu-map-react /apps/frontend/baidu-map-react
+# COPY . ./
+# 复制整个monorepo结构
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig* ./
+COPY packages/unocss-ui/ ./packages/unocss-ui/
+COPY packages/antd-ui/ ./packages/antd-ui/
+COPY apps/frontend/baidu-map-react/ ./apps/frontend/baidu-map-react/
+# 安装所有依赖（包含 devDependencies）
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod=false \
+    --filter="@eggshell/unocss-ui..." \
+    --filter="@eggshell/antd-ui..." \
+    --filter="@frontend/baidu-map-react..."
 
-FROM base AS baidu-map-react-build
-COPY --from=build /apps/frontend/baidu-map-react /app/eggshell/frontend/baidu-map-react
-COPY tsconfig.json tsconfig.client.json /app/eggshell
-WORKDIR /app/eggshell/frontend/baidu-map-react
-RUN pnpm build:baiduMap
+# 阶段3：构建应用ddd
+FROM deps AS fe-build
+RUN pnpm --filter @eggshell/unocss-ui build
+WORKDIR /app/apps/frontend/baidu-map-react
+RUN pnpm build:baiduMap --stats=detailed
+# 1. 检查 webpack 是否存在
+# RUN ls -l ./node_modules/.bin/webpack
+# 2. 执行构建并保留详细日志
+# RUN ./node_modules/.bin/webpack --config webpack.config.mjs --env production --stats=detailed
+# 3. 确认构建产物路径
+# RUN ls -l ./build
 
-# 阶段2：使用Nginx作为Web服务器
+# 阶段4：运行环境
 FROM nginx:latest
-
 # 复制构建好的前端文件到Nginx的默认目录
-COPY --from=baidu-map-react-build --chown=appuser:appgroup /app/apps/frontend/baidu-map-react/build /usr/share/nginx/html
+COPY --from=fe-build /app/apps/frontend/baidu-map-react/build /usr/share/nginx/html
 # 复制Nginx配置文件
-COPY --chown=appuser:appgroup apps/frontend/baidu-map-react/nginx.conf /etc/nginx/conf.d/default.conf
-
-# 设置用户
-USER appuser
-
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost/ || exit 1
-
+COPY apps/frontend/baidu-map-react/nginx.conf /etc/nginx/conf.d/default.conf
 # 暴露Nginx的默认端口
 EXPOSE 80
-# 启动Nginx服务
-CMD ["nginx", "-g", "daemon off;"]    
