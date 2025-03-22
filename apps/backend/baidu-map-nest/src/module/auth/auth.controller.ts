@@ -9,8 +9,8 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AdminEntity } from '../../entities/admin.entity';
 
+import { AdminEntity } from '../../entities/admin.entity';
 import { AuthService } from './auth.service';
 
 // 路由拦截

@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+
 import { UserEntity } from './user.entity';
 
 @Entity({ name: 'photo' })

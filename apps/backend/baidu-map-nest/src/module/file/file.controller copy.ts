@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+
 import { Public } from '../../common/decorators/public.decorator';
 import { FileService } from './file.service';
 import config from '../../config/file';

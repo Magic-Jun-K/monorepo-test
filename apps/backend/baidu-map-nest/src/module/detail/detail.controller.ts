@@ -2,6 +2,7 @@
  * @description 路由处理的控制器（控制器层）
  */
 import { Controller, Get, Param, UsePipes, UseGuards } from '@nestjs/common';
+
 import { DetailService } from './detail.service';
 import { DetailPipe } from '../../common/pipes/DetailPipe';
 import { AuthGuard } from '../../common/guards/Auth';
