@@ -16,8 +16,9 @@ jobs:
       # 安装 pnpm
       - name: Install pnpm(安装 pnpm)
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.6.2
+        # 不指定版本，让 pnpm 自动检测
+        # with:
+        #   version: 10.6.2
           # run_install: false
 
       # 设置 Node.js 环境
