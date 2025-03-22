@@ -7,6 +7,9 @@
     "baseUrl": ".",
     "declaration": true,
     "rootDir": "./src", // 明确指定 rootDir 为当前项目的 src 目录
+    "allowSyntheticDefaultImports": true, // 允许使用默认导入
+    "esModuleInterop": true, // 允许使用 ES 模块的方式导入 CommonJS 模块
+    "lib": ["ESNext", "DOM"]
   },
   "include": ["src"]
 }

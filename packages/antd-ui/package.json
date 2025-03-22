@@ -6,22 +6,25 @@
   "module": "es/index.mjs",
   "types": "es/index.d.mts",
   "scripts": {
-    "dev:antd-ui": "tsup --watch",
-    "build:antd-ui": "tsup"
-  },
-  "dependencies": {
-    "antd": "5.22.7",
-    "@ant-design/icons": "5.5.2",
-    "styled-components": "6.1.13"
-  },
-  "devDependencies": {
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.5",
-    "tsup": "8.3.5"
+    "dev:antd-ui": "vite build --watch",
+    "build:antd-ui": "vite build"
   },
   "peerDependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1"
+  },
+  "dependencies": {
+    "antd": "5.24.4",
+    "@ant-design/icons": "5.6.1",
+    "styled-components": "6.1.16",
+    "clsx": "2.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "vite": "6.2.2",
+    "@vitejs/plugin-react": "4.3.4",
+    "vite-plugin-dts": "4.5.3"
   },
   "keywords": [],
   "author": "",
