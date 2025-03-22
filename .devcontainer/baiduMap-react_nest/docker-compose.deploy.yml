@@ -1,34 +1,58 @@
-version: '3.8'
+include:
+  - docker-compose.yml
 
 services:
-  backend:
+  # NestJS 后端服务
+  eggshell-baidu-map-backend:
+    # 容器名称
+    container_name: eggshell-baidu-map-backend
     build:
-      context: .
-      dockerfile: apps/backend/baidu-map-nest1/Dockerfile
-    environment:
-      POSTGRES_URL: postgres://user:pass@db:5432/nest1
-    depends_on:
-      - db
+      # 构建上下文路径
+      context: ../.. # 指向项目根目录
+      # Dockerfile 路径
+      dockerfile: apps/backend/baidu-map-nest/Dockerfile
+    image: baidu-map-nest:latest # 添加小写镜像名称
     ports:
-      - "3001:3000"
-
-  frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend/baiduMap-react1/Dockerfile
-    ports:
-      - "8001:80"
+      - '7000:7000'
     environment:
-      API_URL: http://backend:3000
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: nest1
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      - NODE_ENV=production
+      # 数据库连接配置
+      - DATABASE_HOST=eggshell-baidu-map-postgresql
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=test123
+      - DATABASE_NAME=baidu-map-nest
+    # 添加重启策略，确保容器不会因错误而停止
+    restart: always
     volumes:
-      - postgres_data_nest1:/var/lib/postgresql/data
+      - ../apps/backend/baidu-map-nest/public:/app/public # 挂载公共资源目录
+      - ../apps/backend/baidu-map-nest/upload:/app/upload # 挂载上传文件目录
+    depends_on:
+      eggshell-baidu-map-postgresql:
+        # 依赖于 PostgreSQL 服务，且要求其健康检查
+        condition: service_healthy
+    networks:
+      - eggshell-baidu-map-network
+    # 添加额外主机映射
+    extra_hosts:
+      - "localhost:172.17.0.1"
+      - "127.0.0.1:172.17.0.1"
 
-volumes:
-  postgres_data_nest1:
+  # React 前端服务
+  eggshell-baidu-map-frontend:
+    container_name: eggshell-baidu-map-frontend
+    build:
+      context: ../.. # 指向项目根目录
+      dockerfile: apps/frontend/baidu-map-react/Dockerfile
+    image: baidu-map-react:latest # 添加小写镜像名称
+    ports:
+      - '8080:80'
+    depends_on:
+      # 依赖于后端服务
+      - eggshell-baidu-map-backend
+    networks:
+      - eggshell-baidu-map-network
+
+networks:
+  eggshell-baidu-map-network:
+    driver: bridge

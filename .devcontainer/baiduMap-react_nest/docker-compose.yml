@@ -1,0 +1,31 @@
+services:
+  eggshell-baidu-map-postgresql:
+    image: bitnami/postgresql:latest
+    container_name: eggshell-baidu-map-postgresql
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=test123
+      - POSTGRESQL_DATABASE=baidu-map-nest
+      # 添加以下配置使PostgreSQL监听所有地址
+      - POSTGRESQL_POSTGRES_PASSWORD=test123
+      - POSTGRESQL_LISTEN_ADDRESSES=*
+    # volumes:
+    # - ../postgresql_data:/bitnami/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      eggshell-baidu-map-network:
+        aliases:
+          - localhost
+          - 127.0.0.1
+
+networks:
+  eggshell-baidu-map-network:
+    driver: bridge
+
+# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=baidu-map-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
