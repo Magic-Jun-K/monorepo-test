@@ -1,5 +1,11 @@
 import axios, { CreateAxiosDefaults } from 'axios';
 
+// type ResponseData<T = any> = {
+//   success: boolean;
+//   data: T;
+//   message?: string;
+// };
+
 const config: CreateAxiosDefaults = {
   baseURL: '/api',
   timeout: 5000
@@ -11,7 +17,8 @@ export const request = axios.create(config);
 request.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers.token = token;
+    console.log('测试token', token);
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });

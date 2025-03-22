@@ -1,6 +1,7 @@
 import { Modal } from '@eggshell/unocss-ui';
 
 import treeIcon from '@/assets/images/test/car_jf.svg';
+// import TreeIcon from '@/assets/images/test/car_jf.svg?react';
 import One from '@/assets/images/test/one.png';
 
 interface Props {
@@ -13,6 +14,7 @@ export default (props: Props) => {
   return (
     <Modal title="图片测试模态框" visible={visible} onCancel={onCancel}>
       <img src={treeIcon} alt="" />
+      {/* <TreeIcon /> */}
       <img src={One} alt="" />
     </Modal>
   );

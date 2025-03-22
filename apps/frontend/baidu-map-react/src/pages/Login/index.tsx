@@ -10,13 +10,19 @@ import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
 import * as api from '@/services';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { login } from '@/store/authSlice';
-import { AuthType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
+// import { useAppDispatch, useAppSelector } from '@/store/store';
+// import { login } from '@/store/authSlice';
+import { AuthType, LoginType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
 import styles from './index.module.scss';
 
-type LoginType = 'phone' | 'account';
-
+// 创建 schema 映射关系
+const schemaMap: Record<AuthType, any> = {
+  login: {
+    account: loginSchema,
+    phone: phoneLoginSchema
+  },
+  register: registerSchema
+};
 export default () => {
   const [authType, setAuthType] = useState<AuthType>('login');
   const [loginType, setLoginType] = useState<LoginType>('account');
@@ -24,13 +30,16 @@ export default () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const dispatch = useAppDispatch();
-  const { status, error } = useAppSelector(state => state.auth);
-  console.log('Login status', status);
-  console.log('Login error', error);
+  // const dispatch = useAppDispatch();
+  // const { status, error } = useAppSelector(state => state.auth);
+  // console.log('Login status', status);
+  // console.log('Login error', error);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(authType === 'login' ? (loginType === 'account' ? loginSchema : phoneLoginSchema) : registerSchema),
+    resolver: zodResolver(
+      authType === 'login'
+      ? schemaMap.login[loginType]
+      : schemaMap.register),
     defaultValues: {
       username: '',
       phone: '',
@@ -65,12 +74,12 @@ export default () => {
       // Handle successful response(处理成功响应)
       if (res.success) {
         if (authType === 'login') {
-          dispatch(
-            login({
-              username: data.username,
-              password: data.password
-            })
-          );
+          // dispatch(
+          //   login({
+          //     username: data.username,
+          //     password: data.password
+          //   })
+          // );
 
           localStorage.setItem('token', res.data.access_token);
 

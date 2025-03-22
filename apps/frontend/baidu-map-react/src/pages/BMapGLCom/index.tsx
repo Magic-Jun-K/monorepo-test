@@ -1,7 +1,10 @@
+import { lazy } from 'react';
 import { Input } from '@eggshell/unocss-ui';
-import MapCom from './components/MapCom/MapCom';
+// import MapCom from './components/MapCom';
 import AutoCompleteCom from './components/AutoCompleteCom';
 import styles from './index.module.scss';
+
+const MapCom = lazy(() => import('./components/MapCom'));
 
 export default () => {
   return (

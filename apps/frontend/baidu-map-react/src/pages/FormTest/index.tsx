@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@eggshell/unocss-ui';
 import { DataEditor, GridCell, GridCellKind } from '@glideapps/glide-data-grid';
-import '@glideapps/glide-data-grid/dist/index.css';
 
 import ImageTestModal from './components/ImageTestModal';
 import FormTestModal from './components/FormTestModal';
 import EChartsTestModal from './components/EChartsTestModal';
 
+import '@glideapps/glide-data-grid/dist/index.css';
 import styles from './index.module.scss';
 
 interface Column {
@@ -93,7 +93,8 @@ export default () => {
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column, newSize: number, colIndex: number) => {
+  const handleColumnResize = useCallback((column: any, newSize: number, colIndex: number) => {
+    console.log('测试列宽调整', column, newSize, colIndex);
     setColumns(prevColumns => {
       const newColumns = [...prevColumns] as Column[];
       newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize } as Column;

@@ -36,6 +36,10 @@ export const router: PickRouter<A> = createBrowserRouter([
         lazy: loadComponent('FormTest')
       },
       {
+        path: 'table-test',
+        lazy: loadComponent('TableTest')
+      },
+      {
         path: '/baidu-map',
         lazy: loadComponent('BMapGLCom')
       }
