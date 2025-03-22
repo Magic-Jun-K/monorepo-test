@@ -1,6 +1,6 @@
 # 阶段1：基础环境
 FROM node:22-slim AS base
-RUN npm i -g pnpm@10.6.2
+RUN npm i -g pnpm@9.15.6
 RUN pnpm config set registry https://registry.npmmirror.com
 # 设置pnpm环境变量
 ENV PNPM_HOME="/pnpm"
@@ -20,7 +20,7 @@ COPY packages/antd-ui/ ./packages/antd-ui/
 COPY apps/frontend/baidu-map-react/ ./apps/frontend/baidu-map-react/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile \
+    pnpm install --frozen-lockfile --prod=false \
     --filter="@eggshell/unocss-ui..." \
     --filter="@eggshell/antd-ui..." \
     --filter="@frontend/baidu-map-react..."
