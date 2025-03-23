@@ -80,6 +80,10 @@ jobs:
           file: ./apps/frontend/baidu-map-react/Dockerfile
           push: true
           tags: ghcr.io/${{ env.ACTOR_LOWER }}/baidu-map-react:latest
+          # 添加构建参数，启用详细日志
+          build-args: |
+            NODE_ENV=production
+            VERBOSE=true
 
       # 部署到服务器（使用 SSH）
       - name: Deploy to server()
