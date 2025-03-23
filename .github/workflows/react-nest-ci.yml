@@ -58,6 +58,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # 设置用户名变量（小写）
+      - name: Set lowercase actor
+        run: echo "ACTOR_LOWER=$(echo ${{ github.actor }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       # 构建并推送后端镜像
       - name: Build and push backend image(构建并推送后端镜像)
@@ -66,7 +70,7 @@ jobs:
           context: .
           file: ./apps/backend/baidu-map-nest/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.actor | tr '[:upper:]' '[:lower:]' }}/baidu-map-nest:latest
+          tags: ghcr.io/${{ env.ACTOR_LOWER }}/baidu-map-nest:latest
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
@@ -75,7 +79,7 @@ jobs:
           context: .
           file: ./apps/frontend/baidu-map-react/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.actor | tr '[:upper:]' '[:lower:]' }}/baidu-map-react:latest
+          tags: ghcr.io/${{ env.ACTOR_LOWER }}/baidu-map-react:latest
 
       # 部署到服务器（使用 SSH）
       - name: Deploy to server()
