@@ -67,8 +67,8 @@ jobs:
       - name: Build and push backend image(构建并推送后端镜像)
         uses: docker/build-push-action@v6
         with:
-          context: apps/backend/baidu-map-nest
-          file: apps/backend/baidu-map-nest/Dockerfile
+          context: .
+          file: ./apps/backend/baidu-map-nest/Dockerfile
           push: true
           tags: ghcr.io/${{ env.OWNER_LOWER }}/baidu-map-nest:latest
 
@@ -76,8 +76,8 @@ jobs:
       - name: Build and push frontend image(构建并推送前端镜像)
         uses: docker/build-push-action@v6
         with:
-          context: apps/frontend/baidu-map-react
-          file: apps/frontend/baidu-map-react/Dockerfile
+          context: .
+          file: ./apps/frontend/baidu-map-react/Dockerfile
           push: true
           tags: ghcr.io/${{ env.OWNER_LOWER }}/baidu-map-react:latest
 
