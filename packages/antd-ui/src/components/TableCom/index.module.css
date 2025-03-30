@@ -1,11 +1,6 @@
 .combined-table-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.combined-table-container :global(.ant-table-wrapper) {
   flex: 1;
+  min-height: 300px;
 }
 
 .combined-table-container :global(.ant-table-wrapper .ant-table-body) {

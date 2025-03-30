@@ -1,38 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useLayoutContext } from '../../context/LayoutContext';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Form, Input, Select, DatePicker, TreeSelect, Button, Row, Col, Space } from 'antd';
 import { SearchOutlined, ReloadOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
-import type { FormInstance } from 'antd/es/form';
 import clsx from 'clsx';
 
-import { SearchItem } from './types';
+import { SearchComProps, SearchItem } from './types';
+import { heightManager } from '../../utils/heightManager';
 
 const { RangePicker } = DatePicker;
-
-// 组件属性定义
-export interface SearchComProps {
-  items: SearchItem[];
-  initialValues?: Record<string, any>;
-  onSearch?: (values: Record<string, any>) => void;
-  onReset?: () => void;
-  form?: FormInstance;
-  className?: string;
-  showResetButton?: boolean;
-  showSearchButton?: boolean;
-  searchButtonText?: string;
-  resetButtonText?: string;
-  searchLoading?: boolean;
-  resetLoading?: boolean;
-  colConfig?: {
-    xs?: number;
-    sm?: number;
-    md?: number;
-    lg?: number;
-    xl?: number;
-    xxl?: number;
-  };
-  rowGutter?: [number, number];
-}
 
 export const SearchCom: React.FC<SearchComProps> = ({
   items,
@@ -55,37 +29,32 @@ export const SearchCom: React.FC<SearchComProps> = ({
   // 控制展开/收起状态
   const [expanded, setExpanded] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { updateSearchHeight } = useLayoutContext();
+
+  // 新增高度更新逻辑
+  const updateSearchHeight = useCallback((height: number) => {
+    heightManager.updateHeight(height);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // 立即更新初始高度
-    const initialHeight = container.clientHeight;
-    console.log('初始化SearchCom高度:', initialHeight);
-    updateSearchHeight(initialHeight);
+    // 强制初始化测量
+    const initHeight = container.offsetHeight;
+    console.log('[SearchCom] 发布初始高度:', initHeight);
+    updateSearchHeight(initHeight);
 
     const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const height = entry.contentRect.height;
-        console.log('ResizeObserver检测到高度变化:', height);
-        updateSearchHeight(height);
-      }
+      // 防抖处理
+      requestAnimationFrame(() => {
+        const newHeight = entries[0]?.contentRect.height ?? 0;
+        console.log('ResizeObserver检测到新高度:', newHeight);
+        updateSearchHeight(newHeight);
+      });
     });
 
     observer.observe(container);
-
-    // 添加延迟重新观察确保初始测量
-    setTimeout(() => {
-      observer.disconnect();
-      observer.observe(container);
-      updateSearchHeight(container.clientHeight);
-    }, 50);
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [updateSearchHeight]);
 
   // 初始化表单值
@@ -129,21 +98,27 @@ export const SearchCom: React.FC<SearchComProps> = ({
     if (item.hidden) return null;
 
     const commonProps = {
-      placeholder: item.type === 'rangePicker' && Array.isArray(item.placeholder) ? item.placeholder : item.placeholder,
       disabled: item.disabled
     };
 
     switch (item.type) {
       case 'input':
-        return <Input {...commonProps} {...item.inputProps} />;
+        return <Input {...commonProps} placeholder={item.placeholder} {...item.inputProps} />;
       case 'select':
-        return <Select {...commonProps} options={item.options} allowClear {...item.selectProps} />;
+        return <Select {...commonProps} placeholder={item.placeholder} options={item.options} allowClear {...item.selectProps} />;
       case 'datePicker':
-        return <DatePicker {...commonProps} style={{ width: '100%' }} {...item.datePickerProps} />;
+        return <DatePicker {...commonProps} placeholder={item.placeholder} style={{ width: '100%' }} {...item.datePickerProps} />;
       case 'rangePicker':
-        return <RangePicker {...commonProps} placeholder={['开始日期', '结束日期']} style={{ width: '100%' }} {...item.rangePickerProps} />;
+        return (
+          <RangePicker
+            {...commonProps}
+            style={{ width: '100%' }}
+            placeholder={item.placeholder || ['开始日期', '结束日期']}
+            {...item.rangePickerProps}
+          />
+        );
       case 'treeSelect':
-        return <TreeSelect {...commonProps} treeData={item.treeData} allowClear style={{ width: '100%' }} {...item.treeSelectProps} />;
+        return <TreeSelect {...commonProps} placeholder={item.placeholder} treeData={item.treeData} allowClear style={{ width: '100%' }} {...item.treeSelectProps} />;
       default:
         return null;
     }

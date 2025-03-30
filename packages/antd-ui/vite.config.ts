@@ -24,7 +24,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['react', 'react-dom', 'antd', '@ant-design/icons', 'styled-components', 'clsx'],
       output: {
-        preserveModules: true, // 保留模块结构
+        preserveModules: false, // 不保留模块结构
         // 确保外部化处理那些你不想打包进库的依赖
         globals: {
           react: 'React',
@@ -32,9 +32,12 @@ export default defineConfig({
           // 'antd': 'antd',
           // '@ant-design/icons': 'AntDesignIcons',
           // 'styled-components': 'styled',
-          'clsx': 'clsx'
+          clsx: 'clsx'
         },
-        assetFileNames: 'index.css' // 添加CSS输出文件名配置
+        entryFileNames: 'index.mjs', // 固定入口文件名
+        // assetFileNames: 'index.css' // 添加CSS输出文件名配置
+        chunkFileNames: 'chunks/[name].[hash].mjs', // 非入口文件添加hash
+        assetFileNames: 'index[extname]' // .css
       }
     },
     cssCodeSplit: true, // 将CSS代码分割为单独的文件，确保样式被正确加载

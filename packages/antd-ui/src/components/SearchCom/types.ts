@@ -2,6 +2,32 @@ import type { SelectProps } from 'antd/es/select';
 import type { TreeSelectProps } from 'antd/es/tree-select';
 import type { DatePickerProps, RangePickerProps } from 'antd/es/date-picker';
 import type { InputProps } from 'antd/es/input';
+import type { FormInstance } from 'antd/es/form';
+
+// 组件Props属性定义
+export interface SearchComProps {
+  items: SearchItem[];
+  initialValues?: Record<string, any>;
+  onSearch?: (values: Record<string, any>) => void;
+  onReset?: () => void;
+  form?: FormInstance;
+  className?: string;
+  showResetButton?: boolean;
+  showSearchButton?: boolean;
+  searchButtonText?: string;
+  resetButtonText?: string;
+  searchLoading?: boolean;
+  resetLoading?: boolean;
+  colConfig?: {
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+    xxl?: number;
+  };
+  rowGutter?: [number, number];
+}
 
 // 搜索项类型定义
 export type SearchItemType = 'input' | 'select' | 'datePicker' | 'rangePicker' | 'treeSelect';
@@ -36,8 +62,9 @@ interface DatePickerSearchItem extends BaseSearchItem {
   datePickerProps?: DatePickerProps;
 }
 
-interface RangePickerSearchItem extends BaseSearchItem {
+interface RangePickerSearchItem extends Omit<BaseSearchItem, 'placeholder'> {
   type: 'rangePicker';
+  placeholder?: [string, string]; // 元组类型
   rangePickerProps?: RangePickerProps;
 }
 
