@@ -1,4 +1,5 @@
-import Menu from '../Menu';
+import MenuCom from '../Menu';
+import Logout from './Logout';
 
 import styles from './index.module.scss';
 
@@ -15,9 +16,9 @@ export default () => {
       <h1>Eggshell</h1>
       <div className={styles['Header-body']}>
         <div className={styles['Header-right-menu']}>
-          <Menu items={menuItems} />
+          <MenuCom items={menuItems} />
         </div>
-        <div className={styles['logo']}></div>
+        <Logout />
       </div>
     </div>
   );
