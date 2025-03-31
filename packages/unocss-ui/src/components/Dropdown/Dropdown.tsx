@@ -14,15 +14,27 @@ export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bo
     const rect = triggerRef.current.getBoundingClientRect();
     switch (placement) {
       case 'bottom':
-        return { top: rect.bottom + 4, left: rect.left };
+        // 修改为居中对齐
+        return {
+          top: rect.bottom + 4,
+          left: rect.left + rect.width / 2 - 60 // 假设下拉菜单宽度为120px，取一半
+        };
       case 'top':
-        return { top: rect.top - 4, left: rect.left };
+        // 同样修改为居中对齐
+        return {
+          top: rect.top - 4,
+          left: rect.left + rect.width / 2 - 60
+        };
       case 'left':
         return { top: rect.top, left: rect.left - 4 };
       case 'right':
         return { top: rect.top, left: rect.right + 4 };
       default:
-        return { top: rect.bottom + 4, left: rect.left };
+        // 默认也使用居中对齐
+        return {
+          top: rect.bottom + 4,
+          left: rect.left + rect.width / 2 - 60
+        };
     }
   };
 
@@ -78,7 +90,7 @@ export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bo
                 style={getPosition()}
                 onMouseEnter={() => handleMouse(true)}
                 onMouseLeave={() => handleMouse(false)}
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 {overlay}
               </div>
@@ -88,4 +100,4 @@ export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bo
       </div>
     </DropdownContext.Provider>
   );
-}; 
+};
