@@ -10,50 +10,32 @@ import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
 import * as api from '@/services';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { login } from '@/store/authSlice';
-import { AuthType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
+import { AuthType, LoginType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
+import { authStore } from '@/store/auth.store';
 import styles from './index.module.scss';
 
-type LoginType = 'phone' | 'account';
-
-interface ApiResponse {
-  success: boolean;
-  data?: { access_token: string };
-  message?: string;
-}
-
-interface Error {
-  response?: {
-    status: number;
-    data?: {
-      message?: string;
-      detail?: string;
-    }
-  }
-  message?: string;
-}
-
-export default function Login() {
+// 创建 schema 映射关系
+const schemaMap: Record<AuthType, any> = {
+  login: {
+    account: loginSchema,
+    phone: phoneLoginSchema
+  },
+  register: registerSchema
+};
+function Login() {
   const [authType, setAuthType] = useState<AuthType>('login');
   const [loginType, setLoginType] = useState<LoginType>('account');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const dispatch = useAppDispatch();
-  const { status, error } = useAppSelector(state => state.auth);
-  console.log('Login status', status);
-  console.log('Login error', error);
-
   const form = useForm<FormData>({
-    resolver: zodResolver(authType === 'login' ? (loginType === 'account' ? loginSchema : phoneLoginSchema) : registerSchema),
+    resolver: zodResolver(authType === 'login' ? schemaMap.login[loginType] : schemaMap.register),
     defaultValues: {
       username: '',
       phone: '',
       password: '',
-      code: '',
-      remember: false
+      code: ''
     }
   });
 
@@ -76,22 +58,14 @@ export default function Login() {
         return;
       }
 
-      const res = await api[authType]({ ...data, password: encryptedPassword }) as unknown as ApiResponse;
+      const res: any = await api[authType]({ ...data, password: encryptedPassword });
       console.log('测试onSubmit response', res);
 
       // Handle successful response(处理成功响应)
       if (res.success) {
         if (authType === 'login') {
-          dispatch(
-            login({
-              username: data.username,
-              password: data.password
-            })
-          );
-
-          if(res.data?.access_token) {
-            localStorage.setItem('token', res.data.access_token);
-          }
+          console.log('测试登录onSubmit res.data', res.data);
+          authStore.setTokens(res.data.access_token, res.data.refresh_token);
 
           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
           navigate(redirectUrl);
@@ -102,21 +76,20 @@ export default function Login() {
       } else {
         addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      const _error = error as unknown as Error;
-      if (_error.response) {
+      if (error.response) {
         // Handle structured error response(处理结构化错误响应)
-        const { status, data } = _error.response;
+        const { status, data } = error.response;
         if (status === 403) {
           addToast({ message: '访问被拒绝，请检查您的权限', type: 'error' });
         } else {
           const { message, detail } = data || {};
           addToast({ message: message || detail || `请求失败，状态码：${status}`, type: 'error' });
         }
-      } else if (_error.message) {
+      } else if (error.message) {
         // Handle generic error(处理一般错误)
-        addToast({ message: _error.message, type: 'error' });
+        addToast({ message: error.message, type: 'error' });
       } else {
         addToast({ message: '登录失败，请稍后重试', type: 'error' });
       }
@@ -150,22 +123,6 @@ export default function Login() {
                   rules={{ required: '密码不能为空' }}
                   error={errors.password}
                 />
-
-                <div className={styles.remember}>
-                  <Controller
-                    name="remember"
-                    control={control}
-                    render={({ field }) => (
-                      <label>
-                        <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} />
-                        记住我
-                      </label>
-                    )}
-                  />
-                  <a href="#" className={styles.forgot}>
-                    忘记密码
-                  </a>
-                </div>
 
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
@@ -244,8 +201,9 @@ export default function Login() {
           </form>
         )}
 
-        <RegisterText authType={authType} setAuthType={setAuthType} />
+        {loginType === 'account' ? <RegisterText authType={authType} setAuthType={setAuthType} /> : null}
       </div>
     </div>
   );
-};
+}
+export default Login;

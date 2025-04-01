@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import Layout from '@/layout';
 import Login from '@/pages/Login';
-import ErrorPage from '@/components/ErrorPage';
+// import ErrorPage from '@/components/ErrorPage';
 
 import AuthRoute from './AuthRoute';
 
@@ -21,7 +21,7 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
         <Layout />
       </AuthRoute>
     ),
-    errorElement: <ErrorPage />, // 全局错误捕获
+    // errorElement: <ErrorPage />, // 全局错误捕获
     children: [
       {
         index: true, // 当访问根路径时，默认渲染 Home 组件
@@ -33,6 +33,10 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
       {
         path: 'form-test',
         lazy: loadComponent('FormTest')
+      },
+      {
+        path: 'table-test',
+        lazy: loadComponent('TableTest')
       },
       {
         path: '/baidu-map',

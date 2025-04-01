@@ -1,26 +1,24 @@
-import { Control, FieldError, Controller, FieldValues, Path, RegisterOptions } from 'react-hook-form';
-
+import { Control, FieldError } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import styles from '../index.module.scss';
 
-// 未显式指定 T 时，默认 T = FieldValues
-// interface FormInputProps<T extends FieldValues = FieldValues> {
-interface FormInputProps<T extends FieldValues> {
-  control: Control<T>;
-  name: Path<T>;
+interface FormInputProps {
+  control: Control<any>;
+  name: string;
   type: string;
   placeholder: string;
-  rules: RegisterOptions<T>;
+  rules: any;
   error?: FieldError;
 }
 
-export default function FormInput<T extends FieldValues>({
+export default function FormInput({
   control,
   name,
   type,
   placeholder,
   rules,
   error
-}: FormInputProps<T>) {
+}: FormInputProps) {
   return (
     <div className={styles.formGroup}>
       <Controller
