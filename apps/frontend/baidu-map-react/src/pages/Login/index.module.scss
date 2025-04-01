@@ -8,6 +8,7 @@
 
 .loginBox {
   width: 480px;
+  min-height: 386px;
   padding: 2.5rem;
   background: #fff;
   border-radius: 12px;
@@ -16,7 +17,7 @@
 
 .tabs {
   display: flex;
-  padding-bottom: 2.5rem;
+  padding-bottom: 2rem;
 }
 
 .tab {
@@ -80,20 +81,6 @@
   }
 }
 
-.remember {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.875rem;
-
-  label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-  }
-}
-
 .forgot {
   color: #3b82f6;
   text-decoration: none;
@@ -104,7 +91,7 @@
 }
 
 .submitButton {
-  padding: 1rem;
+  height: 3rem !important;
   background-color: #2563eb;
   color: white;
   border: none;
@@ -135,16 +122,15 @@
 }
 
 .registerText {
-  text-align: center;
-  margin-top: 2rem;
+  padding-top: 2rem;
   color: #64748b;
   font-size: 1.125rem;
+  display: flex;
 
   a {
     color: #3b82f6;
     text-decoration: none;
     font-weight: 500;
-    margin-left: 0.5rem;
 
     &:hover {
       text-decoration: underline;
