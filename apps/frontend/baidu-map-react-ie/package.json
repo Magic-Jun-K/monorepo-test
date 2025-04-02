@@ -14,7 +14,6 @@
     "react-router-dom": "5.3.4",
     "@reduxjs/toolkit": "2.5.1",
     "react-redux": "8.1.3",
-    "@eggshell/ui": "workspace:*",
     "@eggshell/antd-ui": "workspace:*",
     "@eggshell/unocss-ui-ie": "workspace:*",
     "echarts": "5.6.0",
@@ -74,12 +73,13 @@
     "production": [
       "ie 10",
       ">0.2%",
-      "not ie <= 9",
+      "not dead",
       "not op_mini all"
     ],
     "development": [
       "ie 10",
       "last 1 chrome version",
+      "last 1 firefox version",
       "last 1 safari version"
     ]
   }
