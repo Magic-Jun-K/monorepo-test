@@ -127,7 +127,7 @@ export default () => {
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '924px' }}>
+      <div style={{ height: '774px' }}>
         <DataEditor
           width="100%"
           rows={data.length}
