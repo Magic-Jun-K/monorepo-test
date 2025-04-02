@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, PropsWithChildren } from 'react';
 import { Link } from 'react-router-dom';
 import { Dropdown, Menu } from '@eggshell/unocss-ui';
 import type { MenuItemType } from '@eggshell/unocss-ui';
@@ -60,7 +60,7 @@ const menuConfig: MenuItemType[] = [
   }
 ];
 
-const MainMenu: FC<MenuProps> = ({ items, className = '' }) => {
+const MainMenu: FC<PropsWithChildren<MenuProps>> = ({ items, className = '' }) => {
   console.log('Rendering menu items:', items);
 
   return (

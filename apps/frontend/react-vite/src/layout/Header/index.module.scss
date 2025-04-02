@@ -22,7 +22,7 @@
 
   .Header-right-menu {
     flex-grow: 1;
-    
+
     a {
       color: #fff;
     }
@@ -30,30 +30,22 @@
     .menu-component {
       position: relative;
       z-index: 200;
-      
+
       ul {
         display: flex;
         gap: 30px;
       }
-      
+
       .menu-item {
         > a {
           color: #fff;
           transition: opacity 0.3s;
-          
+
           &:hover {
             opacity: 0.8;
           }
         }
       }
     }
-  }
-
-  .logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 }
