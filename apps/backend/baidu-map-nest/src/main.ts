@@ -6,7 +6,6 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 // import { LoggerMiddleware } from './middlewares/LoggerMiddleware';
 import { HttpErrorFilter } from './common/filters/ExceptionFilter';
-// import { CodeErrorFilter } from './common/filters/CodeErrorFilter';
 // import { DetailPipe } from './common/pipes/DetailPipe';
 import { AuthGuard } from './common/guards/Auth';
 
@@ -16,7 +15,7 @@ async function bootstrap() {
   // app.useGlobalInterceptors(new LoggerMiddleware());
 
   // app.useGlobalFilters;
-  app.useGlobalFilters(new HttpErrorFilter(), /* new CodeErrorFilter() */);
+  app.useGlobalFilters(new HttpErrorFilter());
 
   // app.useGlobalPipes
   // app.useGlobalPipes(new DetailPipe());
@@ -31,7 +30,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5173'
     ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,POST,HEAD,PUT,PATCH,DELETE',
     credentials: true, // 允许携带 cookie
   });
 

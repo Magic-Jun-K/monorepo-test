@@ -1,15 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-import { AdminService } from '../admin/admin.service';
+// import { AdminService } from '../admin/admin.service';
+import { AdminEntity } from '../../entities/admin.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly adminService: AdminService,
+    // private readonly adminService: AdminService,
+    @InjectRepository(AdminEntity)
+    private readonly adminRepository: Repository<AdminEntity>,
     private readonly authUtils: AuthUtils,
+    @Inject('REFRESH_TOKEN_BLACKLIST') // 注入已注册的实例
+    private readonly refreshTokenBlacklist: Set<string>, // 用于存储已失效的 refresh token
   ) {}
 
   /**
@@ -18,8 +25,12 @@ export class AuthService {
    * @param password
    * @returns
    */
-  async validateUser(username: string, password: string): Promise<any> {
-    const admin = await this.adminService.validateUser(username, password);
+  async validateUser(username: string/* , password: string */): Promise<any> {
+    // const admin = await this.adminService.validateUser(username, password);
+    const admin = await this.adminRepository.findOne({
+      where: { username },
+      select: ['id', 'username', 'password' /* , 'roles' */],
+    });
 
     if (admin) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,18 +56,65 @@ export class AuthService {
     );
   }
 
+  /**
+   * 登录
+   * @param user
+   * @returns
+   */
   async login(user: any): Promise<any> {
-    const payload = { username: user.username, sub: user.userId };
-    console.log('测试auth service login payload', payload);
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+    };
+    console.log('测试auth service login user', user);
     console.log(
       '测试auth service login access_token',
       this.jwtService.sign(payload),
     );
     return {
       access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(
+        { sub: user.id },
+        {
+          expiresIn: '7d',
+          secret: process.env.JWT_REFRESH_SECRET, // 使用独立密钥
+        },
+      ),
     };
   }
 
+  /**
+   * 刷新token
+   * @param refreshToken
+   * @returns
+   */
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      return this.jwtService.sign({
+        sub: payload.sub,
+        email: payload.email,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async revokeRefreshToken(token: string) {
+    this.refreshTokenBlacklist.add(token);
+  }
+
+  async isRefreshTokenRevoked(token: string) {
+    return this.refreshTokenBlacklist.has(token);
+  }
+
+  /**
+   * 退出登录
+   * @returns
+   */
   async logout(/* user: any */): Promise<any> {
     // 请注意，jwt token是无状态的，所以不需要做任何操作，没法将其置为失效
     // 但是可以在前端删除token，这样就达到了退出登录的目的

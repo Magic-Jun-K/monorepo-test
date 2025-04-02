@@ -5,8 +5,10 @@ import {
   Request,
   UseGuards,
   UnauthorizedException,
+  Body,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -20,6 +22,7 @@ export class AuthController {
     private readonly authService: AuthService,
     @InjectRepository(AdminEntity)
     private readonly adminRepository: Repository<AdminEntity>,
+    private readonly jwtService: JwtService,
   ) {}
 
   /**
@@ -32,16 +35,16 @@ export class AuthController {
   @Post('/auth/login')
   async login(@Request() req) {
     // 从数据库获取用户信息
-    const user = await this.adminRepository.findOne({
-      where: { username: req.user.username },
-    });
+    // const user = await this.adminRepository.findOne({
+    //   where: { username: req.user.username },
+    // });
 
-    if (!user) {
-      throw new UnauthorizedException({
-        message: '用户认证失败',
-        detail: '无效的用户凭证',
-      });
-    }
+    // if (!user) {
+    //   throw new UnauthorizedException({
+    //     message: '用户认证失败',
+    //     detail: '无效的用户凭证',
+    //   });
+    // }
 
     const token = await this.authService.login(req.user);
 
@@ -50,8 +53,58 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/auth/logout')
-  async logout() {
-    return { success: await this.authService.logout() };
+  // async logout() {
+  //   return { success: await this.authService.logout() };
+  // }
+  async logout(@Request() req) {
+    // 从请求头获取refreshToken（需前端传递）
+    const refreshToken = req.body.refresh_token;
+    await this.authService.revokeRefreshToken(refreshToken);
+    return { success: true };
+  }
+
+  /**
+   * 刷新token
+   * @param refreshToken
+   * @returns
+   */
+  @Post('auth/refresh')
+  async refreshToken(@Body() body: { refresh_token: string }) {
+    // 黑名单验证
+    if (await this.authService.isRefreshTokenRevoked(body.refresh_token)) {
+      throw new UnauthorizedException('令牌已失效');
+    }
+
+    try {
+      // 验证 refresh token
+      const payload = this.jwtService.verify(body.refresh_token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      // 检查用户是否存在
+      const user = await this.adminRepository.findOne({
+        where: { id: payload.sub },
+        select: ['id', 'username'],
+      });
+      
+      if (!user) throw new UnauthorizedException();
+
+      return {
+        access_token: this.jwtService.sign({
+          sub: user.id,
+          username: user.username,
+        }),
+        refresh_token: this.jwtService.sign(
+          { sub: user.id },
+          {
+            expiresIn: '7d',
+            secret: process.env.JWT_REFRESH_SECRET,
+          },
+        ),
+      };
+    } catch {
+      throw new UnauthorizedException('刷新令牌无效');
+    }
   }
 
   /**

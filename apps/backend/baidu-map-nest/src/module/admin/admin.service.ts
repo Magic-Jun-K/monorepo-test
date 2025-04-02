@@ -19,21 +19,21 @@ export class AdminService {
    * @param password
    * @returns
    */
-  async validateUser(username: string, password: string): Promise<any> {
-    const admin = await this.adminRepository.findOne({
-      where: { username },
-    });
+  // async validateUser(username: string, password: string): Promise<any> {
+  //   const admin = await this.adminRepository.findOne({
+  //     where: { username },
+  //   });
 
-    if (!admin) return null;
+  //   if (!admin) return null;
 
-    // 验证密码
-    const isValid = await this.authUtils.verifyPassword(
-      admin.password,
-      password,
-    );
+  //   // 验证密码
+  //   const isValid = await this.authUtils.verifyPassword(
+  //     admin.password,
+  //     password,
+  //   );
 
-    return isValid ? admin : null;
-  }
+  //   return isValid ? admin : null;
+  // }
 
   /**
    * 用户注册

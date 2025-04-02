@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { /* HttpException, HttpStatus, */ Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 
@@ -10,15 +10,21 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  async validate(username: string, password: string): Promise<any> {
-    const user = await this.authService.validateUser(username, password);
+  async validate(username: string/* , password: string */): Promise<any> {
+    const user = await this.authService.validateUser(username);
     console.log("测试auth local validate user", user);
     
+    // if (!user) {
+    //   throw new HttpException(
+    //     { message: 'authorized failed', error: 'please try again later.' },
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
     if (!user) {
-      throw new HttpException(
-        { message: 'authorized failed', error: 'please try again later.' },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new UnauthorizedException({
+        message: '认证失败',
+        error: '无效凭证'
+      });
     }
     return user;
   }
