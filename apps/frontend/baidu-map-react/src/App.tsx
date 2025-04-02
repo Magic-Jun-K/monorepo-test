@@ -1,12 +1,11 @@
-import { FC /* useEffect */ } from 'react';
+import { FC, /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
-import { Provider } from 'react-redux';
 
 import { ToastProvider } from '@/components/Toast';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
-import { store } from '@/store/store';
+import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
@@ -28,12 +27,13 @@ const App: FC = () => {
   //   // }
   // }, []);
 
+  // 检查token是否过期
+  useTokenExpirationCheck();
+
   return (
-    <Provider store={store}>
-      <ToastProvider>
-        <RouterProvider router={router} />
-      </ToastProvider>
-    </Provider>
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
   );
 };
 export default App;
