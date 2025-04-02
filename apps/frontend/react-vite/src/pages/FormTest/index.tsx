@@ -93,7 +93,8 @@ export default function FormTest() {
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column, newSize: number, colIndex: number) => {
+  const handleColumnResize = useCallback((column: any, newSize: number, colIndex: number) => {
+    console.log('测试column', column);
     setColumns(prevColumns => {
       const newColumns = [...prevColumns] as Column[];
       newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize } as Column;
@@ -126,7 +127,7 @@ export default function FormTest() {
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '924px' }}>
+      <div style={{ height: '774px' }}>
         <DataEditor
           width="100%"
           rows={data.length}
