@@ -25,7 +25,7 @@ export class AuthService {
    * @param password
    * @returns
    */
-  async validateUser(username: string/* , password: string */): Promise<any> {
+  async validateUser(username: string /* , password: string */): Promise<any> {
     // const admin = await this.adminService.validateUser(username, password);
     const admin = await this.adminRepository.findOne({
       where: { username },
@@ -61,7 +61,23 @@ export class AuthService {
    * @param user
    * @returns
    */
-  async login(user: any): Promise<any> {
+  async login(user: any, password: string): Promise<any> {
+    // 首先验证密码
+    const admin = await this.adminRepository.findOne({
+      where: { username: user.username },
+      select: ['id', 'username', 'password'],
+    });
+
+    if (!admin) {
+      throw new UnauthorizedException('用户不存在');
+    }
+
+    // 验证密码
+    const isPasswordValid = await this.verifyPassword(admin.password, password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('密码错误');
+    }
+
     const payload = {
       username: user.username,
       sub: user.id,

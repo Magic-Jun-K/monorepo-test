@@ -34,19 +34,8 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('/auth/login')
   async login(@Request() req) {
-    // 从数据库获取用户信息
-    // const user = await this.adminRepository.findOne({
-    //   where: { username: req.user.username },
-    // });
-
-    // if (!user) {
-    //   throw new UnauthorizedException({
-    //     message: '用户认证失败',
-    //     detail: '无效的用户凭证',
-    //   });
-    // }
-
-    const token = await this.authService.login(req.user);
+    // console.log('测试auth controller login req', req);
+    const token = await this.authService.login(req.body.username, req.body.password);
 
     return { data: token, message: '登录成功', success: true };
   }
