@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { SearchCom, TableCom } from '@eggshell/antd-ui';
 
 import ContainerBody from '@/layout/ContainerBody';
 import { COLUMNS, SEARCH_ITEMS } from './constant';
+import { toastStore } from '@/store/toast.store';
 
 import styles from './index.module.scss';
 
@@ -17,6 +19,10 @@ function TableTest() {
   //     createTime: '2023-01-15'
   //   },
   // ]);
+
+  useEffect(() => {
+    toastStore.success('欢迎使用');
+  }, []);
 
   // 处理搜索事件
   const handleSearch = async (values: Record<string, any>) => {

@@ -1,30 +1,18 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect } from 'react';
+
+import { ToastProps, ToastContext } from './useToast';
+
 import styles from './index.module.scss';
-
-interface ToastProps {
-  message: string;
-  type: 'success' | 'error' | 'info';
-  duration?: number;
-  onClose?: () => void;
-}
-
-interface ToastContextType {
-  addToast: (toast: ToastProps) => void;
-}
-
-const ToastContext = createContext<ToastContextType>({
-  addToast: () => {}
-});
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
   const addToast = (toast: ToastProps) => {
-    setToasts((prev) => [...prev, toast]);
+    setToasts(prev => [...prev, toast]);
   };
 
   const removeToast = (index: number) => {
-    setToasts((prev) => prev.filter((_, i) => i !== index));
+    setToasts(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -32,19 +20,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       <div className={styles.container}>
         {toasts.map((toast, index) => (
-          <Toast
-            key={index}
-            {...toast}
-            onClose={() => removeToast(index)}
-          />
+          <Toast key={index} {...toast} onClose={() => removeToast(index)} />
         ))}
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  return useContext(ToastContext);
 }
 
 function Toast({ message, type, duration = 3000, onClose }: ToastProps) {

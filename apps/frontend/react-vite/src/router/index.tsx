@@ -7,9 +7,10 @@ import Login from '@/pages/Login';
 import AuthRoute from './AuthRoute';
 
 export const loadComponent = (path: string) => {
-  return () => import(/* @vite-ignore */ `../pages/${path}`).then(module => ({
-    Component: module.default
-  }));
+  return () =>
+    import(/* @vite-ignore */ `../pages/${path}`).then(module => ({
+      Component: module.default
+    }));
 };
 
 // 路由映射表
