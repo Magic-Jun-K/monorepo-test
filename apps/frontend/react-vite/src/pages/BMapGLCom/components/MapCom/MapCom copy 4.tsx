@@ -25,7 +25,7 @@ const MAP_CONFIG = {
   ICON_CLUSTER: `${BASE_URL}/images/iconCluster.png`,
   ICON_IMAGE: `${BASE_URL}/images/image.png`,
   DATA_BOUNDS: [113.25167, 113.42317, 23.10791, 23.09372] as [number, number, number, number], // 数据边界
-  POINT_COUNT: 500000, // 落点数量
+  POINT_COUNT: 1000000, // 落点数量
 };
 
 let scriptPromise: Promise<typeof window.BMapGL> | null = null;
