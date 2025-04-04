@@ -2,7 +2,10 @@ import { defineConfig /* loadEnv */ } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import wasm from 'vite-plugin-wasm';
 import path from 'node:path';
+
+import assemblyscriptPlugin from './plugins/vite-plugin-assemblyscript';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,6 +16,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
+      wasm(),
+      assemblyscriptPlugin(),
       ViteImageOptimizer({
         jpg: { quality: 80 },
         png: { quality: 85 },
