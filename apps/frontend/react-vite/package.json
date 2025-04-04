@@ -7,14 +7,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "asbuild:debug": "asc assembly/index.ts --target debug",
+    "asbuild:release": "asc assembly/index.ts --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+    "test": "node tests",
+    "start": "npx serve ."
   },
   "dependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "7.1.5",
-    "@reduxjs/toolkit": "2.5.1",
-    "react-redux": "9.2.0",
     "@eggshell/antd-ui": "workspace:*",
     "@eggshell/unocss-ui": "workspace:*",
     "echarts": "5.6.0",
@@ -28,7 +31,9 @@
     "@glideapps/glide-data-grid": "6.0.3",
     "uuid": "11.1.0",
     "web-vitals": "4.2.4",
-    "jose": "6.0.10"
+    "jose": "6.0.10",
+    "mobx": "6.13.7",
+    "mobx-react-lite": "4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "9.23.0",
@@ -46,6 +51,14 @@
     "@vitejs/plugin-react-swc": "3.8.1",
     "vite-plugin-svgr": "4.3.0",
     "vite-plugin-image-optimizer": "1.1.8",
-    "terser": "5.39.0"
+    "terser": "5.39.0",
+    "assemblyscript": "0.27.35",
+    "vite-plugin-wasm": "3.4.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./build/release.js",
+      "types": "./build/release.d.ts"
+    }
   }
 }
