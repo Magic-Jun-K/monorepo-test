@@ -2,9 +2,9 @@ import { FC /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
-import { ToastProvider } from '@/components/Toast';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
+import { ToastContainer } from '@/components/Toast/ToastContainer';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
@@ -30,9 +30,10 @@ const App: FC = () => {
   useTokenExpirationCheck();
 
   return (
-    <ToastProvider>
+    <>
       <RouterProvider router={router} />
-    </ToastProvider>
+      <ToastContainer />
+    </>
   );
 };
 export default App;
