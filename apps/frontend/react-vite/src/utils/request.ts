@@ -18,9 +18,9 @@ request.interceptors.request.use(config => {
   if (accessToken) {
     try {
       const { exp } = decodeJwt(accessToken);
-      console.log('测试token', accessToken);
-      console.log('测试exp', exp);
-      console.log('测试Date.now()', Date.now());
+      // console.log('测试token', accessToken);
+      // console.log('测试exp', exp);
+      // console.log('测试Date.now()', Date.now());
       if (exp && exp * 1000 < Date.now()) {
         authStore.clear();
         window.location.href = '/account/login';
@@ -87,8 +87,9 @@ request.interceptors.response.use(
             onRefreshed(data.access_token);
             return request(originalRequest);
           } catch {
-            authStore.clear();
-            window.location.href = '/account/login';
+            // authStore.clear();
+            // window.location.href = '/account/login';
+            return Promise.reject(error);
           } finally {
             isRefreshing = false;
           }
