@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
 
-import { AuthGuard } from './common/guards/Auth';
+import { AuthGuard } from './common/guards/auth.guard';
 import { AppController } from './app.controller';
 import { AppService, PgService } from './app.service';
 import { DetailModule } from './module/detail/detail.module';

@@ -4,8 +4,8 @@
 import { Controller, Get, Param, UsePipes, UseGuards } from '@nestjs/common';
 
 import { DetailService } from './detail.service';
-import { DetailPipe } from '../../common/pipes/DetailPipe';
-import { AuthGuard } from '../../common/guards/Auth';
+import { DetailPipe } from '../../common/pipes/detail.pipe';
+import { AuthGuard } from '../../common/guards/auth.guard';
 import { PgService } from '../../app.service';
 
 // 路由拦截

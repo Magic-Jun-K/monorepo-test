@@ -1,3 +1,6 @@
+/**
+ * @description 日志中间件
+ */
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 

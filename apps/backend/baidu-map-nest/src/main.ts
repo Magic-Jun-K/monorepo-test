@@ -5,22 +5,19 @@ import { NestFactory, Reflector } from '@nestjs/core';
 
 import { AppModule } from './app.module';
 // import { LoggerMiddleware } from './middlewares/LoggerMiddleware';
-import { HttpErrorFilter } from './common/filters/ExceptionFilter';
+import { HttpErrorFilter } from './common/filters/exception.filter';
 // import { DetailPipe } from './common/pipes/DetailPipe';
-import { AuthGuard } from './common/guards/Auth';
+import { AuthGuard } from './common/guards/auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // app.useGlobalInterceptors(new LoggerMiddleware());
 
-  // app.useGlobalFilters;
   app.useGlobalFilters(new HttpErrorFilter());
 
-  // app.useGlobalPipes
   // app.useGlobalPipes(new DetailPipe());
 
-  // app.useGlobalGuards
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new AuthGuard(reflector));
 

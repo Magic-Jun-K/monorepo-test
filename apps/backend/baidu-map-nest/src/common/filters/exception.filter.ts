@@ -1,5 +1,5 @@
 /**
- * @description 错误过滤器
+ * @description 异常过滤器
  */
 import {
   ExceptionFilter,
