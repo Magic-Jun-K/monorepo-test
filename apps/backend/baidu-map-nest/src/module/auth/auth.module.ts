@@ -11,6 +11,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
 import { AuthUtils } from '../../common/utils/auth.utils';
+import { RedisModule } from '../redis/redis.module';
+import { TokenBlacklistService } from './token-backlist.service';
 
 @Module({
   imports: [
@@ -23,12 +25,13 @@ import { AuthUtils } from '../../common/utils/auth.utils';
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
         secret: config.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1h', algorithm: 'HS256' },
+        signOptions: { expiresIn: '30m', algorithm: 'HS256' },
       }),
       inject: [ConfigService], // 注入配置服务
     }),
     AdminModule,
     TypeOrmModule.forFeature([AdminEntity]),
+    RedisModule
   ],
   controllers: [AuthController],
   providers: [
@@ -36,10 +39,7 @@ import { AuthUtils } from '../../common/utils/auth.utils';
     LocalStrategy,
     JwtStrategy,
     AuthUtils,
-    {
-      provide: 'REFRESH_TOKEN_BLACKLIST', // 注册令牌黑名单实例
-      useValue: new Set<string>(),
-    },
+    TokenBlacklistService
   ],
   exports: [AuthService],
 })

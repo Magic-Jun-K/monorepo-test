@@ -1,22 +1,20 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-// import { AdminService } from '../admin/admin.service';
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
+import { TokenBlacklistService } from './token-backlist.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    // private readonly adminService: AdminService,
     @InjectRepository(AdminEntity)
     private readonly adminRepository: Repository<AdminEntity>,
     private readonly authUtils: AuthUtils,
-    @Inject('REFRESH_TOKEN_BLACKLIST') // 注入已注册的实例
-    private readonly refreshTokenBlacklist: Set<string>, // 用于存储已失效的 refresh token
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   /**
@@ -26,7 +24,6 @@ export class AuthService {
    * @returns
    */
   async validateUser(username: string /* , password: string */): Promise<any> {
-    // const admin = await this.adminService.validateUser(username, password);
     const admin = await this.adminRepository.findOne({
       where: { username },
       select: ['id', 'username', 'password' /* , 'roles' */],
@@ -119,12 +116,21 @@ export class AuthService {
     }
   }
 
+  /**
+   * 撤销token
+   * @param token
+   */
   async revokeRefreshToken(token: string) {
-    this.refreshTokenBlacklist.add(token);
+    await this.tokenBlacklistService.addToBlacklist(token);
   }
 
+  /**
+   * 判断token是否被撤销
+   * @param token
+   * @returns
+   */
   async isRefreshTokenRevoked(token: string) {
-    return this.refreshTokenBlacklist.has(token);
+    return this.tokenBlacklistService.isBlacklisted(token);
   }
 
   /**

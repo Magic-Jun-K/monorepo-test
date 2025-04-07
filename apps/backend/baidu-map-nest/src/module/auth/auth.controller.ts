@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthService } from './auth.service';
+import { Public } from '@/common/decorators/public.decorator';
 
 // 路由拦截
 @Controller()
@@ -35,7 +36,10 @@ export class AuthController {
   @Post('/auth/login')
   async login(@Request() req) {
     // console.log('测试auth controller login req', req);
-    const token = await this.authService.login(req.body.username, req.body.password);
+    const token = await this.authService.login(
+      req.body.username,
+      req.body.password,
+    );
 
     return { data: token, message: '登录成功', success: true };
   }
@@ -57,12 +61,15 @@ export class AuthController {
    * @param refreshToken
    * @returns
    */
+  @Public()
   @Post('auth/refresh')
   async refreshToken(@Body() body: { refresh_token: string }) {
     // 黑名单验证
     if (await this.authService.isRefreshTokenRevoked(body.refresh_token)) {
       throw new UnauthorizedException('令牌已失效');
     }
+
+    console.log('🔄 后端正在刷新 Token...', new Date().toLocaleTimeString());
 
     try {
       // 验证 refresh token
@@ -75,10 +82,10 @@ export class AuthController {
         where: { id: payload.sub },
         select: ['id', 'username'],
       });
-      
+
       if (!user) throw new UnauthorizedException();
 
-      return {
+      const tokens = {
         access_token: this.jwtService.sign({
           sub: user.id,
           username: user.username,
@@ -86,12 +93,22 @@ export class AuthController {
         refresh_token: this.jwtService.sign(
           { sub: user.id },
           {
-            expiresIn: '7d',
+            // expiresIn: '7d',
+            expiresIn: '2d',
             secret: process.env.JWT_REFRESH_SECRET,
           },
         ),
       };
-    } catch {
+
+      console.log('✅ 后端 Token 刷新成功！');
+
+      // 确保返回格式一致
+      return {
+        success: true,
+        data: tokens,
+      };
+    } catch (error) {
+      console.error('Token 刷新失败:', error);
       throw new UnauthorizedException('刷新令牌无效');
     }
   }
