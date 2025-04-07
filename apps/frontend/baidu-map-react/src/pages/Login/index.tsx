@@ -12,6 +12,8 @@ import { encrypt } from '@/utils/hashWasm';
 import * as api from '@/services';
 import { AuthType, LoginType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
 import { authStore } from '@/store/auth.store';
+import { ToastProvider } from '@/components/Toast';
+
 import styles from './index.module.scss';
 
 // 创建 schema 映射关系
@@ -22,7 +24,7 @@ const schemaMap: Record<AuthType, any> = {
   },
   register: registerSchema
 };
-export default () => {
+const LoginContent = () => {
   const [authType, setAuthType] = useState<AuthType>('login');
   const [loginType, setLoginType] = useState<LoginType>('account');
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ export default () => {
   } = form;
 
   const onSubmit = async (data: FormData) => {
-    console.log('测试onSubmit data', data);
+    // console.log('测试onSubmit data', data);
     setLoading(true);
     const encryptedPassword = await encrypt(data.password);
 
@@ -59,15 +61,13 @@ export default () => {
       }
 
       const res: any = await api[authType]({ ...data, password: encryptedPassword });
-      console.log('测试onSubmit response', res);
+      // console.log('测试onSubmit response', res);
 
       // Handle successful response(处理成功响应)
       if (res.success) {
         if (authType === 'login') {
-          console.log('测试登录onSubmit res.data', res.data);
+          // console.log('测试登录onSubmit res.data', res.data);
           authStore.setTokens(res.data.access_token, res.data.refresh_token);
-
-          // localStorage.setItem('token', res.data.access_token);
 
           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
           navigate(redirectUrl);
@@ -206,5 +206,13 @@ export default () => {
         {loginType === 'account' ? <RegisterText authType={authType} setAuthType={setAuthType} /> : null}
       </div>
     </div>
+  );
+};
+
+export default () => {
+  return (
+    <ToastProvider>
+      <LoginContent />
+    </ToastProvider>
   );
 };

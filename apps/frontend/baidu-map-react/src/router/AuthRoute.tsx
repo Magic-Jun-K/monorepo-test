@@ -1,8 +1,6 @@
 import { FC } from 'react';
 import { Navigate } from 'react-router-dom';
-// import { useSelector } from 'react-redux';
 
-// import { RootState } from '@/store/store';
 import { authStore } from '@/store/auth.store';
 
 interface AuthRouteProps {
@@ -11,10 +9,6 @@ interface AuthRouteProps {
 }
 
 const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
-  // const { user, token } = useSelector((state: RootState) => state.auth);
-  // console.log('AuthRoute user', user);
-  // console.log('AuthRoute token', token);
-
   // 如果用户没有登录，重定向到登录页面
   if (!authStore.getAccessToken()) {
     return <Navigate to={`/account/login?redirect=${window.location.pathname}`} />;

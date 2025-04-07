@@ -1,8 +1,7 @@
-import { FC, /* useEffect */ } from 'react';
+import { FC /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
-import { ToastProvider } from '@/components/Toast';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
@@ -30,10 +29,6 @@ const App: FC = () => {
   // 检查token是否过期
   useTokenExpirationCheck();
 
-  return (
-    <ToastProvider>
-      <RouterProvider router={router} />
-    </ToastProvider>
-  );
+  return <RouterProvider router={router} />;
 };
 export default App;
