@@ -1,5 +1,5 @@
-import { CurrentUserRes, LoginPayload, LoginRes } from './types';
 import { request } from '@/utils/request';
+import { CurrentUserRes, LoginPayload, LoginRes } from './types';
 
 /**
  * 用户登录

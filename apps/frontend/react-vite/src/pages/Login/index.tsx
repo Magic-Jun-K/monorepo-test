@@ -67,7 +67,7 @@ function LoginContext() {
       if (res.success) {
         if (authType === 'login') {
           // console.log('测试登录onSubmit res.data', res.data);
-          authStore.setTokens(res.data.access_token, res.data.refresh_token);
+          authStore.setTokens(res.data.access_token, res.data.refresh_token, true);
 
           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
           navigate(redirectUrl);
