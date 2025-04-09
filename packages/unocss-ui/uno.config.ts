@@ -1,8 +1,10 @@
-import { defineConfig, presetUno, presetAttributify } from 'unocss';
+import { defineConfig, presetWind3, presetAttributify } from 'unocss';
 
+// 官方预设文档：https://unocss.dev/presets/
+// 66.0.0版本开始，presetUno改为presetWind3
 export default defineConfig({
   presets: [
-    presetUno(), // 核心原子化预设
+    presetWind3(), // 核心原子化预设
     presetAttributify() // 支持属性化模式（可选）
   ],
   // 组件库专用规则（按需添加）
@@ -32,6 +34,15 @@ export default defineConfig({
       '3xl': '1920px', // 2K基准
       '4xl': '2560px', // 4K基准
       '8xl': '3840px' // 8K基准
+    }
+  },
+  content: {
+    pipeline: {
+      include: [
+        // 确保包含 styles.ts 文件
+        '**/*.{html,js,ts,tsx}',
+        './src/components/**/styles.ts'
+      ]
     }
   }
 });
