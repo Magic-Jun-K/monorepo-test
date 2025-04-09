@@ -2,7 +2,7 @@ export interface ModalProps {
   /**
    * 是否可见
    */
-  visible: boolean;
+  open: boolean;
   /**
    * 标题
    */
@@ -23,4 +23,19 @@ export interface ModalProps {
    * 底部
    */
   footer?: React.ReactNode;
+  /**
+   * 宽度
+   */
+  width?: number | string;
+  /**
+   * 样式配置
+   */
+  styles?: {
+    mask?: React.CSSProperties;
+    wrapper?: React.CSSProperties;
+    header?: React.CSSProperties;
+    body?: React.CSSProperties;
+    footer?: React.CSSProperties;
+    content?: React.CSSProperties;
+  };
 }

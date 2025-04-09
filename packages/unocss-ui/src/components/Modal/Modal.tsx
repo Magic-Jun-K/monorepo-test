@@ -8,21 +8,42 @@ import { createPortal } from 'react-dom';
 import { Button } from '../Button';
 import type { ModalProps } from './types';
 
-export const Modal = ({ visible, title, onCancel, onOk, children, footer }: ModalProps) => {
+export const Modal = ({
+  open,
+  title,
+  onCancel,
+  onOk,
+  children,
+  footer,
+  width = 520,
+  styles = {}
+}: ModalProps) => {
   useEffect(() => {
-    if (visible) {
+    if (open) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
-  }, [visible]);
+  }, [open]);
 
-  if (!visible) return null;
+  if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center relative">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={styles.mask}
+    >
+      <div
+        className="bg-white rounded-lg w-full"
+        style={{
+          maxWidth: typeof width === 'number' ? `${width}px` : width,
+          ...styles.wrapper
+        }}
+      >
+        <div
+          className="p-4 border-b border-gray-200 flex justify-between items-center relative"
+          style={styles.header}
+        >
           <h3 className="text-lg font-semibold">{title}</h3>
           <button
             onClick={onCancel}
@@ -42,10 +63,15 @@ export const Modal = ({ visible, title, onCancel, onOk, children, footer }: Moda
           </button>
         </div>
 
-        <div className="p-4">{children}</div>
+        <div className="p-4" style={styles.body}>
+          {children}
+        </div>
 
         {footer ?? (
-          <div className="p-4 border-t border-gray-200 flex justify-end gap-2">
+          <div
+            className="p-4 border-t border-gray-200 flex justify-end gap-2"
+            style={styles.footer}
+          >
             <Button onClick={onCancel}>取消</Button>
             <Button type="primary" onClick={onOk}>
               确定
