@@ -1,7 +1,9 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonType = 'primary' | 'dashed' | 'text' | 'link';
+type ButtonType = 'primary' | 'default' | 'dashed' | 'text' | 'link';
 type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonVariant = 'filled' | 'outlined' | 'text';
+type ButtonColor = 'default' | 'primary' | 'success' | 'warning' | 'danger';
 
 // 使用 Omit 移除原生 type 属性
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
@@ -24,5 +26,13 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   /**
    * 按钮原生类型
    */
-  htmlType?: 'button' | 'submit' | 'reset'; // 添加原生类型支持
+  htmlType?: 'button' | 'submit' | 'reset';
+  /**
+   * 按钮颜色
+   */
+  color?: ButtonColor;
+  /**
+   * 按钮变体
+   */
+  variant?: ButtonVariant;
 }
