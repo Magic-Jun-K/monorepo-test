@@ -295,6 +295,7 @@ const baseConfig = env => {
       }),
       isProd &&
         new BundleAnalyzerPlugin({
+          // analyzeMode为true时，打包自动打开报告页面
           analyzerMode: analyzeMode ? 'server' : 'disabled', // 分析模式，'server' 或 'disabled'
           openAnalyzer: analyzeMode, // 不自动打开报告页面
           generateStatsFile: false // 不生成stats文件
@@ -339,8 +340,8 @@ const baseConfig = env => {
         chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
         // 任何小于 20,000 字节（约 20 KB）的 chunk 都不会被分割出来，而是会保留在它们原来的 chunk 中
         // 只有当一个 chunk 的大小达到或超过 20 KB 时，Webpack 才会考虑将其分割
-        minSize: 60000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割
-        maxSize: 250000, // 允许更大的chunk尺寸。如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
+        minSize: 100000, // 生成的 chunk 的最小大小（以字节为单位）。小于此大小的 chunk 不会被分割
+        maxSize: 300000, // 允许更大的chunk尺寸。如果设置了 maxSize，Webpack 将尝试将 chunk 分割成更小的部分。0 表示不限制 chunk 的最大大小。
         minChunks: 2, // 最少有多少个 chunks（模块）共享此模块时才会分割代码
         maxAsyncRequests: 20, // 对于异步加载（动态 import）的最大并行请求数
         maxInitialRequests: 20, // 入口点的最大并行请求数
@@ -352,9 +353,7 @@ const baseConfig = env => {
             priority: 70, // 最高优先级确保独立打包
             chunks: 'all',
             reuseExistingChunk: true, // 重用已经存在的 chunk
-            enforce: true, // 强制分离
-            minSize: 250000,
-            maxSize: 500000 // 新增最大尺寸限制
+            enforce: true // 强制分离
           },
           dataGridVendor: {
             test: /[\\/]node_modules[\\/]@glideapps[\\/]/,
@@ -379,25 +378,27 @@ const baseConfig = env => {
             priority: 45,
             enforce: true
           },
-          // 优化 axios 单独打包
-          axiosVendor: {
-            test: /[\\/]node_modules[\\/]axios[\\/]/,
-            name: 'axios',
+          // 高频更新工具库 (单独分包)
+          utilsHot: {
+            test: /[\\/]node_modules[\\/]lodash[\\/]/,
+            name: 'utils-hot',
             priority: 40,
-            reuseExistingChunk: true
+            minSize: 0, // 强制独立
+            chunks: 'all', // 所有类型的 chunks 都可以使用这个缓存组,
+            enforce: true, // 强制独立打包
+            reuseExistingChunk: true // 重用已经存在的 chunk
+          },
+          // 低频稳定工具库 (合并)
+          utilsStable: {
+            test: /[\\/]node_modules[\\/]axios[\\/]/,
+            name: 'utils-stable',
+            priority: 35,
+            minSize: 50000 // 50KB 以上才独立打包, 否则合并到vendors
           },
           corejs: {
             test: /[\\/]node_modules[\\/]core-js[\\/]/,
             name: 'core-js',
             priority: 30,
-            enforce: true,
-            reuseExistingChunk: true, // 增加重用
-            chunks: 'async' // 仅异步加载
-          },
-          lodashVendor: {
-            test: /[\\/]node_modules[\\/]lodash[\\/]/,
-            name: 'lodash',
-            priority: 25,
             enforce: true,
             reuseExistingChunk: true, // 增加重用
             chunks: 'async' // 仅异步加载
@@ -437,8 +438,8 @@ const baseConfig = env => {
     },
     cache: {
       type: 'filesystem',
-      // version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
-      version: `${process.env.NODE_ENV}-${Date.now()}`, // 添加时间戳强制刷新缓存
+      version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
+      // version: `${process.env.NODE_ENV}-${Date.now()}`, // 添加时间戳强制刷新缓存
       cacheDirectory: path.resolve(__dirname, '.webpack_temp_cache'),
       buildDependencies: {
         config: [__filename]
