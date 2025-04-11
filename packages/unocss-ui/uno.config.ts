@@ -1,4 +1,4 @@
-import { defineConfig, presetWind3, presetAttributify } from 'unocss';
+import { defineConfig, presetWind3, presetAttributify, transformerDirectives } from 'unocss';
 
 // 官方预设文档：https://unocss.dev/presets/
 // 66.0.0版本开始，presetUno改为presetWind3
@@ -7,7 +7,12 @@ export default defineConfig({
     presetWind3(), // 核心原子化预设
     presetAttributify() // 支持属性化模式（可选）
   ],
+  // 启用 class 转换
+  transformers: [
+    transformerDirectives() // 启用指令转换器
+  ],
   // 组件库专用规则（按需添加）
+  // 自定义规则
   rules: [
     ['flex-center', { display: 'flex', 'align-items': 'center', 'justify-content': 'center' }]
   ],
