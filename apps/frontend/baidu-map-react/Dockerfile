@@ -28,6 +28,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # 阶段3：构建应用
 FROM deps AS fe-build
 RUN pnpm --filter @eggshell/unocss-ui build
+RUN pnpm --filter @eggshell/antd-ui build
+# 切换到前端应用目录
 WORKDIR /app/apps/frontend/baidu-map-react
 RUN pnpm build:baiduMap --stats=detailed
 # 1. 检查 webpack 是否存在
