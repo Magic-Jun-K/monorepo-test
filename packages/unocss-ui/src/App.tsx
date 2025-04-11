@@ -1,9 +1,11 @@
 import { Button } from './components/Button';
-import { Swiper } from './components/Swiper';
 import { AutoComplete } from './components/AutoComplete';
 import { Menu } from './components/Menu';
 import { Dropdown } from './components/Dropdown';
 import type { MenuItemType } from './components/Menu/types';
+// import './utils/myCall';
+// import './utils/myApply';
+// import './utils/myBind';
 
 import '@unocss/reset/tailwind.css'; // 引入 CSS 重置
 import 'virtual:uno.css'; // 引入 UnoCSS 生成的样式
@@ -14,7 +16,7 @@ const menuConfig: MenuItemType[] = [
   {
     type: 'item',
     itemKey: 'dashboard',
-    label: '仪表盘',
+    label: '仪表盘'
   },
   {
     type: 'submenu',
@@ -57,14 +59,6 @@ const menuConfig: MenuItemType[] = [
 function App() {
   return (
     <div className="w-full h-full">
-      <Button size="lg" className="test">测试</Button>
-      <div className="w-250 h-120">
-        <Swiper className="w-full h-full" loop autoPlay>
-          <div className="w-full h-full bg-red-500">1</div>
-          <div className="w-full h-full bg-pink-500">2</div>
-          <div className="w-full h-full bg-blue-500">3</div>
-        </Swiper>
-      </div>
       <AutoComplete
         options={[
           { label: '北京', value: 'bj' },
@@ -78,38 +72,17 @@ function App() {
           { label: '西安', value: 'xa' },
           { label: '武汉', value: 'wh' }
         ]}
-        filterOption={(input, option) => (typeof option.label === 'string' ? option.label.includes(input) : false)}
+        filterOption={(input, option) =>
+          typeof option.label === 'string' ? option.label.includes(input) : false
+        }
         allowClear
         placeholder="请输入城市"
         style={{ width: '400px' }}
       />
-      <Dropdown
-        overlay={
-          <Menu
-            mode="vertical"
-            items={menuConfig}
-          />
-        }
-      >
+      <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
         <Button>测试下拉菜单</Button>
       </Dropdown>
     </div>
   );
 }
-
-// 添加开发环境下的 key 检查
-if (import.meta.env.DEV) {
-  const checkKeys = (items: MenuItemType[], parentKey = '') => {
-    items.forEach((item, index) => {
-      if (!item.itemKey) {
-        console.error(`Missing itemKey for menu item: ${item.label}`, item);
-      }
-      if (item.children) {
-        checkKeys(item.children, `${parentKey}-${item.itemKey || index}`);
-      }
-    });
-  };
-  checkKeys(menuConfig);
-}
-
 export default App;
