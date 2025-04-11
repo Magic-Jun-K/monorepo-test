@@ -6,8 +6,8 @@
   "module": "es/index.mjs",
   "types": "es/index.d.mts",
   "scripts": {
-    "dev:antd-ui": "vite build --watch",
-    "build:antd-ui": "vite build"
+    "dev": "vite build --watch",
+    "build": "vite build"
   },
   "peerDependencies": {
     "react": "18.3.1",
