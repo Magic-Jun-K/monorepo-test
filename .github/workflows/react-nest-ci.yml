@@ -58,7 +58,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       # 设置用户名变量（小写）
       - name: Set lowercase actor
         run: echo "ACTOR_LOWER=$(echo ${{ github.actor }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
@@ -95,9 +95,12 @@ jobs:
           port: 22
           script: |
             cd /var/www/eggshell
-            # 不使用代理登录 GitHub Container Registry
-            unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # 通过 Git 拉取最新代码（需服务器已安装 Git）
+            git clone https://github.com/Magic-Jun-K/monorepo-test.git . || git pull
+
+            # 或直接同步 compose 文件
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
