@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import LayoutBody from './LayoutBody';
 
-export default () => {
+function Layout() {
   return (
     <>
       <Header />
@@ -12,4 +12,5 @@ export default () => {
       </LayoutBody>
     </>
   );
-};
+}
+export default Layout;
