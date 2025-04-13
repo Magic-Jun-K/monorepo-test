@@ -94,25 +94,16 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            # 修复目录和 Git
             cd /var/www/eggshell
-            if [ ! -d .git ]; then
-              rm -rf ./* 2>/dev/null || true
-              git clone https://github.com/Magic-Jun-K/monorepo-test.git .
-            else
-              git reset --hard
-              git clean -fd
-              git pull
-            fi
+
+            # 通过 Git 拉取最新代码（需服务器已安装 Git）
+            git clone git@github.com:Magic-Jun-K/monorepo-test.git.
 
             # 禁用代理（如果不需要）
             unset HTTP_PROXY HTTPS_PROXY
 
-            # 启动 Docker
-            sudo systemctl start docker
-
-            # 登录到 GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # 或直接同步 compose 文件
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
