@@ -11,7 +11,7 @@ interface LayoutBodyProps {
 const LayoutBody: FC<LayoutBodyProps> = ({ children }) => {
   // const location = useLocation();
   // return <div className={clsx(styles.layoutBody, { [styles.isPadding]: location.pathname === '/home' })}>{children}</div>;
-  return <div className={clsx(styles.layoutBody)}>{children}</div>;
+  return <main className={clsx(styles.layoutBody)}>{children}</main>;
 };
 
 export default LayoutBody;
