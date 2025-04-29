@@ -1,8 +1,9 @@
 import { FC } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Swiper, Button } from '@eggshell/unocss-ui';
+import { Swiper } from '@eggshell/unocss-ui';
 
 import LazyImage from '@/components/LazyImage';
+import Footer from '@/layout/Footer';
 import { BASE_URL } from '@/config';
 
 import styles from './index.module.scss';
@@ -21,7 +22,7 @@ const Home: FC = () => {
       <Swiper className={styles.swiper} loop autoPlay>
         {swiperArray}
       </Swiper>
-      <div className={styles.showImages}>
+      <section className={styles.showImages}>
         <h2>展示图片</h2>
         {/* <img src={`${BASE_URL}/images/robot1.webp`} />
         <img src={`${BASE_URL}/images/robot2.webp`} />
@@ -47,8 +48,8 @@ const Home: FC = () => {
         <LazyImage src={`${BASE_URL}/image/public/compressed/robot6.webp`} alt="robot6" />
         <LazyImage src={`${BASE_URL}/image/public/compressed/robot7.webp`} alt="robot7" />
         <LazyImage src={`${BASE_URL}/image/public/compressed/robot8.webp`} alt="robot8" />
-      </div>
-      <Button onClick={() => console.log('Test interaction')}>Test INP</Button>
+      </section>
+      <Footer />
     </>
   );
 };
