@@ -10,11 +10,7 @@ interface FormButtonProps {
 
 export default function FormButton({ children, loading }: FormButtonProps) {
   return (
-    <Button 
-      htmlType="submit" 
-      disabled={loading} 
-      className={styles.submitButton}
-    >
+    <Button htmlType="submit" disabled={loading} className={styles.submitButton} type="primary">
       {children}
     </Button>
   );
