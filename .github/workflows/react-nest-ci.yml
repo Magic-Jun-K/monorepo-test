@@ -47,7 +47,7 @@ jobs:
       # 前端测试
       - name: Frontend Tests(前端测试)
         run: |
-          cd apps/frontend/baidu-map-react
+          cd apps/frontend/react-webpack
           pnpm install
         # pnpm test
 
@@ -77,9 +77,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/frontend/baidu-map-react/Dockerfile
+          file: ./apps/frontend/react-webpack/Dockerfile
           push: true
-          tags: ghcr.io/${{ env.ACTOR_LOWER }}/baidu-map-react:latest
+          tags: ghcr.io/${{ env.ACTOR_LOWER }}/react-webpack:latest
           # 添加构建参数，启用详细日志
           build-args: |
             NODE_ENV=production

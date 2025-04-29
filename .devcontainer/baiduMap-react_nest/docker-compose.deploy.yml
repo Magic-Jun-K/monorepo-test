@@ -43,8 +43,8 @@ services:
     container_name: eggshell-baidu-map-frontend
     build:
       context: ../.. # 指向项目根目录
-      dockerfile: apps/frontend/baidu-map-react/Dockerfile
-    image: baidu-map-react:latest # 添加小写镜像名称
+      dockerfile: apps/frontend/react-webpack/Dockerfile
+    image: react-webpack:latest # 添加小写镜像名称
     ports:
       - '8080:80'
     depends_on:

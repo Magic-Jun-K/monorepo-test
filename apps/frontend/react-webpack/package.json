@@ -1,5 +1,5 @@
 {
-  "name": "@frontend/baidu-map-react",
+  "name": "@frontend/react-webpack",
   "version": "0.0.1",
   "description": "测试百度地图",
   "main": "index.js",
