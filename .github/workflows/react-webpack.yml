@@ -41,7 +41,7 @@ jobs:
           file: ./apps/backend/baidu-map-nest/Dockerfile
           push: true
           # tags: ghcr.io/Magic-Jun-K/baidu-map-nest:latest
-          tags: registry.cn-guangzhou.aliyuncs.com/eggshell/baidu-map-nest:${{ github.sha }}
+          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/baidu-map-nest:${{ github.sha }}
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
@@ -51,7 +51,7 @@ jobs:
           file: ./apps/frontend/react-webpack/Dockerfile
           push: true
           # tags: ghcr.io/Magic-Jun-K/react-webpack:latest
-          tags: registry.cn-guangzhou.aliyuncs.com/eggshell/react-webpack:${{ github.sha }}
+          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/react-webpack:${{ github.sha }}
           # 添加构建参数，启用详细日志
           build-args: |
             NODE_ENV=production
@@ -72,7 +72,7 @@ jobs:
             # docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GH_TOKEN }}
 
             # 登录阿里云 ACR
-            docker login registry.cn-guangzhou.aliyuncs.com -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD
+            docker login $ALIYUN_ACR_REGISTRY -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
