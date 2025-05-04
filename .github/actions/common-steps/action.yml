@@ -40,5 +40,7 @@ runs:
       uses: docker/login-action@v3
       with:
         registry: registry.cn-guangzhou.aliyuncs.com
-        username: ${{ secrets.ALIYUN_ACR_USERNAME }}
-        password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+        # username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+        # password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+        username: ${{ inputs.ALIYUN_ACR_USERNAME }}
+        password: ${{ inputs.ALIYUN_ACR_PASSWORD }}

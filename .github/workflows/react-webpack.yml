@@ -14,6 +14,9 @@ jobs:
       # 运行 Common Steps
       - name: Run Common Steps
         uses: ./.github/actions/common-steps
+        with:
+          ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       # 后端测试
       - name: Backend Tests(后端测试)
