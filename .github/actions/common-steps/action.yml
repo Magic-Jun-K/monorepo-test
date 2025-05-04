@@ -1,0 +1,44 @@
+name: Common Steps
+
+runs:
+  using: 'composite'
+  steps:
+    # 安装 pnpm
+    - name: Install pnpm(安装 pnpm)
+      uses: pnpm/action-setup@v4
+      # 不指定版本，让 pnpm 自动检测
+      # with:
+      #   version: 10.8.0
+
+    # 设置 Node.js 环境
+    - name: Set up Node.js(设置 Node.js 环境)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    # 依赖缓存优化
+    - name: Cache pnpm modules(依赖缓存优化)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pnpm-store
+          **/node_modules
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-
+
+    # 登录到 GitHub Container Registry
+    # - name: Login to GitHub Container Registry(登录到 GitHub Container Registry)
+    #   uses: docker/login-action@v3
+    #   with:
+    #     registry: ghcr.io
+    #     username: ${{ github.actor }}
+    #     password: ${{ secrets.GH_TOKEN }}
+
+    # 登录到阿里云 ACR
+    - name: Login to Aliyun ACR(登录到阿里云 ACR)
+      uses: docker/login-action@v3
+      with:
+        registry: registry.cn-guangzhou.aliyuncs.com
+        username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+        password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
