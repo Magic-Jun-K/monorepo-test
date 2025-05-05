@@ -65,14 +65,14 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
+          envs: |
+            IMAGE_TAG=${{ github.sha }}
+            ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}
+          source: "./.devcontainer/react-webpack_nest/docker-compose*.yml"
+          target: "/var/www/eggshell"
+          strip_components: 1  # 去掉源路径中的第一个目录层级
           script: |
             cd /var/www/eggshell
-
-            # 或直接同步 compose 文件
-            # docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GH_TOKEN }}
-
-            # 登录阿里云 ACR
-            docker login $ALIYUN_ACR_REGISTRY -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
