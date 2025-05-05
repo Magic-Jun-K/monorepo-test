@@ -68,10 +68,9 @@ jobs:
           envs: |
             IMAGE_TAG=${{ github.sha }}
             ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}
-          source: "./.devcontainer/react-webpack_nest/docker-compose*.yml"
-          target: "/var/www/eggshell"
-          strip_components: 1  # 去掉源路径中的第一个目录层级
           script: |
+            # 手动创建目录（如果不存在）
+            mkdir -p /var/www/eggshell
             cd /var/www/eggshell
 
             # 拉取并启动容器
