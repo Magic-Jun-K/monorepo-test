@@ -11,8 +11,7 @@ services:
       context: ../.. # 指向项目根目录
       # Dockerfile 路径
       dockerfile: apps/backend/baidu-map-nest/Dockerfile
-    # image: baidu-map-nest:latest # 添加小写镜像名称
-    image: ${ALIYUN_REGISTRY}/eggshell/baidu-map-nest:${IMAGE_TAG}
+    image: baidu-map-nest:latest # 添加小写镜像名称
     ports:
       - '7000:7000'
     environment:
@@ -45,8 +44,7 @@ services:
     build:
       context: ../.. # 指向项目根目录
       dockerfile: apps/frontend/react-webpack/Dockerfile
-    # image: react-webpack:latest # 添加小写镜像名称
-    image: ${ALIYUN_REGISTRY}/eggshell/react-webpack:${IMAGE_TAG}
+    image: react-webpack:latest # 添加小写镜像名称
     ports:
       - '8080:80'
     depends_on:
