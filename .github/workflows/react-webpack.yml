@@ -72,7 +72,7 @@ jobs:
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             # 上传docker-compose文件（需要提前在仓库中存储）
-            scp ./.devcontainer/react-webpack_nest/*.yml /var/www/eggshell/
+            # scp ./.devcontainer/react-webpack_nest/*.yml /var/www/eggshell/
 
             cd /var/www/eggshell
 
