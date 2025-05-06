@@ -85,6 +85,12 @@ jobs:
             echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
             echo "IMAGE_TAG=$IMAGE_TAG" >> .env
 
+            # 打印 .env 文件验证内容
+            cat .env
+
+            # 查看 compose 配置是否正确解析变量
+            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml config
+
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up -d
