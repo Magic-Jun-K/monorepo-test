@@ -77,9 +77,7 @@ jobs:
             cd /var/www/eggshell
 
             # 登录阿里云 ACR
-            # docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
-            # 登录阿里云 ACR（非交互式）
-            echo "$ALIYUN_ACR_PASSWORD" | docker login -u "$ALIYUN_ACR_USERNAME" --password-stdin "$ALIYUN_REGISTRY"
+            docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
