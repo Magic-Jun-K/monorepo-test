@@ -79,6 +79,10 @@ jobs:
             # 登录阿里云 ACR
             docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
 
+            # 创建 .env 文件
+            echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
+            echo "IMAGE_TAG=$IMAGE_TAG" >> .env
+
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up -d
