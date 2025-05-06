@@ -9,6 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Test Secrets
+        run: |
+          echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}"
+          echo "IMAGE_TAG=${{ github.sha }}"
+          echo "ALIYUN_ACR_USERNAME=${{ secrets.ALIYUN_ACR_USERNAME }}"
+          echo "ALIYUN_ACR_PASSWORD=${{ secrets.ALIYUN_ACR_PASSWORD }}"
+
       - uses: actions/checkout@v4
 
       # 运行 Common Steps
@@ -71,6 +78,10 @@ jobs:
             ALIYUN_ACR_USERNAME=${{ secrets.ALIYUN_ACR_USERNAME }}
             ALIYUN_ACR_PASSWORD=${{ secrets.ALIYUN_ACR_PASSWORD }}
           script: |
+            # 调试：打印环境变量
+            env | grep -i ALIYUN
+            env | grep -i IMAGE_TAG
+
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
 
