@@ -68,13 +68,16 @@ jobs:
           envs: |
             IMAGE_TAG=${{ github.sha }}
             ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}
+            ALIYUN_ACR_USERNAME=${{ secrets.ALIYUN_ACR_USERNAME }}
+            ALIYUN_ACR_PASSWORD=${{ secrets.ALIYUN_ACR_PASSWORD }}
           script: |
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
-            # 上传docker-compose文件（需要提前在仓库中存储）
-            # scp ./.devcontainer/react-webpack_nest/*.yml /var/www/eggshell/
 
             cd /var/www/eggshell
+
+            # 登录阿里云 ACR
+            docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
 
             # 拉取并启动容器
             docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
