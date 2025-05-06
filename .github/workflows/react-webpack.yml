@@ -76,6 +76,12 @@ jobs:
 
             cd /var/www/eggshell
 
+            # 调试：打印变量值
+            echo "ALIYUN_REGISTRY: $ALIYUN_REGISTRY"
+            echo "IMAGE_TAG: $IMAGE_TAG"
+            echo "ALIYUN_ACR_USERNAME: $ALIYUN_ACR_USERNAME"
+            echo "ALIYUN_ACR_PASSWORD: $ALIYUN_ACR_PASSWORD"
+
             # 登录阿里云 ACR
             # docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
             # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
