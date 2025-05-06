@@ -79,7 +79,7 @@ jobs:
             # 登录阿里云 ACR
             # docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
             # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
-            echo "$ALIYUN_ACR_PASSWORD" | docker login -u "$ALIYUN_ACR_USERNAME" --password-stdin "$ALIYUN_REGISTRY"
+            echo "$ALIYUN_ACR_PASSWORD" | docker login -u "$ALIYUN_ACR_USERNAME" -p "$ALIYUN_ACR_PASSWORD" "$ALIYUN_REGISTRY"
 
             # 创建 .env 文件
             echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
