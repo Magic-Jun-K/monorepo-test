@@ -69,7 +69,6 @@ jobs:
             echo "${{ github.sha }}"
             echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
             echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
-            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}"
 
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
