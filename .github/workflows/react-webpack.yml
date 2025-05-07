@@ -65,34 +65,23 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
-          envs: |
-            IMAGE_TAG=${{ github.sha }}
-            ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}
-            ALIYUN_ACR_USERNAME=${{ secrets.ALIYUN_ACR_USERNAME }}
-            ALIYUN_ACR_PASSWORD=${{ secrets.ALIYUN_ACR_PASSWORD }}
           script: |
             echo "${{ github.sha }}"
             echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
             echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
             echo "${{ secrets.ALIYUN_ACR_PASSWORD }}"
 
-            # 调试：打印变量值
-            echo "ALIYUN_REGISTRY: $ALIYUN_REGISTRY"
-            echo "IMAGE_TAG: $IMAGE_TAG"
-            echo "ALIYUN_ACR_USERNAME: $ALIYUN_ACR_USERNAME"
-            echo "ALIYUN_ACR_PASSWORD: $ALIYUN_ACR_PASSWORD"
-
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
 
             # 登录阿里云 ACR
-            # docker login -u $ALIYUN_ACR_USERNAME -p $ALIYUN_ACR_PASSWORD $ALIYUN_REGISTRY
+            # docker login -u $secrets.ALIYUN_ACR_USERNAME -p $secrets.ALIYUN_ACR_PASSWORD $secrets.ALIYUN_ACR_REGISTRY
             # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
-            echo "$ALIYUN_ACR_PASSWORD" | docker login -u "$ALIYUN_ACR_USERNAME" -p "$ALIYUN_ACR_PASSWORD" "$ALIYUN_REGISTRY"
+            echo "$secrets.ALIYUN_ACR_PASSWORD" | docker login -u "$secrets.ALIYUN_ACR_USERNAME" -p "$secrets.ALIYUN_ACR_PASSWORD" "$secrets.ALIYUN_ACR_REGISTRY"
 
             # 创建 .env 文件
-            echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
+            echo "ALIYUN_REGISTRY=$secrets.ALIYUN_ACR_REGISTRY" > .env
             echo "IMAGE_TAG=$IMAGE_TAG" >> .env
 
             # 打印 .env 文件验证内容
