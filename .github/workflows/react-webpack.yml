@@ -82,7 +82,7 @@ jobs:
 
             # 创建 .env 文件
             echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
-            echo "IMAGE_TAG=${{ IMAGE_TAG }}" >> .env
+            echo "IMAGE_TAG=${{ github.sha }}" >> .env
 
             # 打印 .env 文件验证内容
             cat .env
