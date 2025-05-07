@@ -71,12 +71,10 @@ jobs:
             ALIYUN_ACR_USERNAME=${{ secrets.ALIYUN_ACR_USERNAME }}
             ALIYUN_ACR_PASSWORD=${{ secrets.ALIYUN_ACR_PASSWORD }}
           script: |
-            set -a
-            # 或者手动 export
-            export ALIYUN_REGISTRY
-            export IMAGE_TAG
-            export ALIYUN_ACR_USERNAME
-            export ALIYUN_ACR_PASSWORD
+            echo "${{ github.sha }}"
+            echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
+            echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}"
 
             # 调试：打印变量值
             echo "ALIYUN_REGISTRY: $ALIYUN_REGISTRY"
