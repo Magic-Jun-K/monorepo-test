@@ -78,11 +78,11 @@ jobs:
             # 登录阿里云 ACR
             # docker login -u $secrets.ALIYUN_ACR_USERNAME -p $secrets.ALIYUN_ACR_PASSWORD $secrets.ALIYUN_ACR_REGISTRY
             # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
-            echo "$secrets.ALIYUN_ACR_PASSWORD" | docker login -u "$secrets.ALIYUN_ACR_USERNAME" -p "$secrets.ALIYUN_ACR_PASSWORD" "$secrets.ALIYUN_ACR_REGISTRY"
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" -p "${{ secrets.ALIYUN_ACR_PASSWORD }}" "${{ secrets.ALIYUN_ACR_REGISTRY }}"
 
             # 创建 .env 文件
-            echo "ALIYUN_REGISTRY=$secrets.ALIYUN_ACR_REGISTRY" > .env
-            echo "IMAGE_TAG=$IMAGE_TAG" >> .env
+            echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
+            echo "IMAGE_TAG=${{ IMAGE_TAG }}" >> .env
 
             # 打印 .env 文件验证内容
             cat .env
