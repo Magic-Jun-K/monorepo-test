@@ -76,7 +76,7 @@ jobs:
             echo "IMAGE_TAG: $IMAGE_TAG"
             echo "ALIYUN_ACR_USERNAME: $ALIYUN_ACR_USERNAME"
             echo "ALIYUN_ACR_PASSWORD: $ALIYUN_ACR_PASSWORD"
-            
+
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
@@ -87,8 +87,8 @@ jobs:
             echo "$ALIYUN_ACR_PASSWORD" | docker login -u "$ALIYUN_ACR_USERNAME" -p "$ALIYUN_ACR_PASSWORD" "$ALIYUN_REGISTRY"
 
             # 创建 .env 文件
-            # echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
-            echo "IMAGE_TAG=$IMAGE_TAG" >> .env
+            echo "ALIYUN_REGISTRY=$ALIYUN_REGISTRY" > .env
+            # echo "IMAGE_TAG=$IMAGE_TAG" >> .env
 
             # 打印 .env 文件验证内容
             cat .env
