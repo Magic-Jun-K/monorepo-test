@@ -66,13 +66,16 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            echo "${{ github.sha }}"
-            echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
-            echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
+            # echo "${{ github.sha }}"
+            # echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
+            # echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
 
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
+
+            # 清理旧容器
+            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml down
 
             # 登录阿里云 ACR
             # docker login -u $secrets.ALIYUN_ACR_USERNAME -p $secrets.ALIYUN_ACR_PASSWORD $secrets.ALIYUN_ACR_REGISTRY
