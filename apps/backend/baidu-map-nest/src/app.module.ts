@@ -21,6 +21,7 @@ import database from './config/database';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true, // 设置为全局模块
       envFilePath: ['.env', '.env.local', '.env.prod'],
       load: [database],
     }),
