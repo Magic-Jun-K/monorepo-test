@@ -5,20 +5,21 @@
  * 数据加工
  */
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Pool, PoolConfig } from 'pg';
+import { ConfigService } from '@nestjs/config';
+import { Pool/* , PoolConfig */ } from 'pg';
 
-const dsConfig: PoolConfig = {
-  // host: 'localhost',
-  // port: 5432,
-  // user: 'postgres',
-  // password: 'test123',
-  // database: 'postgres',
-  host: process.env.PG_HOST,
-  port: parseInt(process.env.PG_PORT, 10),
-  user: process.env.PG_USER,
-  password: process.env.PG_PASSWORD,
-  database: process.env.PG_DATABASE_NAME,
-};
+// const dsConfig: PoolConfig = {
+//   // host: 'localhost',
+//   // port: 5432,
+//   // user: 'postgres',
+//   // password: 'test123',
+//   // database: 'postgres',
+//   host: process.env.PG_HOST,
+//   port: parseInt(process.env.PG_PORT, 10),
+//   user: process.env.PG_USER,
+//   password: process.env.PG_PASSWORD,
+//   database: process.env.PG_DATABASE_NAME,
+// };
 
 @Injectable() // @Injectable()告诉NestJS，这个类是可以依赖注入的服务
 export class AppService {
@@ -34,7 +35,15 @@ export class AppService {
 @Injectable()
 export class PgService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    const dsConfig = {
+      host: this.configService.get<string>('PG_HOST'),
+      port: parseInt(this.configService.get<string>('PG_PORT'), 10),
+      user: this.configService.get<string>('PG_USER'),
+      password: this.configService.get<string>('PG_PASSWORD'),
+      database: this.configService.get<string>('PG_DATABASE_NAME'),
+    };
+    // console.log('PG Config:', dsConfig);
     this.pool = new Pool(dsConfig);
   }
   onModuleInit() {
