@@ -44,6 +44,6 @@ FROM nginx:latest
 # 复制构建好的前端文件到Nginx的默认目录
 COPY --from=fe-build /app/apps/frontend/react-webpack/build /usr/share/nginx/html
 # 复制Nginx配置文件
-COPY apps/frontend/react-webpack/nginx.conf /etc/nginx/conf.d/default.conf
+# COPY apps/frontend/react-webpack/nginx.conf /etc/nginx/conf.d/default.conf
 # 暴露Nginx的默认端口
 EXPOSE 80
