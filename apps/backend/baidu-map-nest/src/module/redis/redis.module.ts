@@ -19,9 +19,9 @@ import { RedisModule as NestRedisModule } from '@nestjs-modules/ioredis';
         console.log('测试redis config', {
           type: 'single',
           url: configService.get('REDIS_URL'),
-          host: configService.get('REDIS_HOST', 'localhost'),
+          host: configService.get('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD', ''),
+          password: configService.get('REDIS_PASSWORD'),
           db: configService.get<number>('REDIS_DB', 0),
         });
         return {
