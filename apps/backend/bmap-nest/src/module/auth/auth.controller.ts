@@ -94,13 +94,13 @@ export class AuthController {
           { sub: user.id },
           {
             // expiresIn: '7d',
-            expiresIn: '2d',
+            expiresIn: '6h',
             secret: process.env.JWT_REFRESH_SECRET,
           },
         ),
       };
 
-      console.log('✅ 后端 Token 刷新成功！');
+      console.log('✅ 后端 Token 刷新成功！用户:', user.username);
 
       // 确保返回格式一致
       return {

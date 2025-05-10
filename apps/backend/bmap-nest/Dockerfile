@@ -14,17 +14,17 @@ WORKDIR /app
 # 复制整个monorepo结构
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig* ./
-COPY apps/backend/baidu-map-nest/ ./apps/backend/baidu-map-nest/
+COPY apps/backend/bmap-nest/ ./apps/backend/bmap-nest/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile \
-    --filter="@backend/baidu-map-nest..." && \
+    --filter="@backend/bmap-nest..." && \
     # 添加依赖树检查
     pnpm list --depth=5
 
 # 阶段3：构建应用
 FROM deps AS be-build
-WORKDIR /app/apps/backend/baidu-map-nest
+WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 RUN pnpm build
 
