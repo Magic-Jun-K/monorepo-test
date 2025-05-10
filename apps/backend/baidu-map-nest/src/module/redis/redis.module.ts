@@ -16,12 +16,12 @@ import { RedisModule as NestRedisModule } from '@nestjs-modules/ioredis';
       //   db: configService.get<number>('REDIS_DB', 0),
       // }),
       useFactory: (configService: ConfigService) => {
-        console.log('测试redis config', {
-          url: configService.get('REDIS_URL'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD'),
-          db: configService.get<number>('REDIS_DB', 0),
-        });
+        // console.log('测试redis config', {
+        //   url: configService.get('REDIS_URL'),
+        //   port: configService.get<number>('REDIS_PORT', 6379),
+        //   password: configService.get('REDIS_PASSWORD'),
+        //   db: configService.get<number>('REDIS_DB', 0),
+        // });
         return {
           type: 'single', // 单机模式
           url: configService.get('REDIS_URL'),
