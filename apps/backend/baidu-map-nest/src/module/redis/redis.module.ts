@@ -17,17 +17,14 @@ import { RedisModule as NestRedisModule } from '@nestjs-modules/ioredis';
       // }),
       useFactory: (configService: ConfigService) => {
         console.log('测试redis config', {
-          type: 'single',
           url: configService.get('REDIS_URL'),
-          host: configService.get('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT', 6379),
           password: configService.get('REDIS_PASSWORD'),
           db: configService.get<number>('REDIS_DB', 0),
         });
         return {
-          type: 'single',
+          type: 'single', // 单机模式
           url: configService.get('REDIS_URL'),
-          host: configService.get('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT', 6379),
           password: configService.get('REDIS_PASSWORD'),
           db: configService.get<number>('REDIS_DB', 0),
