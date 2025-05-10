@@ -30,7 +30,8 @@ async function bootstrap() {
     methods: 'GET,POST,HEAD,PUT,PATCH,DELETE',
     credentials: true, // 允许携带 cookie
   });
+  console.log('process.env.PORT', process.env.PORT);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 7000);
 }
 bootstrap();
