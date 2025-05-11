@@ -1,0 +1,70 @@
+name: 后端部署流程
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/backend/bmap-nest/**' # 只在 apps/backend/bmap-nest 目录下的文件发生变化时触发
+
+jobs:
+  build-and-deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 运行 Common Steps
+      - name: Run Common Steps
+        uses: ./.github/actions/common-steps
+        with:
+          ALIYUN_ACR_REGISTRY: ${{ secrets.ALIYUN_ACR_REGISTRY }}
+          ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      # 后端测试
+      - name: Backend Tests(后端测试)
+        run: |
+          cd apps/backend/bmap-nest
+          pnpm install
+          pnpm test
+
+      # 构建并推送后端镜像
+      - name: Build and push backend image(构建并推送后端镜像)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/backend/bmap-nest/Dockerfile
+          push: true
+          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/bmap-nest:${{ github.sha }}
+
+      # 部署后端到服务器（使用 SSH）
+      - name: Deploy backend to server(部署后端到服务器)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            # 手动创建目录（如果不存在）
+            mkdir -p /var/www/eggshell
+            cd /var/www/eggshell
+
+            # 登录阿里云 ACR
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
+
+            # 创建 .env 文件
+            echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
+            echo "IMAGE_TAG=${{ github.sha }}" >> .env
+            # echo "BACKEND_ONLY=true" >> .env  # 标记只更新后端
+
+            # 确保基础设施服务正在运行
+            docker-compose -f docker-compose.infra.yml up -d
+
+            # 停止现有的后端容器
+            docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend
+            docker-compose -f docker-compose.backend.yml rm -f eggshell-bmap-backend
+
+            # 拉取并启动后端容器
+            docker-compose -f docker-compose.backend.yml pull eggshell-bmap-backend
+            docker-compose -f docker-compose.backend.yml up -d eggshell-bmap-backend

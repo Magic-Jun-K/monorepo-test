@@ -1,8 +1,10 @@
-name: CI/CD Pipeline
+name: 前端部署流程
 
 on:
   push:
     branches: [main, master] # 只在 main 和 master 分支上触发
+    paths:
+      - 'apps/frontend/react-webpack/**' # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
 
 jobs:
   build-and-deploy:
@@ -19,29 +21,12 @@ jobs:
           ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
           ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
-      # 后端测试
-      - name: Backend Tests(后端测试)
-        run: |
-          cd apps/backend/baidu-map-nest
-          pnpm install
-          pnpm test
-
       # 前端测试
       # - name: Frontend Tests(前端测试)
       #   run: |
       #     cd apps/frontend/react-webpack
       #     pnpm install
       # pnpm test
-
-      # 构建并推送后端镜像
-      - name: Build and push backend image(构建并推送后端镜像)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./apps/backend/baidu-map-nest/Dockerfile
-          push: true
-          # tags: ghcr.io/Magic-Jun-K/baidu-map-nest:latest
-          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/baidu-map-nest:${{ github.sha }}
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
@@ -53,6 +38,7 @@ jobs:
           # tags: ghcr.io/Magic-Jun-K/react-webpack:latest
           tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/react-webpack:${{ github.sha }}
           # 添加构建参数，启用详细日志
+          # VERBOSE=true 启用详细日志
           build-args: |
             NODE_ENV=production
             VERBOSE=true
@@ -66,19 +52,10 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            # echo "${{ github.sha }}"
-            # echo "${{ secrets.ALIYUN_ACR_REGISTRY }}"
-            # echo "${{ secrets.ALIYUN_ACR_USERNAME }}"
-
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
 
-            # 清理旧容器
-            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml down
-
-            # 登录阿里云 ACR
-            # docker login -u $secrets.ALIYUN_ACR_USERNAME -p $secrets.ALIYUN_ACR_PASSWORD $secrets.ALIYUN_ACR_REGISTRY
             # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
             echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
 
@@ -90,8 +67,15 @@ jobs:
             cat .env
 
             # 查看 compose 配置是否正确解析变量
-            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml config
+            docker-compose -f docker-compose.frontend.yml config
+
+            # 确保基础设施服务正在运行
+            docker-compose -f docker-compose.infra.yml up -d
+
+            # 停止现有的前端容器
+            docker-compose -f docker-compose.frontend.yml stop eggshell-bmap-frontend
+            docker-compose -f docker-compose.frontend.yml rm -f eggshell-bmap-frontend
 
             # 拉取并启动容器
-            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml pull
-            docker-compose -f docker-compose.yml -f docker-compose.deploy.yml up -d
+            docker-compose -f docker-compose.frontend.yml pull eggshell-bmap-frontend
+            docker-compose -f docker-compose.frontend.yml up -d eggshell-bmap-frontend
