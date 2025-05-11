@@ -13,7 +13,8 @@ FROM base AS deps
 WORKDIR /app
 # COPY . ./
 # 复制整个monorepo结构
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml* ./
 COPY tsconfig* ./
 COPY packages/unocss-ui/ ./packages/unocss-ui/
 COPY packages/antd-ui/ ./packages/antd-ui/
