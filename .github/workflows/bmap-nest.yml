@@ -58,8 +58,13 @@ jobs:
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
             # echo "BACKEND_ONLY=true" >> .env  # 标记只更新后端
 
-            # 确保网络存在
-            docker network ls | grep eggshell-bmap-network || docker network create eggshell-bmap-network
+            # 确保网络存在（调试输出）
+            if ! docker network ls | grep -q 'eggshell-bmap-network'; then
+              echo "Creating network eggshell-bmap-network..."
+              docker network create eggshell-bmap-network
+            else
+              echo "Network eggshell-bmap-network exists."
+            fi
 
             # 确保基础设施服务正在运行
             docker-compose -f docker-compose.infra.yml up -d
