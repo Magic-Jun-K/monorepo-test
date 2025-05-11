@@ -51,6 +51,9 @@ jobs:
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
 
+            # 确保基础设施服务正在运行
+            docker-compose -f docker-compose.infra.yml up -d
+
             # 登录阿里云 ACR
             echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
 
@@ -59,19 +62,8 @@ jobs:
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
             # echo "BACKEND_ONLY=true" >> .env  # 标记只更新后端
 
-            # 确保网络存在（调试输出）
-            if ! docker network ls | grep -q 'eggshell-bmap-network'; then
-              echo "Creating network eggshell-bmap-network..."
-              docker network create eggshell-bmap-network
-            else
-              echo "Network eggshell-bmap-network exists."
-            fi
-
             # 查看 compose 配置是否正确解析变量
             docker-compose -f docker-compose.backend.yml config
-
-            # 确保基础设施服务正在运行
-            docker-compose -f docker-compose.infra.yml up -d
 
             # 停止现有的后端容器
             docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend
