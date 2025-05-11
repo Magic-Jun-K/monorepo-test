@@ -5,6 +5,7 @@ on:
     branches: [main, master] # 只在 main 和 master 分支上触发
     paths:
       - 'apps/frontend/react-webpack/**' # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
+      - 'packges/**' # 只在 packages 目录下的文件发生变化时触发
 
 jobs:
   build-and-deploy:
@@ -43,8 +44,8 @@ jobs:
             NODE_ENV=production
             VERBOSE=true
 
-      # 部署到服务器（使用 SSH）
-      - name: Deploy to server(部署到服务器)
+      # 部署前端到服务器（使用 SSH）
+      - name: Deploy to server(部署前端到服务器)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
