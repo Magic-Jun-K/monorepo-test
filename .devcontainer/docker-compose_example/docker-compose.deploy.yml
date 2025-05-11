@@ -9,9 +9,9 @@ services:
     environment:
       - NODE_ENV=production
     volumes:
-      - ../apps/backend/baidu-map-nest/dist:/app/backend/baidu-map-nest/dist
-      - ../apps/backend/baidu-map-nest/package.json:/app/backend/baidu-map-nest/package.json
-      - ../apps/backend/baidu-map-nest/pnpm-lock.yaml:/app/backend/baidu-map-nest/pnpm-lock.yaml # 必须挂载lock文件
+      - ../apps/backend/bmap-nest/dist:/app/backend/bmap-nest/dist
+      - ../apps/backend/bmap-nest/package.json:/app/backend/bmap-nest/package.json
+      - ../apps/backend/bmap-nest/pnpm-lock.yaml:/app/backend/bmap-nest/pnpm-lock.yaml # 必须挂载lock文件
     depends_on:
       - eggshell-baiduMap-postgresql
     command: sh -c "npm install -g pnpm && pnpm install --prod && node dist/main.js"

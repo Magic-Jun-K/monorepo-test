@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRESQL_USERNAME=postgres
       - POSTGRESQL_PASSWORD=test123
-      - POSTGRESQL_DATABASE=baidu-map-nest
+      - POSTGRESQL_DATABASE=bmap-nest
     volumes:
       - ./postgresql_data:/bitnami/postgresql
 
@@ -16,4 +16,4 @@ networks:
     name: eggshell-baiduMap-network
     driver: bridge
 
-# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=baidu-map-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
+# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=bmap-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
