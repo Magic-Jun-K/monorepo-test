@@ -5,6 +5,7 @@ on:
     branches: [main, master]
     paths:
       - 'apps/backend/bmap-nest/**' # 只在 apps/backend/bmap-nest 目录下的文件发生变化时触发
+      - '.github/workflows/bmap-nest.yml' # 只在该工作流文件发生变化时触发
 
 jobs:
   build-and-deploy-backend:
@@ -65,6 +66,9 @@ jobs:
             else
               echo "Network eggshell-bmap-network exists."
             fi
+
+            # 查看 compose 配置是否正确解析变量
+            docker-compose -f docker-compose.backend.yml config
 
             # 确保基础设施服务正在运行
             docker-compose -f docker-compose.infra.yml up -d
