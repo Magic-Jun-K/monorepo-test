@@ -67,11 +67,11 @@ jobs:
             # 打印 .env 文件验证内容
             cat .env
 
-            # 查看 compose 配置是否正确解析变量
-            docker-compose -f docker-compose.frontend.yml config
-
             # 确保基础设施服务正在运行
             docker-compose -f docker-compose.infra.yml up -d
+
+            # 查看 compose 配置是否正确解析变量
+            docker-compose -f docker-compose.frontend.yml config
 
             # 停止现有的前端容器
             docker-compose -f docker-compose.frontend.yml stop eggshell-bmap-frontend
