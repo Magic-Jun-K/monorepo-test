@@ -22,6 +22,7 @@ COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     # pnpm install --frozen-lockfile \
+    pnpm install \
     --filter="@eggshell/unocss-ui..." \
     --filter="@eggshell/antd-ui..." \
     --filter="@frontend/react-webpack..."
