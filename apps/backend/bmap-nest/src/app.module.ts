@@ -33,7 +33,6 @@ import database from './config/database';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // 静态资源目录
-      serveRoot: '/image', // 添加这一行，指定URL前缀
       serveStaticOptions: {
         // 强缓存配置（1年，immutable）
         cacheControl: true,
