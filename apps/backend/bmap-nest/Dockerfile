@@ -20,7 +20,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile \
     --filter="@backend/bmap-nest..." && \
     # 添加依赖树检查
-    pnpm list --depth=5
+    # pnpm list --depth=5
 
 # 阶段3：构建应用
 FROM deps AS be-build
@@ -37,7 +37,8 @@ COPY --from=be-build /app/apps/backend/bmap-nest/public ./public
 COPY --from=be-build /app/apps/backend/bmap-nest/package.json ./
 
 # 只安装生产依赖
-RUN pnpm install --prod
+# 添加--unsafe-perm以允许构建脚本运行
+RUN pnpm install --prod --unsafe-perm
 
 # 暴露端口
 EXPOSE 7000
