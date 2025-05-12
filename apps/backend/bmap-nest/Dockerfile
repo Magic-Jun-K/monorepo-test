@@ -28,6 +28,17 @@ WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 RUN pnpm build
 
+# 阶段4：生产环境
+FROM base AS production
+WORKDIR /app
+# 复制构建产物和必要文件
+COPY --from=be-build /app/apps/backend/bmap-nest/dist ./dist
+COPY --from=be-build /app/apps/backend/bmap-nest/public ./public
+COPY --from=be-build /app/apps/backend/bmap-nest/package.json ./
+
+# 只安装生产依赖
+RUN pnpm install --prod
+
 # 暴露端口
 EXPOSE 7000
 CMD ["node", "--experimental-specifier-resolution=node", "dist/main.js"]
