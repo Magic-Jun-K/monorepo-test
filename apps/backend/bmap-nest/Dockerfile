@@ -18,12 +18,13 @@ COPY apps/backend/bmap-nest/ ./apps/backend/bmap-nest/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile \
-    --filter="@backend/bmap-nest..." && \
+    --filter="@backend/bmap-nest..."
+    # --filter="@backend/bmap-nest..." && \
     # 添加依赖树检查
     # pnpm list --depth=5
 
 # 阶段3：构建应用
-FROM deps AS be-build
+FROM deps AS builder
 WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 RUN pnpm build
@@ -32,9 +33,9 @@ RUN pnpm build
 FROM base AS production
 WORKDIR /app
 # 复制构建产物和必要文件
-COPY --from=be-build /app/apps/backend/bmap-nest/dist ./dist
-COPY --from=be-build /app/apps/backend/bmap-nest/public ./public
-COPY --from=be-build /app/apps/backend/bmap-nest/package.json ./
+COPY --from=builder /app/apps/backend/bmap-nest/dist ./dist
+COPY --from=builder /app/apps/backend/bmap-nest/public ./public
+COPY --from=builder /app/apps/backend/bmap-nest/package.json ./
 
 # 只安装生产依赖
 # 添加--unsafe-perm以允许构建脚本运行
