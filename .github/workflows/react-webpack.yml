@@ -6,7 +6,7 @@ on:
     paths:
       - 'apps/frontend/react-webpack/**' # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
       - 'packges/**' # 只在 packages 目录下的文件发生变化时触发
-      - '.github/workflows/react-webpack.yml' # 只在该工作流文件发生变化时触发
+      # - '.github/workflows/react-webpack.yml' # 只在该工作流文件发生变化时触发
 
 jobs:
   build-and-deploy:
@@ -72,7 +72,7 @@ jobs:
             docker-compose -f docker-compose.infra.yml up -d
 
             # 查看 compose 配置是否正确解析变量
-            docker-compose -f docker-compose.frontend.yml config
+            # docker-compose -f docker-compose.frontend.yml config
 
             # 停止现有的前端容器
             docker-compose -f docker-compose.frontend.yml stop eggshell-bmap-frontend

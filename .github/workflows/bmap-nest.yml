@@ -57,13 +57,12 @@ jobs:
             # 创建 .env 文件
             echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
-            # echo "BACKEND_ONLY=true" >> .env  # 标记只更新后端
 
             # 确保基础设施服务正在运行
             docker-compose -f docker-compose.infra.yml up -d
 
             # 查看 compose 配置是否正确解析变量
-            docker-compose -f docker-compose.backend.yml config
+            # docker-compose -f docker-compose.backend.yml config
 
             # 停止现有的后端容器
             docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend
