@@ -26,7 +26,7 @@ import { TokenBlacklistService } from './token-backlist.service';
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
         secret: config.get('JWT_SECRET'),
-        signOptions: { expiresIn: '5m', algorithm: 'HS256' },
+        signOptions: { expiresIn: '30m', algorithm: 'HS256' },
       }),
       inject: [ConfigService], // 注入配置服务
     }),
