@@ -10,11 +10,18 @@ export default (props: Props) => {
   return (
     <Modal
       title="测试表单模态框"
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
+      width={800}
+      styles={{ body: { height: 600 } }}
     >
       <Input />
-      <Select options={[{ label: '选项1', value: '1' }, { label: '选项2', value: '2' }]} />
+      <Select
+        options={[
+          { label: '选项1', value: '1' },
+          { label: '选项2', value: '2' }
+        ]}
+      />
     </Modal>
   );
 };
