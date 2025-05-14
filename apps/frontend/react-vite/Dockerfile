@@ -37,7 +37,9 @@ RUN ls -alR /app/apps/frontend/react-vite
 # 设置环境变量跳过类型检查
 ENV SKIP_TYPECHECK=true
 # 修改package.json中的构建命令，根据环境变量决定是否进行类型检查
-RUN sed -i 's/"tsc -b && vite build"/"if [ \\"$SKIP_TYPECHECK\\" = \\"true\\" ]; then echo \\"Skipping type checking\\"; vite build; else tsc -b && vite build; fi"/g' package.json
+RUN if [ "$SKIP_TYPECHECK" = "true" ]; then \
+      node -e "const pkg=require('./package.json'); pkg.scripts.build='vite build'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2))"; \
+    fi
 RUN pnpm build
 
 # 阶段4：运行环境
