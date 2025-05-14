@@ -68,6 +68,7 @@ const MainMenu: FC<PropsWithChildren<MenuProps>> = ({ items, className = '' }) =
       <ul>
         {items.map((item, index) => (
           <li key={index}>
+            {/* @ts-expect-error Link 组件类型定义不兼容本用法 */}
             <Link to={item.path}>{item.name}</Link>
           </li>
         ))}
