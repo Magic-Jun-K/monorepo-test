@@ -33,6 +33,7 @@ RUN pnpm --filter @eggshell/unocss-ui build
 RUN pnpm --filter @eggshell/antd-ui build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-vite
+RUN ls -alR /app/apps/frontend/react-vite/src
 RUN pnpm build
 
 # 阶段4：运行环境
