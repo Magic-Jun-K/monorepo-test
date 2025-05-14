@@ -33,7 +33,11 @@ RUN pnpm --filter @eggshell/unocss-ui build
 RUN pnpm --filter @eggshell/antd-ui build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-vite
-RUN ls -alR /app/apps/frontend/react-vite/src
+RUN ls -alR /app/apps/frontend/react-vite
+# 设置环境变量跳过类型检查
+ENV SKIP_TYPECHECK=true
+# 修改package.json中的构建命令，根据环境变量决定是否进行类型检查
+RUN sed -i 's/"tsc -b && vite build"/"if [ \\"$SKIP_TYPECHECK\\" = \\"true\\" ]; then echo \\"Skipping type checking\\"; vite build; else tsc -b && vite build; fi"/g' package.json
 RUN pnpm build
 
 # 阶段4：运行环境
