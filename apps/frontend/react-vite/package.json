@@ -58,7 +58,8 @@
     "vite-plugin-image-optimizer": "1.1.8",
     "terser": "5.39.1",
     "assemblyscript": "0.27.36",
-    "vite-plugin-wasm": "3.4.1"
+    "vite-plugin-wasm": "3.4.1",
+    "sass-embedded": "1.88.0"
   },
   "exports": {
     ".": {
