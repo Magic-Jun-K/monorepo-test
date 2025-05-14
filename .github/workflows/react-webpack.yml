@@ -1,4 +1,4 @@
-name: 前端部署流程
+name: 前端react-webpack部署流程
 
 on:
   push:
@@ -72,12 +72,12 @@ jobs:
             docker-compose -f docker-compose.infra.yml up -d
 
             # 查看 compose 配置是否正确解析变量
-            # docker-compose -f docker-compose.frontend.yml config
+            # docker-compose -f docker-compose.react-webpack.yml config
 
             # 停止现有的前端容器
-            docker-compose -f docker-compose.frontend.yml stop eggshell-bmap-frontend
-            docker-compose -f docker-compose.frontend.yml rm -f eggshell-bmap-frontend
+            docker-compose -f docker-compose.react-webpack.yml stop eggshell-react-webpack
+            docker-compose -f docker-compose.react-webpack.yml rm -f eggshell-react-webpack
 
             # 拉取并启动容器
-            docker-compose -f docker-compose.frontend.yml pull eggshell-bmap-frontend
-            docker-compose -f docker-compose.frontend.yml up -d eggshell-bmap-frontend
+            docker-compose -f docker-compose.react-webpack.yml pull eggshell-react-webpack
+            docker-compose -f docker-compose.react-webpack.yml up -d eggshell-react-webpack
