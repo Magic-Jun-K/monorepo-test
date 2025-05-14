@@ -127,7 +127,7 @@ export default function FormTest() {
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '774px' }}>
+      <div style={{ height: '83vh' }}>
         <DataEditor
           width="100%"
           rows={data.length}
