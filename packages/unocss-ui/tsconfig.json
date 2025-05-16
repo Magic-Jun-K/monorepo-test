@@ -10,7 +10,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true // 禁止导入没有声明的模块
   },
   "include": ["src"],
   "exclude": ["node_modules", "build", "public"]

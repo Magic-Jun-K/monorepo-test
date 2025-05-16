@@ -1,11 +1,15 @@
-import { defineConfig, presetWind3, presetAttributify, transformerDirectives } from 'unocss';
+import { defineConfig, presetWind3, presetAttributify, transformerDirectives, presetIcons } from 'unocss';
 
 // 官方预设文档：https://unocss.dev/presets/
 // 66.0.0版本开始，presetUno改为presetWind3
 export default defineConfig({
   presets: [
     presetWind3(), // 核心原子化预设
-    presetAttributify() // 支持属性化模式（可选）
+    presetAttributify(), // 支持属性化模式（可选）
+    presetIcons({
+      scale: 1.2, // 图标缩放比例
+      cdn: 'https://esm.sh/' // 使用CDN加载图标
+    })
   ],
   // 启用 class 转换
   transformers: [

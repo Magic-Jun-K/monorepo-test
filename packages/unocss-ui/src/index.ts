@@ -10,3 +10,4 @@ export * from './components/Swiper';
 export * from './components/AutoComplete';
 export * from './components/Dropdown';
 export * from './components/Menu';
+export * from './components/Upload';
