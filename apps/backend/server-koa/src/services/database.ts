@@ -1,6 +1,6 @@
 import Pool from 'pg-pool';
-import config from '../config/index.js';
-import logger from '../utils/logger.js';
+import config from '../config/index.ts';
+import logger from '../utils/logger.ts';
 
 const pool = new Pool({
   connectionString: config.database.url,
