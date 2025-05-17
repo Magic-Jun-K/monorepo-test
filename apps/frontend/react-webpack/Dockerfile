@@ -33,7 +33,7 @@ RUN pnpm --filter @eggshell/unocss-ui build
 RUN pnpm --filter @eggshell/antd-ui build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack
-RUN pnpm build:baiduMap --stats=detailed
+RUN pnpm build --stats=detailed
 # 1. 检查 webpack 是否存在
 # RUN ls -l ./node_modules/.bin/webpack
 # 2. 执行构建并保留详细日志
