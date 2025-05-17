@@ -5,14 +5,18 @@
       "cache": true,
       "persistent": false
     },
-    "dev:baiduMap": {
+    "dev:react-webpack": {
       "dependsOn": ["start:dev"],
       "cache": true,
       "persistent": false
     },
-    "build:baiduMap": {
+    "build:react-webpack": {
       "cache": true,
       "persistent": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
