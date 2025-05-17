@@ -128,7 +128,7 @@ export default function FormTest() {
         </Button>
       </div>
       <div style={{ height: '83vh' }}>
-        {/* @ts-expect-error DataEditor 组件类型定义不兼容本用法 */}
+        {/* @ts-error DataEditor 组件类型定义不兼容本用法 */}
         <DataEditor
           width="100%"
           rows={data.length}
