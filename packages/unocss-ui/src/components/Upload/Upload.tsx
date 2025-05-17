@@ -89,8 +89,8 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
         nextFileList = nextFileList.slice(-maxCount);
       }
 
-      console.log('测试handleUpload fileList', fileList);
-      console.log('测试handleUpload nextFileList', nextFileList);
+      // console.log('测试handleUpload fileList', fileList);
+      // console.log('测试handleUpload nextFileList', nextFileList);
       // 更新内部状态
       if (!fileList) {
         setInternalFileList(nextFileList);
@@ -136,10 +136,10 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
         return file;
       });
 
-      console.log('测试updateFileStatus fileList', fileList);
-      console.log('测试updateFileStatus nextFileList', nextFileList);
-      console.log('测试updateFileStatus internalFileList', internalFileList);
-      console.log('测试updateFileStatus internalFileListRef.current', internalFileListRef.current);
+      // console.log('测试updateFileStatus fileList', fileList);
+      // console.log('测试updateFileStatus nextFileList', nextFileList);
+      // console.log('测试updateFileStatus internalFileList', internalFileList);
+      // console.log('测试updateFileStatus internalFileListRef.current', internalFileListRef.current);
 
       // 只要不是受控 fileList，始终更新 internalFileList，保证 UI 持续显示
       if (!fileList) {
@@ -240,8 +240,8 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
 
     // 渲染文件列表
     const renderUploadList = () => {
-      console.log('测试renderUploadList showUploadList', showUploadList);
-      console.log('测试renderUploadList internalFileList', internalFileList);
+      // console.log('测试renderUploadList showUploadList', showUploadList);
+      // console.log('测试renderUploadList internalFileList', internalFileList);
       if (!showUploadList || internalFileList.length === 0) return null;
 
       // 只过滤掉 status 为 removed 的文件，其他状态都显示
@@ -305,7 +305,14 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
                       } else if (file.originFileObj) {
                         // 为其他类型文件创建临时URL并打开
                         const fileUrl = URL.createObjectURL(file.originFileObj);
-                        window.open(fileUrl, '_blank');
+                        // window.open(fileUrl, '_blank');
+                        const a = document.createElement('a');
+                        a.href = fileUrl;
+                        a.download = file.name;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
                         // 使用后释放URL
                         setTimeout(() => URL.revokeObjectURL(fileUrl), 100);
                       }
