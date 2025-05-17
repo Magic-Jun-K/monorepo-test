@@ -8,8 +8,6 @@ import { Upload } from './components/Upload';
 // import './utils/myApply';
 // import './utils/myBind';
 
-import '@unocss/reset/tailwind.css'; // 引入 CSS 重置
-import 'virtual:uno.css'; // 引入 UnoCSS 生成的样式
 import './App.css';
 
 // 在检查前定义 menuConfig

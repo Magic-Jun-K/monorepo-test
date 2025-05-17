@@ -1,4 +1,5 @@
-import '@unocss/reset/tailwind.css'; // 影响全局样式，与tailwindcss有冲突
+// presetWind4 不再需要 @unocss/reset/tailwind.css
+// import '@unocss/reset/tailwind.css'; // 影响全局样式，与tailwindcss有冲突
 import 'virtual:uno.css';  // 开发时使用
 
 // 组件导出

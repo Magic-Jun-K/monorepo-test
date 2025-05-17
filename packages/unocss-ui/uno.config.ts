@@ -1,10 +1,11 @@
-import { defineConfig, presetWind3, presetAttributify, transformerDirectives, presetIcons } from 'unocss';
+import { defineConfig, presetWind4, presetAttributify, transformerDirectives, presetIcons } from 'unocss';
 
 // 官方预设文档：https://unocss.dev/presets/
 // 66.0.0版本开始，presetUno改为presetWind3
 export default defineConfig({
   presets: [
-    presetWind3(), // 核心原子化预设
+    // presetWind3(), // 核心原子化预设
+    presetWind4(), // 核心原子化预设
     presetAttributify(), // 支持属性化模式（可选）
     presetIcons({
       scale: 1.2, // 图标缩放比例
