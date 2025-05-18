@@ -3,17 +3,18 @@
  */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, Reflector } from '@nestjs/core';
+import { /* APP_GUARD, */ Reflector } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
 
-import { AuthGuard } from './common/guards/auth.guard';
+// import { AuthGuard } from './common/guards/auth.guard';
 import { AppController } from './app.controller';
 import { AppService, PgService } from './app.service';
 import { DetailModule } from './module/detail/detail.module';
 import { FileModule } from './module/file/file.module';
 import { AuthModule } from './module/auth/auth.module';
+import { UserModule } from './module/user/user.module';
 import { ImageModule } from './module/image/image.module';
 import { TableModule } from './module/table/table.module';
 import database from './config/database';
@@ -55,6 +56,7 @@ import database from './config/database';
       },
     }),
     AuthModule,
+    UserModule,
     DetailModule,
     FileModule,
     ImageModule,
@@ -65,10 +67,10 @@ import database from './config/database';
   providers: [
     AppService,
     PgService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AuthGuard,
+    // },
     Reflector,
   ], // 提供可注入的一些服务
 })
