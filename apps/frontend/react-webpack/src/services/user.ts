@@ -1,36 +1,44 @@
-import { CurrentUserRes, LoginPayload, LoginRes } from '@/types/api';
 import { request } from '@/utils/request';
 
 /**
- * 用户登录
- * @param data
- * @returns
+ * 获取用户列表
+ * @param params 
+ * @returns 
  */
-export const login = async (data: LoginPayload): Promise<LoginRes> => {
-  return await request.post('/auth/login', data);
-};
+export async function fetchUsers(params: unknown) {
+  return request.get('/users', { params });
+}
 
 /**
- * 获取当前用户信息
- * @returns
+ * 新增用户
+ * @param data 
+ * @returns 
  */
-export const currentUser = async (): Promise<CurrentUserRes> => {
-  return await request.get('/currentUser');
-};
+export async function createUser(data: unknown) {
+  return request.post('/users', data);
+}
 
 /**
- * 用户注册
- * @param data
- * @returns
+ * 导入用户
+ * @param file 
+ * @returns 
  */
-export const register = async (data: { username: string; password: string }) => {
-  return await request.post('/admin/register', data);
-};
+export async function importUsers(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request.post('/users/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
 
 /**
- * 用户退出登录
- * @returns
+ * 导出用户
+ * @param params 
+ * @returns 
  */
-export const logout = async () => {
-  return await request.post('/auth/logout');
-};
+export async function exportUsers(params: unknown) {
+  return request.get('/users/export', {
+    params,
+    responseType: 'blob'
+  });
+}

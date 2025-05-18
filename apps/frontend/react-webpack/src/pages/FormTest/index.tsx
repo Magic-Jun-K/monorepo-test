@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { SearchCom, TableCom } from '@eggshell/antd-ui';
 import { Button } from '@eggshell/unocss-ui';
 
@@ -6,14 +7,22 @@ import ImageTestModal from './components/ImageTestModal';
 import FormTestModal from './components/FormTestModal';
 import EChartsTestModal from './components/EChartsTestModal';
 import { COLUMNS, SEARCH_ITEMS } from './constant';
+import { fetchUsers, createUser, importUsers, exportUsers } from '@/services';
 
 import styles from './index.module.scss';
-import { useState } from 'react';
 
 export default () => {
   const [isOpenImage, setIsOpenImage] = useState(false); // 是否打开ECharts模态框
   const [isOpenECharts, setIsOpenECharts] = useState(false); // 是否打开ECharts模态框
   const [isOpenForm, setIsOpenForm] = useState(false); // 是否打开表单模态框
+
+  // 获取用户列表
+  useEffect(() => {
+    fetchUsers({ page: 1, pageSize: 20 }).then(res => {
+      // 处理数据
+      console.log('测试fetchUsers',res);
+    });
+  }, []);
 
   // 处理搜索事件
   const handleSearch = async (values: Record<string, any>) => {
@@ -45,30 +54,48 @@ export default () => {
     console.log('重置搜索');
   };
 
+  // 新增用户
+  const handleAddUser = (user: unknown) => {
+    createUser(user).then(res => {
+      // 处理结果
+      console.log('新增用户结果:', res);
+    });
+  };
+
+  // 导入用户
+  const handleImport = (file: any) => {
+    console.log('导入文件:', file);
+    importUsers(file).then(res => {
+      // 处理结果
+      console.log('导入结果:', res);
+    });
+  };
+
+  // 导出用户
+  const handleExport = () => {
+    exportUsers({}).then(res => {
+      // 下载文件
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'users.xlsx');
+      document.body.appendChild(link);
+      link.click();
+    });
+  };
+
   return (
     <ContainerBody className={styles['TableTestPage']}>
       <div className={styles.container}>
         <SearchCom items={SEARCH_ITEMS} onSearch={handleSearch} onReset={handleReset} />
         <div style={{ paddingBottom: '20px' }}>
-          <Button
-            type="primary"
-            style={{ marginRight: '12px' }}
-            // onClick={}
-          >
+          <Button type="primary" style={{ marginRight: '12px' }} onClick={handleAddUser}>
             新增用户信息
           </Button>
-          <Button
-            type="primary"
-            style={{ marginRight: '12px' }}
-            // onClick={}
-          >
+          <Button type="primary" style={{ marginRight: '12px' }} onClick={handleImport}>
             导入用户信息
           </Button>
-          <Button
-            type="primary"
-            style={{ marginRight: '12px' }}
-            // onClick={}
-          >
+          <Button type="primary" style={{ marginRight: '12px' }} onClick={handleExport}>
             导出用户信息
           </Button>
           <Button

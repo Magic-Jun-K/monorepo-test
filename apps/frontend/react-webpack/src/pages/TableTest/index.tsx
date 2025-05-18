@@ -112,7 +112,7 @@ export default () => {
 
   return (
     <div className={styles.container} style={{ height: '92.5vh' }}>
-      {/* @ts-error DataEditor 组件类型定义不兼容本用法 */}
+      {/* @ts-expect-error DataEditor 组件类型定义不兼容本用法 */}
       <DataEditor
         width="100%"
         rows={data.length}

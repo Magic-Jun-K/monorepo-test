@@ -4,7 +4,6 @@ import { Swiper } from '@eggshell/unocss-ui';
 
 import LazyImage from '@/components/LazyImage';
 import { BASE_URL } from '@/config';
-// import * as api from '@/services';
 
 import styles from './index.module.scss';
 

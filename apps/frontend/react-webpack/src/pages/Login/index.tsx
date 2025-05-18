@@ -9,8 +9,15 @@ import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
-import * as api from '@/services';
-import { AuthType, LoginType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
+import { login, register } from '@/services';
+import {
+  AuthType,
+  LoginType,
+  FormData,
+  loginSchema,
+  phoneLoginSchema,
+  registerSchema
+} from './types';
 import { authStore } from '@/store/auth.store';
 import { ToastProvider } from '@/components/Toast';
 
@@ -24,6 +31,7 @@ const schemaMap: Record<AuthType, any> = {
   },
   register: registerSchema
 };
+const api = { login, register };
 const LoginContent = () => {
   const [authType, setAuthType] = useState<AuthType>('login');
   const [loginType, setLoginType] = useState<LoginType>('account');
@@ -146,20 +154,28 @@ const LoginContent = () => {
                 />
 
                 <div className={styles.formGroup}>
+                  {/* @ts-expect-error Controller 组件类型定义不兼容本用法 */}
                   <Controller
                     name="code"
                     control={control}
                     rules={{ required: '验证码不能为空' }}
                     render={({ field }) => (
                       <div className={styles.codeInput}>
-                        <input {...field} type="text" placeholder="请输入验证码" className={errors.code ? styles.error : ''} />
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="请输入验证码"
+                          className={errors.code ? styles.error : ''}
+                        />
                         <button type="button" className={styles.getCodeButton}>
                           获取验证码
                         </button>
                       </div>
                     )}
                   />
-                  {errors.code && <span className={styles.errorMessage}>{errors.code.message}</span>}
+                  {errors.code && (
+                    <span className={styles.errorMessage}>{errors.code.message}</span>
+                  )}
                 </div>
 
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
@@ -203,7 +219,9 @@ const LoginContent = () => {
           </form>
         )}
 
-        {loginType === 'account' ? <RegisterText authType={authType} setAuthType={setAuthType} /> : null}
+        {loginType === 'account' ? (
+          <RegisterText authType={authType} setAuthType={setAuthType} />
+        ) : null}
       </div>
     </div>
   );
