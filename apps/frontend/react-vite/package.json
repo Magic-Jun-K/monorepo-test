@@ -22,9 +22,9 @@
     "@eggshell/unocss-ui": "workspace:*",
     "echarts": "5.6.0",
     "axios": "1.9.0",
-    "@sentry/react": "9.18.0",
+    "@sentry/react": "9.19.0",
     "clsx": "2.1.1",
-    "react-hook-form": "7.56.3",
+    "react-hook-form": "7.53.2",
     "zod": "3.24.4",
     "@hookform/resolvers": "5.0.1",
     "hash-wasm": "4.12.0",
@@ -36,15 +36,15 @@
     "mobx-react-lite": "4.1.0",
     "redux": "5.0.1",
     "react-redux": "9.2.0",
-    "@reduxjs/toolkit": "2.8.1",
+    "@reduxjs/toolkit": "2.8.2",
     "antd": "5.25.1"
   },
   "devDependencies": {
-    "@eslint/js": "9.26.0",
-    "@types/react": "18.3.21",
-    "@types/react-dom": "18.3.7",
+    "@eslint/js": "9.27.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
     "@types/node": "22.15.18",
-    "eslint": "9.26.0",
+    "eslint": "9.27.0",
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-react-refresh": "0.4.20",
     "globals": "16.1.0",
@@ -56,10 +56,10 @@
     "@vitejs/plugin-react-swc": "3.9.0",
     "vite-plugin-svgr": "4.3.0",
     "vite-plugin-image-optimizer": "1.1.8",
-    "terser": "5.39.1",
+    "terser": "5.39.2",
     "assemblyscript": "0.27.36",
     "vite-plugin-wasm": "3.4.1",
-    "sass-embedded": "1.88.0"
+    "sass-embedded": "1.89.0"
   },
   "exports": {
     ".": {
