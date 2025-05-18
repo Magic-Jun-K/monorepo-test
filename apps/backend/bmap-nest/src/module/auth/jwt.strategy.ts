@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // private readonly adminService: AdminService
     @InjectRepository(AdminEntity)
     private readonly adminRepository: Repository<AdminEntity>,
-    private readonly configService: ConfigService // 注入配置服务
+    private readonly configService: ConfigService, // 注入配置服务
   ) {
     super({
       // jwtFromRequest: ExtractJwt.fromHeader('token'),
@@ -35,11 +35,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // 使用标准Passport流程
   /**
    * 验证用户
-   * @param payload 
-   * @returns 
+   * @param payload
+   * @returns
    */
   async validate(payload: any) {
-    const user = await this.adminRepository.findOne(payload.sub);
+    const user = await this.adminRepository.findOne({
+      where: { id: payload.sub },
+    });
     if (!user) throw new UnauthorizedException();
     return user;
   }
@@ -47,10 +49,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   //   // 添加缓存检查（示例）
   //   const cacheUser = await this.cacheManager.get(`user_${payload.sub}`);
   //   if (cacheUser) return cacheUser;
-  
+
   //   const user = await this.adminRepository.findOne(payload.sub);
   //   if (!user) throw new UnauthorizedException('用户不存在');
-    
+
   //   await this.cacheManager.set(`user_${payload.sub}`, user, 300); // 缓存5分钟
   //   return user;
   // }
