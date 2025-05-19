@@ -1,6 +1,7 @@
 .menu {
   @apply box-border m-0 p-0 text-base list-none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
 }
 
 /* 垂直菜单选中指示条 */
@@ -8,16 +9,19 @@
   @apply absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 transform bg-blue-600;
 }
 /* 垂直模式 */
-.menu-vertical {
-  @apply border-r border-solid border-gray-200;
+/* .menu-vertical {
+} */
+
+/* 水平模式 */
+.menu-horizontal {
+  @apply flex;
 }
 
 .menu-item {
-  @apply flex items-center px-4 py-2 cursor-pointer transition-colors;
+  @apply relative flex items-center p-2 cursor-pointer transition-colors border-rd-1;
 }
-
-.menu-item-vertical {
-  @apply pl-6;
+.menu-item:hover {
+  @apply bg-gray-100;
 }
 
 .menu-item-selected {
@@ -33,18 +37,47 @@
 }
 
 /* 子菜单样式 */
-.submenu-content {
-  @apply min-w-[160px] py-1 border border-gray-200 rounded-md;
-  left: 100%;
+.submenu-popup {
+  @apply absolute bg-white shadow-lg z-50 min-w-40 p-1 m-0 border border-gray-200 rounded-md;
+  /* 初始状态隐藏 */
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.2s linear;
+}
+.submenu-popup::before {
+  @apply content-empty block absolute top-0 left-[-8px] w-2 h-full bg-transparent pointer-events-auto;
+  /* content: '';
+  display: block;
+  position: absolute;
   top: 0;
+  left: -8px;
+  width: 8px;
+  height: 100%;
+  background: transparent;
+  pointer-events: auto; */
 }
 
-.submenu-content-vertical {
-  @apply pl-4 border-l border-gray-200 ml-2;
+.submenu:hover > .submenu-popup {
+  /* 鼠标悬停时显示 */
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 水平模式下子菜单弹出层定位 */
+.menu-horizontal .submenu:hover > .submenu-popup {
+  top: 100%;
+  left: 0;
 }
 
 .submenu-title {
-  @apply flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100;
+  @apply flex items-center justify-between cursor-pointer hover:bg-gray-100;
+}
+
+.submenu-open .submenu-popup {
+  visibility: visible;
+  opacity: 1;
+  top: 100%;
+  left: 0;
 }
 
 /* 子菜单箭头动画 */

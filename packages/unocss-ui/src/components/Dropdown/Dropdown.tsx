@@ -86,7 +86,7 @@ export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bo
           createPortal(
             <DropdownContext.Provider value={{ closeMenu }}>
               <div
-                className="absolute bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px] py-1"
+                className="absolute bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px] p-1"
                 style={getPosition()}
                 onMouseEnter={() => handleMouse(true)}
                 onMouseLeave={() => handleMouse(false)}

@@ -1,11 +1,9 @@
-import { useState } from 'react';
-
-import { Button } from './components/Button';
+// import { Button } from './components/Button';
 import { AutoComplete } from './components/AutoComplete';
 import { Menu } from './components/Menu';
+
 import { Dropdown } from './components/Dropdown';
 import type { MenuItemType } from './components/Menu/types';
-import { Drawer } from './components/Drawer';
 // import './utils/myCall';
 // import './utils/myApply';
 // import './utils/myBind';
@@ -58,15 +56,6 @@ const menuConfig: MenuItemType[] = [
 ];
 
 function App() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const handleOk = () => {
-    // 处理确定逻辑
-    setDrawerOpen(false);
-  };
-  const handleCancel = () => {
-    // 处理取消逻辑
-    setDrawerOpen(false);
-  };
   return (
     <div className="w-full h-full">
       <AutoComplete
@@ -90,23 +79,8 @@ function App() {
         style={{ width: '400px' }}
       />
       <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
-        <Button>测试下拉菜单</Button>
+        <div className="p-4 bg-gray-200 mt-8 ml-8">测试下拉菜单</div>
       </Dropdown>
-      <Button className="mt-4" onClick={() => setDrawerOpen(true)}>
-        打开抽屉
-      </Button>
-      <Drawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title="演示 Drawer 组件"
-        placement="right"
-        width={600}
-        showFooter={true}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <div className="p-4">这里是 Drawer 内容，可以放表单、菜单等。</div>
-      </Drawer>
     </div>
   );
 }
