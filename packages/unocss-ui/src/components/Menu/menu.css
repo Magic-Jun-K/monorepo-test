@@ -18,8 +18,9 @@
 }
 
 .menu-item {
-  @apply relative flex items-center p-2 cursor-pointer transition-colors border-rd-1;
+  @apply relative min-w-42 flex items-center p-2 cursor-pointer transition-colors border-rd-1;
 }
+
 .menu-item:hover {
   @apply bg-gray-100;
 }
@@ -94,5 +95,5 @@
 
 /* 分组样式 */
 .menu-group-title {
-  @apply px-4 py-2 text-gray-500 uppercase tracking-wide;
+  @apply p-2 text-gray-500 uppercase tracking-wide;
 }
