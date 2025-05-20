@@ -3,10 +3,5 @@
 **/build
 **/.git
 **/*.log
-**/coverage
-**/cypress
 **/*.env.local
 **/docker-compose*
-
-.git
-.DS_Store
