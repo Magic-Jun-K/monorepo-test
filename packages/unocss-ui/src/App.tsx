@@ -1,55 +1,48 @@
 // import { Button } from './components/Button';
 import { AutoComplete } from './components/AutoComplete';
 import { Menu } from './components/Menu';
-
-import { Dropdown } from './components/Dropdown';
-import type { MenuItemType } from './components/Menu/types';
+// import { Dropdown } from './components/Dropdown';
+import type { MenuType } from './components/Menu/types';
 // import './utils/myCall';
 // import './utils/myApply';
 // import './utils/myBind';
 
 import './App.css';
 
-// 在检查前定义 menuConfig
-const menuConfig: MenuItemType[] = [
+// antd 5.25.0 风格 menuConfig
+const menuConfig: MenuType[] = [
   {
-    type: 'item',
-    itemKey: 'dashboard',
+    key: 'dashboard',
     label: '仪表盘'
   },
   {
-    type: 'submenu',
-    itemKey: 'settings',
+    key: 'settings',
     label: '系统设置',
     children: [
       {
-        type: 'item',
-        itemKey: 'account',
+        key: 'account',
         label: '账户管理'
       },
       {
-        type: 'submenu',
-        itemKey: 'security',
+        key: 'security',
         label: '安全设置',
         children: [
           {
-            type: 'item',
-            itemKey: 'password',
+            key: 'password',
             label: '密码修改'
           }
         ]
-      }
-    ]
-  },
-  {
-    type: 'group',
-    itemKey: 'help',
-    label: '帮助中心',
-    children: [
+      },
       {
-        type: 'item',
-        itemKey: 'help-docs',
-        label: '文档中心'
+        type: 'group',
+        key: 'help',
+        label: '帮助中心',
+        children: [
+          {
+            key: 'help-docs',
+            label: '文档中心'
+          }
+        ]
       }
     ]
   }
@@ -78,9 +71,13 @@ function App() {
         placeholder="请输入城市"
         style={{ width: '400px' }}
       />
-      <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
+      {/* <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
         <div className="p-4 bg-gray-200 mt-8 ml-8">测试下拉菜单</div>
-      </Dropdown>
+      </Dropdown> */}
+      <Menu mode="vertical" items={menuConfig} style={{ width: 256 }} />
+      <div className='bg-pink-300'>
+        <Menu mode="horizontal" items={menuConfig} />
+      </div>
     </div>
   );
 }

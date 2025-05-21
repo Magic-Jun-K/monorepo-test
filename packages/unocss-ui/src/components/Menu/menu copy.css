@@ -5,7 +5,7 @@
 }
 
 .menu-item {
-  @apply relative p-2 cursor-pointer transition-colors border-rd-1;
+  @apply relative min-w-42 flex items-center p-2 cursor-pointer transition-colors border-rd-1;
 }
 
 .menu-item:hover {
@@ -38,7 +38,7 @@
 
 /* 子菜单样式 */
 .submenu-popup {
-  @apply absolute bg-white text-black shadow-lg z-1000 flex flex-col w-50 p-1 m-0 rounded-md;
+  @apply absolute bg-white shadow-lg z-50 min-w-40 p-1 m-0 rounded-md;
   /* 初始状态隐藏 */
   visibility: hidden;
   opacity: 0;
@@ -63,7 +63,25 @@
   opacity: 1;
 }
 
-.submenu-title {
+/* 水平模式下子菜单弹出层定位 */
+.menu-horizontal .submenu.submenu-popup {
+  left: 100%;
+  top: 0;
+}
+/* 水平模式下子菜单弹出层定位 */
+.menu-horizontal .submenu.submenu-popup {
+  left: 100%;
+  top: 0;
+}
+
+.submenu.submenu-title .submenu-open .submenu-popup {
+  visibility: visible;
+  opacity: 1;
+  left: 100%;
+  top: 0;
+}
+
+-title {
   @apply flex items-center justify-between cursor-pointer hover:bg-gray-100;
 }
 
@@ -86,59 +104,40 @@
 
 /* 垂直模式 */
 /* .menu-vertical {} */
-.menu-vertical > .submenu > .submenu-popup {
-  top: 0;
-  left: calc(100% + 8px);
-}
-
-/* 垂直模式下嵌套子菜单定位 */
-.menu-vertical .submenu .submenu > .submenu-popup {
-  top: 0;
-  left: calc(100% + 8px);
-}
 
 /* 水平模式 */
 .menu-horizontal {
-  @apply flex items-center bg-transparent;
+  @apply flex items-center bg-white;
   position: relative;
 }
-
 .menu-horizontal > .menu-item {
-  @apply relative flex items-center flex-justify-center text-white w-30 p-2 bg-transparent border-none rounded-md transition-colors duration-200;
+  @apply relative flex items-center min-w-40 p-2 bg-transparent border-none rounded-md transition-colors duration-200;
+  /* background: none; */
 }
 .menu-horizontal > .menu-item.menu-item-selected {
-  @apply text-blue-600 font-semibold bg-transparent;
+  @apply text-blue-600 font-semibold bg-transp.menu-horizontal .submenu .submenuarent;
 }
-.menu-horizontal > .menu-item:hover {
+.menu-horizont-openal > .menver {
   @apply bg-gray-100;
 }
 .menu-horizontal .submenu {
   @apply relative;
 }
-.menu-horizontal > .submenu > .submenu-title {
-  @apply flex items-center flex-justify-center text-white cursor-pointer;
+.menu-horizontal .submenu-title {
+  @apply flex items-center cursor-pointer;
 }
-
-.menu-horizontal .submenu .submenu > .submenu-popup {
+.menu-horizontal .submenu .submenu.menu-horizontal .submenu-open .submenu-popup {
+  @apply absolute bg-white shadow-lg z-50 min-w-40 p-1 m-0 rounded-md;
+  left: 100%;
   top: 0;
-  left: calc(100% + 8px);
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.2s linear;
 }
 
 .menu-horizontal > .submenu > .submenu-popup {
-  top: calc(100% + 6px);
+  top: 100%;
   left: 0;
-}
-.menu-horizontal > .submenu > .submenu-popup::before {
-  @apply content-empty block absolute top-[-8px] left-0 w-full h-2 bg-transparent pointer-events-auto;
-  /* content: '';
-  display: block;
-  position: absolute;
-  top: -8px; // Position above the popup 位于弹出窗口上方
-  left: 0;
-  width: 100%;
-  height: 8px; // Cover the 8px gap 填补8px的空白
-  background: transparent;
-  pointer-events: auto; */
 }
 .menu-horizontal .submenu:hover > .submenu-popup,
 .menu-horizontal .submenu-open .submenu-popup {
