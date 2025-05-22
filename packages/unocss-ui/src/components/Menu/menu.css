@@ -8,9 +8,9 @@
   @apply relative p-2 cursor-pointer transition-colors border-rd-1;
 }
 
-.menu-item:hover {
+/* .menu-item:hover {
   @apply bg-gray-100;
-}
+} */
 
 .menu-item-selected {
   @apply bg-blue-50 text-blue-600;
@@ -64,7 +64,7 @@
 }
 
 .submenu-title {
-  @apply flex items-center justify-between cursor-pointer hover:bg-gray-100;
+  @apply flex items-center justify-between cursor-pointer /* hover:bg-gray-100 */;
 }
 
 .submenu-title .submenu-open .submenu-popup {
@@ -109,9 +109,9 @@
 .menu-horizontal > .menu-item.menu-item-selected {
   @apply text-blue-600 font-semibold bg-transparent;
 }
-.menu-horizontal > .menu-item:hover {
+/* .menu-horizontal > .menu-item:hover {
   @apply bg-gray-100;
-}
+} */
 .menu-horizontal .submenu {
   @apply relative;
 }

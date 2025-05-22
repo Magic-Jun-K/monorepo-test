@@ -83,13 +83,13 @@ const MenuItem: React.FC<{
   if ('children' in item && Array.isArray(item.children)) {
     return (
       <li
-        className={`menu-item submenu${isSubmenuOpen ? ' submenu-open' : ''}`}
+        className={`menu-item submenu ${isSubmenuOpen ? 'submenu-open' : ''}`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div
-          className={`submenu-title w-full${
-            isInSelectedPath && selectedKey !== key ? ' menu-ancestor-selected' : ''
+          className={`submenu-title w-full ${
+            isInSelectedPath && selectedKey !== key ? 'menu-ancestor-selected' : ''
           }`}
         >
           {item.icon && <span className="menu-item-icon mr-2">{item.icon}</span>}
@@ -119,9 +119,9 @@ const MenuItem: React.FC<{
   if (item.href) {
     return (
       <li
-        className={`menu-item${selectedKey === key ? ' menu-item-selected' : ''} ${
-          item.disabled ? ' menu-item-disabled' : ''
-        } ${item.danger ? ' menu-item-danger' : ''}`}
+        className={`menu-item ${selectedKey === key ? 'menu-item-selected' : ''} ${
+          item.disabled ? 'menu-item-disabled' : ''
+        } ${item.danger ? 'menu-item-danger' : ''}`}
         style={mode === 'horizontal' ? { position: 'relative' } : {}}
       >
         <a
