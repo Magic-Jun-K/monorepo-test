@@ -1,5 +1,5 @@
 .menu-component {
-  > ul {
+  .menu-component-ul {
     list-style: none;
     padding: 0;
     display: flex;
@@ -13,7 +13,7 @@
   a {
     text-decoration: none;
     color: #1C222B;
-    font-size: 1.25rem;
+    // font-size: 1.25rem;
   }
 
   .menu-item {
