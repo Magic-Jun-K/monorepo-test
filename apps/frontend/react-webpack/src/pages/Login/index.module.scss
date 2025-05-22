@@ -1,9 +1,19 @@
 .loginContainer {
   display: flex;
-  justify-content: center;
+  // justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(189.16deg, #97ABFF 14%, #123597 98%);
+  // background: linear-gradient(189.16deg, #97abff 14%, #123597 98%);
+  padding-right: 16vw;
+}
+
+.loginLogo {
+  width: 542px;
+  height: 629px;
+  background-size: '30%'; // 根据需要添加其他背景样式
+  background-repeat: 'no-repeat'; // 根据需要添加其他背景样式
+  background-position: 'left'; // 根据需要添加其他背景样式
 }
 
 .loginBox {
@@ -12,7 +22,7 @@
   padding: 2.5rem;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(94, 91, 91, 0.1);
 }
 
 .tabs {

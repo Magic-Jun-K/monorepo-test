@@ -20,8 +20,11 @@ import {
 } from './types';
 import { authStore } from '@/store/auth.store';
 import { ToastProvider } from '@/components/Toast';
+import { BASE_URL } from '@/config';
 
 import styles from './index.module.scss';
+
+const backgroundImageUrl = `${BASE_URL}/image/compressed/login-bg2.webp`;
 
 // 创建 schema 映射关系
 const schemaMap: Record<AuthType, any> = {
@@ -109,7 +112,15 @@ const LoginContent = () => {
   };
 
   return (
-    <div className={styles.loginContainer}>
+    <div
+      className={styles.loginContainer}
+      style={{
+        background: `url(${backgroundImageUrl})`,
+        backgroundSize: 'cover', // 根据需要添加其他背景样式
+        backgroundRepeat: 'no-repeat' // 根据需要添加其他背景样式
+        // background-position: 'left'; // 根据需要添加其他背景样式
+      }}
+    >
       <div className={styles.loginBox}>
         {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />}
 
