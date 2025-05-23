@@ -3,9 +3,8 @@ export interface MenuItemType {
   type?: 'group';
   /** 菜单项唯一标识 */
   key?: string; // 兼容 antd
-  itemKey?: string; // 兼容旧用法
   /** 菜单项显示内容 */
-  label: React.ReactNode;
+  label: React.ReactNode | JSX.Element;
   /** 菜单项图标 */
   icon?: React.ReactNode;
   /** 是否禁用该菜单项 */
@@ -18,13 +17,14 @@ export interface MenuItemType {
   [key: string]: any;
 }
 
-export interface SubMenuType extends MenuItemType {
-  children: MenuItemType[];
+export interface SubMenuType extends Omit<MenuItemType, 'type'> {
+  type?: never;
+  children: MenuType[];
 }
 
-export interface MenuItemGroupType extends MenuItemType {
+export interface MenuItemGroupType extends Omit<MenuItemType, 'type'> {
   type: 'group';
-  children: MenuItemType[];
+  children: MenuType[];
 }
 
 export type MenuType = MenuItemType | SubMenuType | MenuItemGroupType;
@@ -38,6 +38,8 @@ export interface MenuProps {
   style?: React.CSSProperties;
   /** 选中项 */
   selectedKeys?: string[];
+  /** 默认选中项 */
+  defaultSelectedKeys?: string[];
   /** 点击事件 */
   onClick?: (info: {
     key: string;
@@ -45,4 +47,6 @@ export interface MenuProps {
     item: any;
     domEvent: React.MouseEvent;
   }) => void;
+  /** 选择事件 */
+  onSelect?: (selectedKeys: string[]) => void;
 }

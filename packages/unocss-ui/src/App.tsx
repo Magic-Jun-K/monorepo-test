@@ -75,8 +75,14 @@ function App() {
         <div className="p-4 bg-gray-200 mt-8 ml-8">测试下拉菜单</div>
       </Dropdown> */}
       <Menu mode="vertical" items={menuConfig} style={{ width: 256 }} />
-      <div className='bg-pink-300'>
-        <Menu mode="horizontal" items={menuConfig} />
+      <div className="bg-pink-300">
+        <Menu
+          mode="horizontal"
+          items={menuConfig}
+          onClick={({ key, keyPath, item, domEvent }) => {
+            console.log(key, keyPath, item, domEvent);
+          }}
+        />
       </div>
     </div>
   );
