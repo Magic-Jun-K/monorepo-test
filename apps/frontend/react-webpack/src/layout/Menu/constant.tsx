@@ -21,50 +21,50 @@ export const MENU_CONFIG: MenuItemType[] = [
 ];
 export const TEST_MENU_CONFIG: MenuItemType[] = [
   {
-    itemKey: '/',
-    label: <Link to="/">首页</Link> as React.ReactNode
+    key: '/',
+    label: <Link to="/">首页</Link> as JSX.Element
   },
   {
-    itemKey: '/form-test',
+    key: '/form-test',
     label: <Link to="/form-test">表单测试页</Link>
   },
   {
-    itemKey: '/table-test',
+    key: '/table-test',
     label: <Link to="/table-test">表格测试页</Link>
   },
   {
-    itemKey: '/baidu-map',
+    key: '/baidu-map',
     label: <Link to="/baidu-map">百度地图</Link>
   },
   {
-    itemKey: 'dashboard',
+    key: 'dashboard',
     label: '仪表盘'
   },
   {
-    itemKey: 'settings',
+    key: 'settings',
     label: '系统设置',
     children: [
       {
-        itemKey: 'account',
+        key: 'account',
         label: '账户管理'
       },
       {
-        itemKey: 'security',
+        key: 'security',
         label: '安全设置',
         children: [
           {
-            itemKey: 'password',
+            key: 'password',
             label: '密码修改'
           }
         ]
       },
       {
         type: 'group',
-        itemKey: 'help',
+        key: 'help',
         label: '帮助中心',
         children: [
           {
-            itemKey: 'help-docs',
+            key: 'help-docs',
             label: '文档中心'
           }
         ]
