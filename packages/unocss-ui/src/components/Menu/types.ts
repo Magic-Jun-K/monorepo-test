@@ -4,7 +4,7 @@ export interface MenuItemType {
   /** 菜单项唯一标识 */
   key?: string; // 兼容 antd
   /** 菜单项显示内容 */
-  label: React.ReactNode | JSX.Element;
+  label: React.ReactNode;
   /** 菜单项图标 */
   icon?: React.ReactNode;
   /** 是否禁用该菜单项 */
