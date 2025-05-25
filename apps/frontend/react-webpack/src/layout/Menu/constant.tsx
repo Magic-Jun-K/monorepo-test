@@ -1,25 +1,25 @@
 import { Link } from 'react-router-dom';
 import type { MenuItemType } from '@eggshell/unocss-ui';
 
+// export const MENU_CONFIG: MenuItemType[] = [
+//   {
+//     itemKey: '/',
+//     label: '首页'
+//   },
+//   {
+//     itemKey: '/form-test',
+//     label: '表单测试页'
+//   },
+//   {
+//     itemKey: '/table-test',
+//     label: '表格测试页'
+//   },
+//   {
+//     itemKey: '/baidu-map',
+//     label: '百度地图'
+//   }
+// ];
 export const MENU_CONFIG: MenuItemType[] = [
-  {
-    itemKey: '/',
-    label: '首页'
-  },
-  {
-    itemKey: '/form-test',
-    label: '表单测试页'
-  },
-  {
-    itemKey: '/table-test',
-    label: '表格测试页'
-  },
-  {
-    itemKey: '/baidu-map',
-    label: '百度地图'
-  }
-];
-export const TEST_MENU_CONFIG: MenuItemType[] = [
   {
     key: '/',
     label: <Link to="/">首页</Link> as JSX.Element
