@@ -8,8 +8,7 @@ import styles from './index.module.scss';
 // 在检查前定义 menuConfig
 const userConfig: MenuItemType[] = [
   {
-    type: 'item',
-    itemKey: 'logout',
+    key: 'logout',
     label: '退出登录'
   }
 ];
