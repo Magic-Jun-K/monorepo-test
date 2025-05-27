@@ -1,7 +1,7 @@
 /**
  * @description 入口文件
  */
-import { NestFactory/* , Reflector */ } from '@nestjs/core';
+import { NestFactory /* , Reflector */ } from '@nestjs/core';
 
 import { AppModule } from './app.module';
 // import { LoggerMiddleware } from './middlewares/LoggerMiddleware';
@@ -23,11 +23,15 @@ async function bootstrap() {
 
   // 启用 CORS
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://8.138.104.160'
-    ],
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? ['http://eggshell.online', 'http://www.eggshell.online']
+        : [
+            'http://eggshell.online',
+            'http://www.eggshell.online',
+            'http://localhost:3000',
+            'http://localhost:5173',
+          ],
     methods: 'GET,POST,HEAD,PUT,PATCH,DELETE',
     credentials: true, // 允许携带 cookie
   });
