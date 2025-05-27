@@ -238,10 +238,24 @@ const LoginContent = () => {
   );
 };
 
+const FooterRecord = () => {
+  return (
+    <div
+      className={styles['footer-record']}
+      onClick={() => {
+        window.open('https://beian.miit.gov.cn');
+      }}
+    >
+      <span>粤ICP备2025421349号-1</span>
+    </div>
+  );
+};
+
 export default () => {
   return (
     <ToastProvider>
       <LoginContent />
+      <FooterRecord />
     </ToastProvider>
   );
 };

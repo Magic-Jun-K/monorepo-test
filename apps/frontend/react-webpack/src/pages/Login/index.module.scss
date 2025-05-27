@@ -160,3 +160,15 @@
     background-color: #e5e7eb;
   }
 }
+
+.footer-record {
+  position: absolute;
+  bottom: 0.5rem;
+  width: 100%;
+  text-align: center;
+  color: rgb(90, 92, 95);
+
+  span {
+    cursor: pointer;
+  }
+}
