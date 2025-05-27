@@ -19,8 +19,8 @@ declare global {
 // 配置常量
 const MAP_CONFIG = {
   AK: 'VyYLcISnIl9Pkivq8WD8TmNMjzkP76mZ',
-  ICON_CLUSTER: `${BASE_URL}/image/images/iconCluster.png`,
-  ICON_IMAGE: `${BASE_URL}/image/images/image.png`,
+  ICON_CLUSTER: `${BASE_URL}/images/iconCluster.png`,
+  ICON_IMAGE: `${BASE_URL}/images/image.png`,
   DATA_BOUNDS: [113.25167, 113.42317, 23.10791, 23.09372] as [number, number, number, number], // 数据边界
   POINT_COUNT: 500000, // 落点数量
 };

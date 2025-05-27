@@ -24,7 +24,7 @@ import { BASE_URL } from '@/config';
 
 import styles from './index.module.scss';
 
-const backgroundImageUrl = `${BASE_URL}/image/compressed/login-bg2.webp`;
+const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
 
 // 创建 schema 映射关系
 const schemaMap: Record<AuthType, any> = {
