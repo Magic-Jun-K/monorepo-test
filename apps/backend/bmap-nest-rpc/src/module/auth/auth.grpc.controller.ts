@@ -2,10 +2,17 @@ import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 
 import { AuthService } from './auth.service';
+import { AdminEntity } from '@/entities/admin.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Controller()
 export class AuthGrpcController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @InjectRepository(AdminEntity)
+    private readonly adminRepository: Repository<AdminEntity>,
+  ) {}
 
   @GrpcMethod('AuthService', 'login')
   async login(data: { username: string; password: string }) {
@@ -19,10 +26,18 @@ export class AuthGrpcController {
         };
       }
 
+      // 从数据库获取包含密码的完整用户信息
+      const admin = await this.adminRepository.findOne({
+        where: { username: data.username },
+        select: ['id', 'username', 'password'],
+      });
+
+      // 使用原始密码进行验证
       const isPasswordValid = await this.authService.verifyPassword(
-        user.password,
+        admin.password,
         data.password,
       );
+
       if (!isPasswordValid) {
         return {
           success: false,
@@ -132,4 +147,4 @@ export class AuthGrpcController {
       };
     }
   }
-} 
+}
