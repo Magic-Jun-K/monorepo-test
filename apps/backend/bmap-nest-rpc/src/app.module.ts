@@ -18,8 +18,6 @@ import { UserModule } from './module/user/user.module';
 import { ImageModule } from './module/image/image.module';
 import { TableModule } from './module/table/table.module';
 import database from './config/database';
-import { AuthGrpcClient } from './module/auth/auth.client';
-import { AuthGrpcService } from './module/auth/auth.grpc.service';
 
 @Module({
   imports: [
@@ -62,7 +60,7 @@ import { AuthGrpcService } from './module/auth/auth.grpc.service';
     DetailModule,
     FileModule,
     ImageModule,
-    TableModule
+    TableModule,
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
@@ -74,8 +72,6 @@ import { AuthGrpcService } from './module/auth/auth.grpc.service';
     //   useClass: AuthGuard,
     // },
     Reflector,
-    AuthGrpcClient,
-    AuthGrpcService
   ], // 提供可注入的一些服务
 })
 export class AppModule {
