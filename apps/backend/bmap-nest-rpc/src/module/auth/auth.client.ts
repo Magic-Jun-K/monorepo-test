@@ -1,10 +1,5 @@
-import {
-  ClientGrpc,
-  ClientProxyFactory,
-  Transport,
-} from '@nestjs/microservices';
-import { join } from 'path';
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 
 import { AuthServiceClient } from '../../generated/auth';
 
@@ -12,32 +7,20 @@ import { AuthServiceClient } from '../../generated/auth';
 export class AuthGrpcClient implements OnModuleInit {
   private authService: AuthServiceClient;
 
-  onModuleInit() {
-    const client: ClientGrpc = ClientProxyFactory.create({
-      transport: Transport.GRPC,
-      options: {
-        package: 'auth',
-        // 使用绝对路径
-        protoPath: join(process.cwd(), 'src/proto/auth.proto'),
-        url: 'localhost:5000',
-        loader: {
-          keepCase: true, // 保持字段名称的大小写
-          longs: String, // 使用字符串表示长整型
-          enums: String, // 使用字符串表示枚举类型
-          defaults: true, // 使用默认值
-          oneofs: true, // 使用 oneof
-        },
-        // credentials: null, // 禁用 SSL 证书验证
-        // maxSendMessageLength: 1024 * 1024 * 2, // 设置最大发送消息长度
-        // maxReceiveMessageLength: 1024 * 1024 * 2, // 设置最大接收消息长度
-      },
-    }) as ClientGrpc;
+  constructor(
+    @Inject('GRPC_AUTH_SERVICE') private readonly client: ClientGrpc,
+  ) {}
 
-    this.authService = client.getService<AuthServiceClient>('AuthService');
+  onModuleInit() {
+    this.authService = this.client.getService<AuthServiceClient>('AuthService');
   }
 
   async login(username: string, password: string): Promise<any> {
     return new Promise((resolve, reject) => {
+      console.log('🔍 gRPC Login方法被调用，请求参数：', {
+        username,
+        password,
+      });
       this.authService.login({ username, password }).subscribe({
         next: (value) => resolve(value),
         error: (err) => reject(err),
