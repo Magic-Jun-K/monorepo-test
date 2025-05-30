@@ -4,7 +4,14 @@ import { createPortal } from 'react-dom';
 import type { DropdownProps } from './types';
 import { DropdownContext } from './context';
 
-export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bottom' }: DropdownProps) => {
+import './dropdown.css';
+
+export const Dropdown = ({
+  children,
+  overlay,
+  trigger = 'hover',
+  placement = 'bottom'
+}: DropdownProps) => {
   const [visible, setVisible] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement>(null);
@@ -86,10 +93,10 @@ export const Dropdown = ({ children, overlay, trigger = 'hover', placement = 'bo
           createPortal(
             <DropdownContext.Provider value={{ closeMenu }}>
               <div
-                className="absolute bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[120px] p-1"
+                className="dropdown-popup absolute bg-white rounded-md shadow-lg z-1000 w-30 p-1"
                 style={getPosition()}
                 onMouseEnter={() => handleMouse(true)}
-                onMouseLeave={() => handleMouse(false)}
+                // onMouseLeave={() => handleMouse(false)}
                 onClick={e => e.stopPropagation()}
               >
                 {overlay}

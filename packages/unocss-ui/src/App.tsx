@@ -1,7 +1,7 @@
 // import { Button } from './components/Button';
 import { AutoComplete } from './components/AutoComplete';
 import { Menu } from './components/Menu';
-// import { Dropdown } from './components/Dropdown';
+import { Dropdown } from './components/Dropdown';
 import type { MenuType } from './components/Menu/types';
 // import './utils/myCall';
 // import './utils/myApply';
@@ -71,10 +71,10 @@ function App() {
         placeholder="请输入城市"
         style={{ width: '400px' }}
       />
-      {/* <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
+      <Dropdown overlay={<Menu mode="vertical" items={menuConfig} />}>
         <div className="p-4 bg-gray-200 mt-8 ml-8">测试下拉菜单</div>
-      </Dropdown> */}
-      <Menu mode="vertical" items={menuConfig} style={{ width: 256 }} />
+      </Dropdown>
+      {/* <Menu mode="vertical" items={menuConfig} style={{ width: 256 }} />
       <div className="bg-pink-300">
         <Menu
           mode="horizontal"
@@ -83,7 +83,7 @@ function App() {
             console.log(key, keyPath, item, domEvent);
           }}
         />
-      </div>
+      </div> */}
     </div>
   );
 }
