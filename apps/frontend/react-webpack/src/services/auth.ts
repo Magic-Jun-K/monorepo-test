@@ -1,4 +1,5 @@
 import { request } from '@/utils/request';
+import { authStore } from '@/store/auth.store';
 
 export interface LoginPayload {
   username: string;
@@ -49,5 +50,6 @@ export const register = async (data: { username: string; password: string }) => 
  * @returns
  */
 export const logout = async () => {
-  return await request.post('/auth/logout');
+  const refreshToken = authStore.getRefreshToken();
+  return await request.post('/auth/logout', { refresh_token: refreshToken });
 };

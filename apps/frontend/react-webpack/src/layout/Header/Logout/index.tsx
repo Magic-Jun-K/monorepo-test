@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Dropdown, Menu, MenuItemType } from '@eggshell/unocss-ui';
 
 import { authStore } from '../../../store/auth.store';
+import { logout } from '@/services';
 
 import styles from './index.module.scss';
+import './index.scss';
 
 // 在检查前定义 menuConfig
 const userConfig: MenuItemType[] = [
@@ -17,14 +19,24 @@ export default () => {
   const navigate = useNavigate();
 
   // 处理退出登录
-  const handleLogout = (key: string) => {
-    console.log('退出登录', key);
+  const handleLogout = async (selectedKeys: string[]) => {
+    console.log('退出登录', selectedKeys);
 
-    // 清除 token
-    authStore.clear();
+    try {
+      // 调用退出登录接口
+      await logout();
 
-    // 跳转到登录页
-    navigate(`/account/login?redirect=${window.location.pathname}`);
+      // 清除本地 token
+      authStore.clear();
+
+      // 跳转到登录页
+      navigate(`/account/login?redirect=${window.location.pathname}`);
+    } catch (error) {
+      console.error('退出登录失败:', error);
+      // 即使接口调用失败，也清除本地状态并跳转
+      authStore.clear();
+      navigate(`/account/login?redirect=${window.location.pathname}`);
+    }
   };
 
   return (
