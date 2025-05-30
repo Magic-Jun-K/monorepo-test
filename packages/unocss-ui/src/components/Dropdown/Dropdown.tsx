@@ -96,7 +96,7 @@ export const Dropdown = ({
                 className="dropdown-popup absolute bg-white rounded-md shadow-lg z-1000 w-30 p-1"
                 style={getPosition()}
                 onMouseEnter={() => handleMouse(true)}
-                // onMouseLeave={() => handleMouse(false)}
+                onMouseLeave={() => handleMouse(false)}
                 onClick={e => e.stopPropagation()}
               >
                 {overlay}
