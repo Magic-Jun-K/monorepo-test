@@ -16,7 +16,7 @@ import {
   GetCurrentUserRequest,
   GetCurrentUserResponse,
   ValidateTokenRequest,
-  ValidateTokenResponse
+  ValidateTokenResponse,
 } from '../../generated/auth';
 
 @Injectable()
@@ -30,34 +30,18 @@ export class AuthGrpcService {
 
   @GrpcMethod('AuthService', 'login')
   async login(request: LoginRequest): Promise<LoginResponse> {
-    console.log('🔍 gRPC Login方法被调用，请求参数：', request);
+    console.log('🔍 测试gRPC service Login方法被调用，请求参数：', request);
     try {
-      // 验证用户
-      const user = await this.authService.validateUser(request.username);
-      if (!user) {
-        return {
-          success: false,
-          message: '用户不存在',
-          data: undefined,
-        };
-      }
-
-      // 登录并获取token
-      const tokens = await this.authService.login(user, request.password);
-
-      return {
-        success: true,
-        message: '登录成功',
-        data: {
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-        },
-      };
+      const tokens = await this.authService.login(
+        request.username,
+        request.password,
+      );
+      return { success: true, message: '登录成功', data: tokens };
     } catch (error) {
       return {
         success: false,
         message: error.message || '登录失败',
-        data: undefined,
+        data: null,
       };
     }
   }
