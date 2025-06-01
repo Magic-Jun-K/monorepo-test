@@ -12,10 +12,6 @@ export const grpcConfig = {
     //   keepalivePermitWithoutCalls: true,
     //   http2MaxPingsWithoutData: 0,
     // },
-    // ✅ 添加调试日志
-    onModuleInit: () => {
-      console.log('🔌 gRPC服务加载模块');
-    },
   },
   // maxConnectionAgeMs: 300000, // 5分钟
   // maxConnectionAgeGraceMs: 10000,
