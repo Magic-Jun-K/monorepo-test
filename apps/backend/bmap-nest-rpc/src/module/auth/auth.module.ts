@@ -7,9 +7,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AdminModule } from '../admin/admin.module';
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthController } from './auth.controller';
-import { AuthGrpcController } from './auth.grpc.controller';
 import { AuthService } from './auth.service';
-import { AuthGrpcClient } from './auth.client';
+// import { AuthGrpcClient } from './auth.client';
 import { AuthGrpcService } from './auth.grpc.service';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { RedisModule } from '../redis/redis.module';
@@ -39,10 +38,10 @@ import { authGrpcConfig } from './auth.grpc.config';
     TypeOrmModule.forFeature([AdminEntity]),
     RedisModule,
   ],
-  controllers: [AuthController, AuthGrpcController],
+  controllers: [AuthController],
   providers: [
     AuthService,
-    AuthGrpcClient,
+    // AuthGrpcClient,
     AuthGrpcService,
     AuthUtils,
     TokenBlacklistService,
