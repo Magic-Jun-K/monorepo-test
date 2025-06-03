@@ -21,8 +21,13 @@ export class AdminEntity {
   @Column()
   password: string;
 
-  @Column({ unique: true }) // 设置 phone 为唯一
+  // 设置 phone 为唯一，nullable 表示可以为空
+  @Column({ unique: true, nullable: true })
   phone: string;
+
+  // 设置 email 为唯一，nullable 表示可以为空
+  @Column({ unique: true, nullable: true })
+  email: string;
 
   @OneToOne(() => UserEntity) // 定义一对一关系
   @JoinColumn({ name: 'userId' }) // 指定外键字段
