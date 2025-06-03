@@ -3,6 +3,7 @@ import { authStore } from '@/store/auth.store';
 
 export interface LoginPayload {
   username: string;
+  email: string;
   password: string;
 }
 

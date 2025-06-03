@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from '@/components/Toast';
 
+import { useToast } from '@/components/Toast';
 import LoginTabs from './components/LoginTabs';
 import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
@@ -15,7 +15,7 @@ import {
   LoginType,
   FormData,
   loginSchema,
-  phoneLoginSchema,
+  emailLoginSchema,
   registerSchema
 } from './types';
 import { authStore } from '@/store/auth.store';
@@ -30,7 +30,7 @@ const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
 const schemaMap: Record<AuthType, any> = {
   login: {
     account: loginSchema,
-    phone: phoneLoginSchema
+    email: emailLoginSchema
   },
   register: registerSchema
 };
@@ -46,7 +46,7 @@ const LoginContent = () => {
     resolver: zodResolver(authType === 'login' ? schemaMap.login[loginType] : schemaMap.register),
     defaultValues: {
       username: '',
-      phone: '',
+      email: '',
       password: '',
       code: ''
     }
@@ -59,18 +59,12 @@ const LoginContent = () => {
   } = form;
 
   const onSubmit = async (data: FormData) => {
-    // console.log('测试onSubmit data', data);
     setLoading(true);
     const encryptedPassword = await encrypt(data.password);
 
     if (!encryptedPassword) return;
 
     try {
-      if (loginType === 'phone' && !/^1[3-9]\d{9}$/.test(data.phone || '')) {
-        addToast({ message: '请输入有效的手机号', type: 'error' });
-        return;
-      }
-
       const res: any = await api[authType]({ ...data, password: encryptedPassword });
       // console.log('测试onSubmit response', res);
 
@@ -122,7 +116,8 @@ const LoginContent = () => {
       }}
     >
       <div className={styles.loginBox}>
-        {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />}
+        {/* {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />} */}
+        <LoginTabs authType={authType} loginType={loginType} setLoginType={setLoginType} />
 
         {authType === 'login' ? (
           <>
@@ -151,17 +146,17 @@ const LoginContent = () => {
               <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
                 <FormInput
                   control={control}
-                  name="phone"
-                  type="tel"
-                  placeholder="请输入手机号"
+                  name="email"
+                  type="email"
+                  placeholder="请输入邮箱地址"
                   rules={{
-                    required: '手机号不能为空',
+                    required: '邮箱地址不能为空',
                     pattern: {
-                      value: /^1[3-9]\d{9}$/,
-                      message: '请输入有效的手机号'
+                      value: /^\S+@\S+\.\S+$/,
+                      message: '请输入有效的邮箱地址'
                     }
                   }}
-                  error={errors.phone}
+                  error={errors.email}
                 />
 
                 <div className={styles.formGroup}>
@@ -205,20 +200,6 @@ const LoginContent = () => {
             />
             <FormInput
               control={control}
-              name="phone"
-              type="tel"
-              placeholder="请输入手机号"
-              rules={{
-                required: '手机号不能为空',
-                pattern: {
-                  value: /^1[3-9]\d{9}$/,
-                  message: '请输入有效的手机号'
-                }
-              }}
-              error={errors.phone}
-            />
-            <FormInput
-              control={control}
               name="password"
               type="password"
               placeholder="请输入密码"
@@ -238,7 +219,7 @@ const LoginContent = () => {
   );
 };
 
-const FooterRecord = () => {
+const FooterRecord = memo(() => {
   return (
     <div
       className={styles['footer-record']}
@@ -249,7 +230,7 @@ const FooterRecord = () => {
       <span>粤ICP备2025421349号-1</span>
     </div>
   );
-};
+});
 
 export default () => {
   return (

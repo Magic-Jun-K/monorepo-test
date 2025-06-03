@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export type AuthType = 'login' | 'register';
-export type LoginType = 'account' | 'phone';
+export type LoginType = 'account' | 'email';
 
 // 登录模式校验规则
 export const loginSchema = z.object({
@@ -10,9 +10,9 @@ export const loginSchema = z.object({
   remember: z.boolean().optional()
 });
 
-// 手机登录校验规则
-export const phoneLoginSchema = z.object({
-  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+// 邮箱登录校验规则
+export const emailLoginSchema = z.object({
+  email: z.string().email('请输入有效的邮箱地址'),
   code: z.string().length(6, '验证码必须为6位数字'),
   remember: z.boolean().optional()
 });
@@ -20,18 +20,19 @@ export const phoneLoginSchema = z.object({
 // 注册模式校验规则
 export const registerSchema = z.object({
   username: z.string().min(2, '用户名至少2个字符'),
-  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'), 
+  // phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  // email: z.string().email('请输入有效的邮箱地址'),
   password: z.string().min(6, '密码至少6个字符')
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
-export type PhoneLoginFormData = z.infer<typeof phoneLoginSchema>;
+export type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 // 联合类型定义不同场景
-export type FormData = (LoginFormData & PhoneLoginFormData & RegisterFormData) & {
+export type FormData = (LoginFormData & EmailLoginFormData & RegisterFormData) & {
   username?: string;
-  phone?: string;
+  email?: string;
   password: string;
   code?: string;
   remember?: boolean;
@@ -40,7 +41,7 @@ export type FormData = (LoginFormData & PhoneLoginFormData & RegisterFormData) &
 export type FormErrors = {
   username?: { message: string };
   password?: { message: string };
-  phone?: { message: string };
+  email?: { message: string };
   code?: { message: string };
   confirmPassword?: { message: string };
   remember?: { message: string };
