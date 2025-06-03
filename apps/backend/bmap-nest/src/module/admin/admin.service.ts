@@ -28,6 +28,38 @@ export class AdminService {
         400,
       );
     }
+
+    // 只在提供了手机号时才检查手机号
+    if (body.phone) {
+      // Check for existing phone number(检查是否存在手机号)
+      const adminByPhone = await this.adminRepository.findOne({
+        where: { phone: body.phone },
+      });
+      if (adminByPhone) {
+        throw new HttpException(
+          {
+            message: '手机号已被注册',
+            error: 'phone number already registered',
+          },
+          400,
+        );
+      }
+    }
+
+    // 只在提供了邮箱时才检查邮箱
+    if (body.email) {
+      // Check for existing email(检查是否存在邮箱)
+      const adminByEmail = await this.adminRepository.findOne({
+        where: { email: body.email },
+      });
+      if (adminByEmail) {
+        throw new HttpException(
+          { message: '邮箱已被注册', error: 'email already registered' },
+          400,
+        );
+      }
+    }
+
     // Hash password before saving(保存前对密码进行哈希)
     const hashedPassword = await this.authUtils.hashPassword(body.password);
     const admin = await this.adminRepository.create({
