@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,9 +36,11 @@ const schemaMap: Record<AuthType, any> = {
 };
 const api = { login, register };
 const LoginContent = () => {
-  const [authType, setAuthType] = useState<AuthType>('login');
-  const [loginType, setLoginType] = useState<LoginType>('account');
-  const [loading, setLoading] = useState(false);
+  const [authType, setAuthType] = useState<AuthType>('login'); // 登录注册
+  const [loginType, setLoginType] = useState<LoginType>('account'); // 登录方式
+  const [loading, setLoading] = useState<boolean>(false); // 登录中
+  const [isSending, setIsSending] = useState<boolean>(false); // 验证码发送中
+  const [countdown, setCountdown] = useState<number>(0); // 倒计时
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -57,6 +59,18 @@ const LoginContent = () => {
     handleSubmit,
     formState: { errors }
   } = form;
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (countdown === 0 && isSending) {
+      setIsSending(false);
+    }
+    return () => clearInterval(timer);
+  }, [countdown, isSending]);
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
@@ -105,6 +119,23 @@ const LoginContent = () => {
     }
   };
 
+  const handleSendCode = () => {
+    if (countdown > 0) return; // 防止重复点击
+
+    setIsSending(true);
+    setCountdown(60); // 设置倒计时60秒
+
+    // 调用发送验证码接口
+    // fetch(`/auth/send-code?email=${form.getValues('email')}`)
+    //   .then(() => {
+    //     addToast({ message: '验证码已发送，请查收邮箱' });
+    //   })
+    //   .catch(() => {
+    //     addToast({ message: '验证码发送失败，请稍后重试' });
+    //     setCountdown(0);
+    //   });
+  };
+
   return (
     <div
       className={styles.loginContainer}
@@ -139,7 +170,6 @@ const LoginContent = () => {
                   rules={{ required: '密码不能为空' }}
                   error={errors.password}
                 />
-
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             ) : (
@@ -158,7 +188,6 @@ const LoginContent = () => {
                   }}
                   error={errors.email}
                 />
-
                 <div className={styles.formGroup}>
                   {/* @ts-expect-error Controller 组件类型定义不兼容本用法 */}
                   <Controller
@@ -173,8 +202,13 @@ const LoginContent = () => {
                           placeholder="请输入验证码"
                           className={errors.code ? styles.error : ''}
                         />
-                        <button type="button" className={styles.getCodeButton}>
-                          获取验证码
+                        <button
+                          type="button"
+                          className={styles.getCodeButton}
+                          onClick={handleSendCode}
+                          disabled={isSending}
+                        >
+                          {isSending ? `重新发送(${countdown}s)` : '获取验证码'}
                         </button>
                       </div>
                     )}
@@ -183,7 +217,6 @@ const LoginContent = () => {
                     <span className={styles.errorMessage}>{errors.code.message}</span>
                   )}
                 </div>
-
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             )}
