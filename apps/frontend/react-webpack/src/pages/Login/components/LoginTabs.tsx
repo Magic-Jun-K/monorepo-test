@@ -13,17 +13,11 @@ export default memo(function LoginTabs({ authType, loginType, setLoginType }: Lo
     <div className={styles.tabs}>
       {authType === 'login' ? (
         <>
-          <div
-            className={`${styles.tab} ${loginType === 'account' ? styles.active : ''}`}
-            onClick={() => setLoginType('account')}
-          >
-            <span>账号登录</span>
+          <div className={`${styles.tab} ${loginType === 'account' ? styles.active : ''}`}>
+            <span onClick={() => setLoginType('account')}>账号登录</span>
           </div>
-          <div
-            className={`${styles.tab} ${loginType === 'email' ? styles.active : ''}`}
-            onClick={() => setLoginType('email')}
-          >
-            <span>邮箱登录</span>
+          <div className={`${styles.tab} ${loginType === 'email' ? styles.active : ''}`}>
+            <span onClick={() => setLoginType('email')}>邮箱登录</span>
           </div>
         </>
       ) : (

@@ -9,15 +9,14 @@ import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
-import { emailLogin, login, register, sendCode } from '@/services';
+import { login, register, sendCode } from '@/services';
 import {
   AuthType,
   LoginType,
   FormData,
   loginSchema,
   emailLoginSchema,
-  registerSchema,
-  AccountLoginPayload
+  registerSchema
 } from './types';
 import { authStore } from '@/store/auth.store';
 import { ToastProvider } from '@/components/Toast';
@@ -75,54 +74,29 @@ const LoginContent = () => {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
+    const encryptedPassword = await encrypt(data.password);
+
+    if (!encryptedPassword) return;
 
     try {
-      let response;
-      if (authType === 'login' && loginType === 'email') {
-        // 使用验证码登录
-        response = await emailLogin({
-          email: data.email,
-          code: data.code
-        });
-      } else {
-        // authType === 'login'  && loginType === 'account'
-        // 密码加密
-        const encryptedPassword = await encrypt(data.password);
-        // if (!encryptedPassword) return;
-
-        // 原始登录/注册逻辑
-        const payload: AccountLoginPayload = {
-          username: data.username,
-          password: encryptedPassword
-        };
-
-        response = await api[authType](payload);
-      }
-
-      if (response.success) {
-        // 处理 token 存储
-        if (authType === 'login') {
-          authStore.setTokens(response.data.access_token, response.data.refresh_token);
-          navigate('/');
-        }
-      }
-
-      // const res: any = await api[authType]({ ...data, password: encryptedPassword });
+      const res: any = await api[authType]({ ...data, password: encryptedPassword });
+      // console.log('测试onSubmit response', res);
 
       // Handle successful response(处理成功响应)
-      // if (res.success) {
-      //   if (authType === 'login') {
-      //     authStore.setTokens(res.data.access_token, res.data.refresh_token);
+      if (res.success) {
+        if (authType === 'login') {
+          // console.log('测试登录onSubmit res.data', res.data);
+          authStore.setTokens(res.data.access_token, res.data.refresh_token);
 
-      //     const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
-      //     navigate(redirectUrl);
-      //   } else {
-      //     addToast({ message: '注册成功，请登录', type: 'success' });
-      //     setAuthType('login');
-      //   }
-      // } else {
-      //   addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
-      // }
+          const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
+          navigate(redirectUrl);
+        } else {
+          addToast({ message: '注册成功，请登录', type: 'success' });
+          setAuthType('login');
+        }
+      } else {
+        addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       if (error.response) {
@@ -149,6 +123,7 @@ const LoginContent = () => {
     if (countdown > 0) return; // 防止重复点击
 
     const email = form.getValues('email');
+    console.log('测试发送验证码', email);
 
     if (!email) {
       form.setError('email', { message: '请输入邮箱' });

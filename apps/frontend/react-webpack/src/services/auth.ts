@@ -2,14 +2,18 @@ import { request } from '@/utils/request';
 import { authStore } from '@/store/auth.store';
 
 export interface LoginPayload {
-  username: string;
-  email: string;
-  password: string;
+  username?: string; // 账号登录时使用
+  password?: string; // 账号登录时使用
+  email?: string; // 邮箱登录时使用
+  code?: string; // 邮箱登录时使用
 }
 
 export interface LoginRes {
+  success: boolean;
+  message: string;
   data: {
     access_token: string;
+    refresh_token: string;
   };
 }
 
@@ -42,7 +46,7 @@ export const currentUser = async (): Promise<CurrentUserRes> => {
  * @param data
  * @returns
  */
-export const register = async (data: { username: string; password: string }) => {
+export const register = async (data: { username: string; password: string }): Promise<LoginRes> => {
   return await request.post('/admin/register', data);
 };
 
@@ -53,4 +57,23 @@ export const register = async (data: { username: string; password: string }) => 
 export const logout = async () => {
   const refreshToken = authStore.getRefreshToken();
   return await request.post('/auth/logout', { refresh_token: refreshToken });
+};
+
+/**
+ * 发送验证码
+ * @param email
+ * @returns
+ */
+export const sendCode = async (email: string) => {
+  return await request.post('/auth/send-code', { email });
+};
+
+/**
+ * 验证码登录
+ * @param email
+ * @param code
+ * @returns
+ */
+export const emailLogin = async (params: { email: string; code: string }): Promise<LoginRes> => {
+  return await request.post('/auth/email-login', params);
 };

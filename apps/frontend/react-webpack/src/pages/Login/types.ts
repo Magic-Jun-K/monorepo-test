@@ -30,13 +30,14 @@ export type EmailLoginFormData = z.infer<typeof emailLoginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 // 联合类型定义不同场景
-export type FormData = (LoginFormData & EmailLoginFormData & RegisterFormData) & {
-  username?: string;
-  email?: string;
-  password: string;
-  code?: string;
-  remember?: boolean;
-};
+export type FormData = EmailLoginFormData & RegisterFormData;
+// & {
+//   username?: string;
+//   email?: string;
+//   password: string;
+//   code?: string;
+//   remember?: boolean;
+// };
 
 export type FormErrors = {
   username?: { message: string };
@@ -65,3 +66,5 @@ export interface LoginRes {
 export interface UserInfo {
   username: string;
 }
+
+export type AccountLoginPayload = { username: string; password: string };
