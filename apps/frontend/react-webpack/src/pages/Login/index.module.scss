@@ -8,18 +8,11 @@
   padding-right: 18vw;
 }
 
-.loginLogo {
-  width: 542px;
-  height: 629px;
-  background-size: '30%'; // 根据需要添加其他背景样式
-  background-repeat: 'no-repeat'; // 根据需要添加其他背景样式
-  background-position: 'left'; // 根据需要添加其他背景样式
-}
-
 .loginBox {
   width: 480px;
-  min-height: 386px;
-  padding: 2.5rem;
+  // min-height: 386px;
+  min-height: 348px;
+  padding: 2rem;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(94, 91, 91, 0.1);
@@ -27,7 +20,7 @@
 
 .tabs {
   display: flex;
-  padding-bottom: 2rem;
+  padding-bottom: 1.5rem;
 }
 
 .tab {
@@ -135,7 +128,7 @@
 }
 
 .registerText {
-  padding-top: 2rem;
+  padding-top: 1rem;
   color: #64748b;
   font-size: 1.125rem;
   display: flex;
@@ -161,6 +154,15 @@
 
   &:hover {
     background-color: #e5e7eb;
+  }
+
+  /* 禁用状态样式 */
+  &[disabled] {
+    background-color: #e5e7eb !important; // 灰色背景
+    border-color: #d1d5db !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+    // pointer-events: none; // 阻止所有交互
   }
 }
 
