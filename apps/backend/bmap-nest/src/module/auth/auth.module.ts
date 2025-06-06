@@ -13,6 +13,7 @@ import { LocalStrategy } from './local.strategy';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { RedisModule } from '../redis/redis.module';
 import { TokenBlacklistService } from './token-backlist.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { TokenBlacklistService } from './token-backlist.service';
     }),
     AdminModule,
     TypeOrmModule.forFeature([AdminEntity]),
-    RedisModule
+    RedisModule,
+    MailModule
   ],
   controllers: [AuthController],
   providers: [

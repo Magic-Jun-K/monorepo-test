@@ -17,7 +17,7 @@ import { AuthService } from './auth.service';
 import { Public } from '@/common/decorators/public.decorator';
 
 // 路由拦截
-@Controller()
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -33,7 +33,7 @@ export class AuthController {
    * @returns 登录结果
    */
   @UseGuards(AuthGuard('local'))
-  @Post('/auth/login')
+  @Post('login')
   async login(@Request() req) {
     // console.log('测试auth controller login req', req);
     const token = await this.authService.login(
@@ -45,7 +45,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('jwt'))
-  @Post('/auth/logout')
+  @Post('logout')
   // async logout() {
   //   return { success: await this.authService.logout() };
   // }
@@ -62,7 +62,7 @@ export class AuthController {
    * @returns
    */
   @Public()
-  @Post('auth/refresh')
+  @Post('refresh')
   async refreshToken(@Body() body: { refresh_token: string }) {
     // 黑名单验证
     if (await this.authService.isRefreshTokenRevoked(body.refresh_token)) {
@@ -130,5 +130,33 @@ export class AuthController {
   @Get('me')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  /**
+   * 发送验证码
+   * @param email
+   * @returns
+   */
+  @Public()
+  @Post('send-code')
+  async sendVerificationCode(@Body('email') email: string) {
+    console.log('发送验证码:', email);
+    return await this.authService.sendVerificationCode(email);
+  }
+
+  /**
+   * 验证验证码
+   * @param email
+   * @param code
+   * @returns
+   */
+  @Public()
+  @Post('email-login')
+  async emailLogin(@Body() body: { email: string; code: string }) {
+    const token = await this.authService.verifyEmailCodeAndLogin(
+      body.email,
+      body.code,
+    );
+    return { data: token, message: '登录成功', success: true };
   }
 }

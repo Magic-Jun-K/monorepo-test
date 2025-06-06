@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,6 +10,8 @@ import { Repository } from 'typeorm';
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { TokenBlacklistService } from './token-backlist.service';
+import { RedisService } from '../redis/redis.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +21,8 @@ export class AuthService {
     private readonly adminRepository: Repository<AdminEntity>,
     private readonly authUtils: AuthUtils,
     private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly redisService: RedisService,
+    private readonly mailService: MailService,
   ) {}
 
   /**
@@ -146,5 +154,78 @@ export class AuthService {
     // 3. session + refresh_token 方案
 
     return true;
+  }
+
+  /**
+   * 发送验证码
+   * @param email
+   */
+  async sendVerificationCode(email: string) {
+    // 生成6位随机数
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // 缓存验证码到redis
+    await this.redisService.set(`email_code:${email}`, code);
+    // 发送邮件
+    await this.mailService.sendMail(email, '验证码', `您的验证码是：${code}`);
+  }
+
+  /**
+   * 验证验证码
+   * @param email
+   * @param code
+   * @returns
+   */
+  async verifyEmailCodeAndLogin(email: string, code: string) {
+    const storedCode = await this.redisService.get(`email_code:${email}`);
+    if (!storedCode || storedCode !== code) {
+      throw new BadRequestException('验证码错误或已过期');
+    }
+
+    let user = await this.adminRepository.findOne({ where: { email } });
+
+    if (!user) {
+      // 首次登录：自动注册
+      const hashedPassword = await this.authUtils.hashPassword(
+        this.generateRandomPassword(),
+      );
+      const username = this.generateUniqueUsername(email);
+      user = this.adminRepository.create({
+        email,
+        password: hashedPassword,
+        username,
+      });
+      await this.adminRepository.save(user);
+    }
+
+    // 返回 Token
+    const payload = { sub: user.id, username: user.username };
+    return {
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      }),
+    };
+  }
+
+  /**
+   * 生成唯一的用户名
+   * @param email
+   * @returns
+   */
+  private generateUniqueUsername(email: string): string {
+    // 获取邮箱的前缀
+    const base = email.split('@')[0];
+    // 生成三位随机数
+    const suffix = Math.floor(Math.random() * 1000);
+    return `${base}${suffix}`;
+  }
+
+  /**
+   * 生成随机密码
+   * @returns
+   */
+  private generateRandomPassword(): string {
+    return Math.random().toString(36).slice(-8); // 生成8位随机密码
   }
 }
