@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import clsx from 'clsx';
 
 import styles from '../index.module.scss';
 
@@ -8,23 +9,27 @@ interface LoginTabsProps {
   setLoginType: (type: 'email' | 'account') => void;
 }
 
-export default memo(function LoginTabs({ authType, loginType, setLoginType }: LoginTabsProps) {
-  return (
-    <div className={styles.tabs}>
-      {authType === 'login' ? (
-        <>
-          <div className={`${styles.tab} ${loginType === 'account' ? styles.active : ''}`}>
-            <span onClick={() => setLoginType('account')}>账号登录</span>
+export default memo(
+  function LoginTabs({ authType, loginType, setLoginType }: LoginTabsProps) {
+    return (
+      <div className={styles.tabs}>
+        {authType === 'login' ? (
+          <>
+            <div className={clsx(styles.tab, loginType === 'account' && styles.active)}>
+              <span onClick={() => setLoginType('account')}>账号登录</span>
+            </div>
+            <div className={`${styles.tab} ${loginType === 'email' ? styles.active : ''}`}>
+              <span onClick={() => setLoginType('email')}>邮箱登录</span>
+            </div>
+          </>
+        ) : (
+          <div className={`${styles.tab} ${styles.active}`}>
+            <span>注册账号</span>
           </div>
-          <div className={`${styles.tab} ${loginType === 'email' ? styles.active : ''}`}>
-            <span onClick={() => setLoginType('email')}>邮箱登录</span>
-          </div>
-        </>
-      ) : (
-        <div className={`${styles.tab} ${styles.active}`}>
-          <span>注册账号</span>
-        </div>
-      )}
-    </div>
-  );
-});
+        )}
+      </div>
+    );
+  },
+  (prevProps, nextProps) =>
+    prevProps.authType === nextProps.authType && prevProps.loginType === nextProps.loginType
+);
