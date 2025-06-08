@@ -1,12 +1,12 @@
 {
-  "name": "@frontend/baidu-map-react-ie",
+  "name": "@frontend/react-webpack-ie",
   "version": "0.0.1",
-  "description": "测试百度地图",
+  "description": "测试IE",
   "main": "index.js",
   "scripts": {
-    "dev:baiduMap-ie": "webpack serve --env development",
+    "dev:react-webpack-ie": "webpack serve --env development",
     "build:font-ie": "node scripts/font-subset.js",
-    "build:baiduMap-ie": "pnpm build:font && webpack --env production"
+    "build:react-webpack-ie": "pnpm build:font && webpack --env production"
   },
   "peerDependencies": {
     "react": "17.0.2",
