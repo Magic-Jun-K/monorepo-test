@@ -1,5 +1,5 @@
-import { Control, FieldError } from 'react-hook-form';
-import { Controller } from 'react-hook-form';
+import { Control, FieldError, Controller } from 'react-hook-form';
+
 import styles from '../index.module.scss';
 
 interface FormInputProps {
@@ -21,7 +21,6 @@ export default function FormInput({
 }: FormInputProps) {
   return (
     <div className={styles.formGroup}>
-      {/* @ts-expect-error Controller 组件类型定义不兼容本用法 */}
       <Controller
         name={name}
         control={control}
@@ -35,11 +34,7 @@ export default function FormInput({
           />
         )}
       />
-      {error && (
-        <span className={styles.errorMessage}>
-          {error.message}
-        </span>
-      )}
+      {error && <span className={styles.errorMessage}>{error.message}</span>}
     </div>
   );
 }

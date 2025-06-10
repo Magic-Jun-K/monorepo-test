@@ -54,7 +54,12 @@ export default function FormTest() {
       const city = cities[Math.floor(Math.random() * cities.length)];
       const district = districts[Math.floor(Math.random() * districts.length)];
 
-      const row = [firstName! + lastName!, String(Math.floor(Math.random() * 40 + 20)), `${city!}市${district!}`, generatePhone()];
+      const row = [
+        firstName! + lastName!,
+        String(Math.floor(Math.random() * 40 + 20)),
+        `${city!}市${district!}`,
+        generatePhone()
+      ];
       result.push(row);
     }
     return result;
@@ -128,7 +133,6 @@ export default function FormTest() {
         </Button>
       </div>
       <div style={{ height: '83vh' }}>
-        {/* @ts-expect-error DataEditor 组件类型定义不兼容本用法 */}
         <DataEditor
           width="100%"
           rows={data.length}
@@ -159,4 +163,4 @@ export default function FormTest() {
       <EChartsTestModal visible={isOpenECharts} onCancel={() => setIsOpenECharts(false)} />
     </div>
   );
-};
+}

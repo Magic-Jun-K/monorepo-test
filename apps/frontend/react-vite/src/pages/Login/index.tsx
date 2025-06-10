@@ -146,7 +146,6 @@ function LoginContext() {
                 />
 
                 <div className={styles.formGroup}>
-                  {/* @ts-expect-error Controller 组件类型定义不兼容本用法 */}
                   <Controller
                     name="code"
                     control={control}
