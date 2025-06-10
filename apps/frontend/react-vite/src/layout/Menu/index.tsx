@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren } from 'react';
-import { Link } from 'react-router-dom';
-import { Dropdown, Menu } from '@eggshell/unocss-ui';
-import type { MenuItemType } from '@eggshell/unocss-ui';
+import { Menu } from '@eggshell/unocss-ui';
+
+import { MENU_CONFIG } from './constant';
 
 import styles from './index.module.scss';
 
@@ -16,68 +16,12 @@ interface MenuProps {
   className?: string;
 }
 
-const menuConfig: MenuItemType[] = [
-  {
-    type: 'item',
-    itemKey: 'dashboard',
-    label: '仪表盘',
-  },
-  {
-    type: 'submenu',
-    itemKey: 'settings',
-    label: '系统设置',
-    children: [
-      {
-        type: 'item',
-        itemKey: 'account',
-        label: '账户管理'
-      },
-      {
-        type: 'submenu',
-        itemKey: 'security',
-        label: '安全设置',
-        children: [
-          {
-            type: 'item',
-            itemKey: 'password',
-            label: '密码修改'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    type: 'group',
-    itemKey: 'help',
-    label: '帮助中心',
-    children: [
-      {
-        type: 'item',
-        itemKey: 'help-docs',
-        label: '文档中心'
-      }
-    ]
-  }
-];
-
 const MainMenu: FC<PropsWithChildren<MenuProps>> = ({ items, className = '' }) => {
   console.log('Rendering menu items:', items);
 
   return (
     <nav className={`${styles['menu-component']} ${className}`}>
-      <ul>
-        {items.map((item, index) => (
-          <li key={index}>
-            {/* @ts-expect-error Link 组件类型定义不兼容本用法 */}
-            <Link to={item.path}>{item.name}</Link>
-          </li>
-        ))}
-      </ul>
-      <Dropdown
-        overlay={<Menu items={menuConfig} />}
-      >
-        <span>测试下拉菜单</span>
-      </Dropdown>
+      <Menu mode="horizontal" items={MENU_CONFIG} />
     </nav>
   );
 };

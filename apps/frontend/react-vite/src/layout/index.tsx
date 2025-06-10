@@ -9,7 +9,6 @@ function Layout() {
     <>
       <Header />
       <LayoutBody>
-        {/* @ts-expect-error Outlet 组件类型定义不兼容本用法 */}
         <Outlet />
         {/* <Footer /> */}
       </LayoutBody>
