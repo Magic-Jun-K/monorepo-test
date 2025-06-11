@@ -22,7 +22,7 @@ import type { MenuItemType } from '@eggshell/unocss-ui';
 export const MENU_CONFIG: MenuItemType[] = [
   {
     key: '/',
-    label: <Link to="/">首页</Link> as JSX.Element
+    label: <Link to="/">首页</Link>
   },
   {
     key: '/form-test',
