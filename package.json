@@ -1,7 +1,7 @@
 {
   "name": "canvaskit-react-test",
   "version": "0.0.1",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.12.1",
   "main": "index.js",
   "scripts": {
     "dev": "turbo dev",
@@ -37,7 +37,7 @@
     "eslint": "9.28.0",
     "@eslint/js": "9.28.0",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.33.0",
+    "typescript-eslint": "8.34.0",
     "cspell": "9.0.2",
     "stylelint": "16.20.0",
     "husky": "9.1.7",
