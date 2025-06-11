@@ -2,6 +2,7 @@ import type { Middleware } from 'koa';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
+
 import logger from '../utils/logger.ts';
 
 const fileExistsCache = new Map<string, boolean>(); // 缓存文件存在性检查
