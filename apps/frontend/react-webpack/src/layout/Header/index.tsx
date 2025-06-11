@@ -12,14 +12,12 @@ const menuItems = [
 
 export default () => {
   return (
-    <div className={styles['Header']}>
+    <header className={styles['Header']}>
       <h1>Eggshell</h1>
       <div className={styles['Header-body']}>
-        <div className={styles['Header-right-menu']}>
-          <MenuCom items={menuItems} />
-        </div>
-        <Logout />
+        <MenuCom items={menuItems} />
       </div>
-    </div>
+      <Logout />
+    </header>
   );
 };
