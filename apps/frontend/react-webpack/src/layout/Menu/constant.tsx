@@ -1,24 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { MenuItemType } from '@eggshell/unocss-ui';
 
-// export const MENU_CONFIG: MenuItemType[] = [
-//   {
-//     itemKey: '/',
-//     label: '首页'
-//   },
-//   {
-//     itemKey: '/form-test',
-//     label: '表单测试页'
-//   },
-//   {
-//     itemKey: '/table-test',
-//     label: '表格测试页'
-//   },
-//   {
-//     itemKey: '/baidu-map',
-//     label: '百度地图'
-//   }
-// ];
 export const MENU_CONFIG: MenuItemType[] = [
   {
     key: '/',
@@ -26,11 +8,15 @@ export const MENU_CONFIG: MenuItemType[] = [
   },
   {
     key: '/form-test',
-    label: <Link to="/form-test">表单测试页</Link>
+    label: <Link to="/form-test">表单测试</Link>
   },
   {
     key: '/table-test',
-    label: <Link to="/table-test">表格测试页</Link>
+    label: <Link to="/table-test">表格测试</Link>
+  },
+  {
+    key: '/virtual-list-test',
+    label: <Link to="/virtual-list-test">虚拟列表测试</Link>
   },
   {
     key: '/baidu-map',
