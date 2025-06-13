@@ -1,5 +1,7 @@
 import { FC, UIEvent, useRef, useState, useEffect } from 'react';
 
+import styles from './index.module.scss';
+
 interface Item {
   id: number;
   text: string;
@@ -128,15 +130,19 @@ const VirtualList: FC = () => {
     }
   };
 
+  // 计算加载动画的位置
+  const getLoadingPosition = () => {
+    if (!isLoading) return 0;
+    // 计算当前可见的最后一项的位置
+    const lastVisibleIndex = Math.max(...visibleItems);
+    return lastVisibleIndex * itemHeight;
+  };
+
   return (
     <div
       ref={containerRef}
-      style={{
-        height: 800,
-        overflow: 'auto',
-        position: 'relative',
-        backgroundColor: '#fff'
-      }}
+      className={styles.virtualListContainer}
+      style={{ height: 800 }}
       onScroll={handleScroll}
     >
       {/* 占位元素，高度根据实际加载的数据量动态计算 */}
@@ -144,11 +150,8 @@ const VirtualList: FC = () => {
 
       {/* 实际渲染的列表项 */}
       <div
+        className={styles.listContainer}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
           transform: `translateY(${Math.floor(scrollTop / itemHeight) * itemHeight}px)`
         }}
       >
@@ -157,20 +160,7 @@ const VirtualList: FC = () => {
           if (!item) return null;
 
           return (
-            <div
-              key={item.id}
-              style={{
-                height: `${itemHeight}px`,
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 10px',
-                boxSizing: 'border-box',
-                borderBottom: '1px solid #eee',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-            >
+            <div key={item.id} className={styles.listItem} style={{ height: `${itemHeight}px` }}>
               {item.text}
             </div>
           );
@@ -179,36 +169,16 @@ const VirtualList: FC = () => {
 
       {/* 加载状态提示 */}
       {isLoading && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '10px',
-            textAlign: 'center',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)'
-          }}
-        >
-          加载中...
+        <div className={styles.loadingContainer} style={{ top: `${getLoadingPosition()}px` }}>
+          <div className={styles.loadingSpinner} />
         </div>
       )}
 
       {/* 没有更多数据提示 */}
       {!hasMore && items.length > 0 && (
         <div
-          style={{
-            position: 'absolute',
-            top: `${(totalItems - 1) * itemHeight + itemHeight}px`,
-            left: 0,
-            right: 0,
-            height: '40px',
-            lineHeight: '40px',
-            textAlign: 'center',
-            backgroundColor: '#fff',
-            borderTop: '1px solid #eee',
-            pointerEvents: 'none'
-          }}
+          className={styles.noMoreData}
+          style={{ top: `${(totalItems - 1) * itemHeight + itemHeight}px` }}
         >
           没有更多数据了
         </div>
