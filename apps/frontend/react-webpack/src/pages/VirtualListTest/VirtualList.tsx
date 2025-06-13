@@ -6,7 +6,7 @@ interface Item {
 }
 
 const itemHeight = 50; // 每项高度
-const buffer = 10; // 缓冲区大小
+const buffer = 5; // 减小缓冲区大小，避免加载过多数据
 const initialItemCount = 20; // 初始加载的数据量
 const loadMoreThreshold = 100; // 触发加载的阈值（距离底部多少像素时触发加载）
 const totalDataLimit = 100; // 总数据量限制
@@ -26,9 +26,9 @@ const generateRandomText = (index: number): string => {
 
 const VirtualList: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [totalItems, setTotalItems] = useState(initialItemCount);
-  const [visibleItems, setVisibleItems] = useState<number[]>([]);
-  const [currentStartIndex, setCurrentStartIndex] = useState(0);
+  const [totalItems, setTotalItems] = useState(initialItemCount); // 数据总数
+  const [visibleItems, setVisibleItems] = useState<number[]>([]); // 可见的项索引
+  // 数据项
   const [items, setItems] = useState<Item[]>(() => {
     const initialItems: Item[] = [];
     for (let i = 0; i < initialItemCount; i++) {
@@ -39,8 +39,8 @@ const VirtualList: FC = () => {
     }
     return initialItems;
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // 加载状态
+  const [hasMore, setHasMore] = useState(true); // 是否还有更多数据
   const [scrollTop, setScrollTop] = useState(0); // 添加滚动位置状态
 
   // 计算可见范围
@@ -48,41 +48,33 @@ const VirtualList: FC = () => {
     const container = containerRef.current;
     if (!container) return;
 
+    // 获取容器高度
     const containerHeight = container.clientHeight;
-    // 修改起始索引计算，确保向上滚动时能看到前面的数据
-    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer * 2);
+    // 获取起始索引计算，确保能正确显示所有数据
+    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight));
+    // 计算确保能正确显示所有数据
     const visibleCount = Math.ceil(containerHeight / itemHeight);
-    const endIndex = Math.min(totalItems, startIndex + visibleCount + buffer * 2);
+    // 计算结束索引
+    const endIndex = Math.min(totalItems, startIndex + visibleCount + buffer);
 
-    setCurrentStartIndex(startIndex);
-
-    // 如果是最后一条数据，确保它完全可见
-    if (!hasMore && endIndex < totalItems) {
-      const lastItemIndex = totalItems - 1;
-      const lastItemTop = lastItemIndex * itemHeight;
-      const lastItemBottom = lastItemTop + itemHeight;
-      const containerBottom = scrollTop + containerHeight;
-
-      if (lastItemBottom > containerBottom) {
-        container.scrollTop = lastItemTop - containerHeight + itemHeight;
-      }
-    }
-
+    // 设置可见项
     const visibleIndices = Array.from({ length: endIndex - startIndex }, (_, i) => startIndex + i);
     setVisibleItems(visibleIndices);
-  }, [totalItems, itemHeight, buffer, scrollTop, hasMore]);
+  }, [totalItems, itemHeight, buffer, scrollTop]);
 
   // 滚动事件处理
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    const currentScrollTop = container.scrollTop;
+    const currentScrollTop = container.scrollTop; // 获取滚动位置
     setScrollTop(currentScrollTop); // 更新滚动位置
 
-    // 修改加载更多数据的触发条件
-    const scrollHeight = container.scrollHeight;
-    const clientHeight = container.clientHeight;
+    // 加载更多数据的触发条件
+    const scrollHeight = container.scrollHeight; // 获取滚动高度
+    const clientHeight = container.clientHeight; // 获取容器高度
+    // 获取滚动底部位置
     const scrollBottom = scrollHeight - currentScrollTop - clientHeight;
 
+    // 触发加载更多数据
     if (scrollBottom < loadMoreThreshold && !isLoading && hasMore) {
       loadMoreData();
     }
@@ -91,22 +83,23 @@ const VirtualList: FC = () => {
   const fetchData = async (): Promise<Item[]> => {
     return new Promise(resolve => {
       setTimeout(() => {
-        const currentLength = items.length;
-        const remainingItems = totalDataLimit - currentLength;
-        
+        const currentLength = items.length; // 当前数据长度
+        const remainingItems = totalDataLimit - currentLength; // 剩余数据长度
+
         // 如果剩余数据不足10条，就只加载剩余的数据
         const newItemCount = Math.min(10, remainingItems);
-        
+
         if (newItemCount <= 0) {
           resolve([]);
           return;
         }
 
+        // 生成新的数据项
         const newItems: Item[] = Array.from({ length: newItemCount }, (_, i) => ({
           id: currentLength + i,
           text: generateRandomText(currentLength + i)
         }));
-        resolve(newItems);
+        resolve(newItems); // 返回新的数据项
       }, 500);
     });
   };
@@ -114,7 +107,7 @@ const VirtualList: FC = () => {
   // 动态加载数据
   const loadMoreData = async () => {
     if (isLoading || !hasMore) return;
-    
+
     setIsLoading(true);
     try {
       const newItems = await fetchData();
@@ -122,7 +115,7 @@ const VirtualList: FC = () => {
         setHasMore(false);
         return;
       }
-      
+
       setItems(prev => [...prev, ...newItems]);
       setTotalItems(prev => prev + newItems.length);
 
@@ -148,7 +141,7 @@ const VirtualList: FC = () => {
     >
       {/* 占位元素，高度根据实际加载的数据量动态计算 */}
       <div style={{ height: `${totalItems * itemHeight}px` }} />
-      
+
       {/* 实际渲染的列表项 */}
       <div
         style={{
@@ -156,13 +149,13 @@ const VirtualList: FC = () => {
           top: 0,
           left: 0,
           width: '100%',
-          transform: `translateY(${currentStartIndex * itemHeight}px)`
+          transform: `translateY(${Math.floor(scrollTop / itemHeight) * itemHeight}px)`
         }}
       >
         {visibleItems.map(index => {
           const item = items[index];
           if (!item) return null;
-          
+
           return (
             <div
               key={item.id}
@@ -214,8 +207,7 @@ const VirtualList: FC = () => {
             textAlign: 'center',
             backgroundColor: '#fff',
             borderTop: '1px solid #eee',
-            pointerEvents: 'none',
-            zIndex: 1
+            pointerEvents: 'none'
           }}
         >
           没有更多数据了
