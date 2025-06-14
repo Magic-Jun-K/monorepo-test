@@ -28,22 +28,84 @@ const generateRandomText = (index: number): string => {
 
 const VirtualList: FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [totalItems, setTotalItems] = useState(initialItemCount); // 数据总数
+  const [totalItems, setTotalItems] = useState(0); // 数据总数，初始值设为0，等待计算
   const [visibleItems, setVisibleItems] = useState<number[]>([]); // 可见的项索引
-  // 数据项
-  const [items, setItems] = useState<Item[]>(() => {
-    const initialItems: Item[] = [];
-    for (let i = 0; i < initialItemCount; i++) {
-      initialItems.push({
-        id: i,
-        text: generateRandomText(i)
-      });
-    }
-    return initialItems;
-  });
+  const [items, setItems] = useState<Item[]>([]); // 数据项
   const [isLoading, setIsLoading] = useState(false); // 加载状态
   const [hasMore, setHasMore] = useState(true); // 是否还有更多数据
   const [scrollTop, setScrollTop] = useState(0); // 添加滚动位置状态
+  const [isInitialized, setIsInitialized] = useState(false); // 初始化状态
+
+  // 计算初始数据量
+  const calculateInitialItemCount = () => {
+    if (!containerRef.current) return initialItemCount;
+    
+    // 获取容器高度
+    const containerHeight = containerRef.current.clientHeight;
+    // 计算可以显示的项目数量，并向上取整
+    const visibleCount = Math.ceil(containerHeight / itemHeight);
+    // 确保至少有 initialItemCount 个项目，并且是 10 的倍数
+    return Math.max(initialItemCount, Math.ceil(visibleCount / 10) * 10);
+  };
+
+  // 初始化数据
+  const initializeData = () => {
+    const count = calculateInitialItemCount();
+    const initialItems: Item[] = Array.from({ length: count }, (_, i) => ({
+      id: i,
+      text: generateRandomText(i)
+    }));
+    setItems(initialItems);
+    setTotalItems(count);
+    setIsInitialized(true);
+  };
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      if (!isInitialized) return;
+
+      // 重新计算可见项
+      const container = containerRef.current;
+      if (!container) return;
+
+      // 获取容器高度
+      const containerHeight = container.clientHeight;
+      // 获取起始索引
+      const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight));
+      // 计算可见项数量
+      const visibleCount = Math.ceil(containerHeight / itemHeight);
+      // 获取结束索引
+      const endIndex = Math.min(totalItems, startIndex + visibleCount + buffer);
+
+      // 设置可见项
+      const visibleIndices = Array.from(
+        { length: endIndex - startIndex },
+        (_, i) => startIndex + i
+      );
+      setVisibleItems(visibleIndices);
+
+      // 检查是否需要加载更多数据
+      if (items.length < totalDataLimit && !isLoading && hasMore) {
+        const scrollHeight = container.scrollHeight; // 获取滚动高度
+        const clientHeight = container.clientHeight; // 获取容器高度
+        const scrollBottom = scrollHeight - scrollTop - clientHeight; // 获取滚动底部位置
+
+        // 触发加载更多数据
+        if (scrollBottom < loadMoreThreshold) {
+          loadMoreData();
+        }
+      }
+    };
+
+    // 初始化数据
+    if (!isInitialized) {
+      initializeData();
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isInitialized, scrollTop, items.length, isLoading, hasMore]);
 
   // 计算可见范围
   useEffect(() => {
@@ -63,6 +125,30 @@ const VirtualList: FC = () => {
     const visibleIndices = Array.from({ length: endIndex - startIndex }, (_, i) => startIndex + i);
     setVisibleItems(visibleIndices);
   }, [totalItems, itemHeight, buffer, scrollTop]);
+
+  // 动态加载数据
+  const loadMoreData = async () => {
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+    try {
+      const newItems = await fetchData();
+      if (newItems.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      setItems(prev => [...prev, ...newItems]);
+      setTotalItems(prev => prev + newItems.length);
+
+      // 检查是否达到数据限制
+      if (items.length + newItems.length >= totalDataLimit) {
+        setHasMore(false);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 滚动事件处理
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
@@ -106,30 +192,6 @@ const VirtualList: FC = () => {
     });
   };
 
-  // 动态加载数据
-  const loadMoreData = async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const newItems = await fetchData();
-      if (newItems.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setItems(prev => [...prev, ...newItems]);
-      setTotalItems(prev => prev + newItems.length);
-
-      // 检查是否达到数据限制
-      if (items.length + newItems.length >= totalDataLimit) {
-        setHasMore(false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // 计算加载动画的位置
   const getLoadingPosition = () => {
     if (!isLoading) return 0;
@@ -139,12 +201,7 @@ const VirtualList: FC = () => {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={styles.virtualListContainer}
-      style={{ height: 800 }}
-      onScroll={handleScroll}
-    >
+    <div ref={containerRef} className={styles.virtualListContainer} onScroll={handleScroll}>
       {/* 占位元素，高度根据实际加载的数据量动态计算 */}
       <div style={{ height: `${totalItems * itemHeight}px` }} />
 

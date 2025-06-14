@@ -1,10 +1,11 @@
 .container {
-  height: 100%;
+  height: 92.5vh;
   padding: 1rem;
   background-color: rgb(238, 238, 238);
 }
 
 .virtualListContainer {
+  height: 100%;
   overflow: auto;
   position: relative;
   background-color: #fff;
