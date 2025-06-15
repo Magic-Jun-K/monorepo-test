@@ -2,6 +2,7 @@
  * @description 入口文件
  */
 import { NestFactory /* , Reflector */ } from '@nestjs/core';
+import * as cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
 // import { LoggerMiddleware } from './middlewares/LoggerMiddleware';
@@ -12,6 +13,9 @@ import { HttpErrorFilter } from './common/filters/exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 添加 cookie 解析中间件
+  app.use(cookieParser());
+
   // app.useGlobalInterceptors(new LoggerMiddleware());
 
   app.useGlobalFilters(new HttpErrorFilter());
@@ -20,6 +24,7 @@ async function bootstrap() {
 
   // const reflector = app.get(Reflector);
   // app.useGlobalGuards(new AuthGuard(reflector));
+  console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
   // 启用 CORS
   app.enableCors({
