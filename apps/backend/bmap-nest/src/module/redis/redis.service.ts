@@ -24,4 +24,12 @@ export class RedisService {
   async get(key: string): Promise<string | null> {
     return await this.redis.get(key);
   }
+
+  /**
+   * 删除缓存
+   * @param key 键
+   */
+  async del(key: string): Promise<void> {
+    await this.redis.del(key);
+  }
 }
