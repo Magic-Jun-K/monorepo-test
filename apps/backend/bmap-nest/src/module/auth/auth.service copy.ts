@@ -15,9 +15,6 @@ import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
-  private readonly REFRESH_TOKEN_PREFIX = 'refresh_token:';
-  private readonly ACCESS_TOKEN_PREFIX = 'access_token:';
-
   constructor(
     private readonly jwtService: JwtService,
     @InjectRepository(AdminEntity)
@@ -64,49 +61,6 @@ export class AuthService {
     );
   }
 
-  // 生成Token对
-  private async generateTokenPair(user: any) {
-    console.log('测试generateTokenPair user', user);
-    const accessToken = this.jwtService.sign(
-      {
-        sub: user.id,
-        username: user.username,
-        // role: user.role,
-      },
-      { expiresIn: '1m' }, // Access Token 15分钟过期
-    );
-
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id },
-      {
-        expiresIn: '7d',
-        secret: process.env.JWT_REFRESH_SECRET,
-      },
-    );
-
-    console.log('测试generateTokenPair accessToken', accessToken);
-    console.log('测试generateTokenPair refreshToken', refreshToken);
-
-    // 将Refresh Token存入Redis
-    await this.redisService.set(
-      `${this.REFRESH_TOKEN_PREFIX}${user.id}`,
-      refreshToken,
-      7 * 24 * 60 * 60, // 7天过期
-    );
-
-    // 将Access Token也存入Redis，用于快速验证和撤销
-    await this.redisService.set(
-      `${this.ACCESS_TOKEN_PREFIX}${user.id}`,
-      accessToken,
-      15 * 60, // 15分钟过期
-    );
-
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    };
-  }
-
   /**
    * 登录
    * @param user
@@ -129,12 +83,25 @@ export class AuthService {
       throw new UnauthorizedException('密码错误');
     }
 
-    const tokens = await this.generateTokenPair(user);
-
-    // 只返回 access_token
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+    };
+    console.log('测试auth service login user', user);
+    console.log(
+      '测试auth service login access_token',
+      this.jwtService.sign(payload),
+    );
     return {
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(
+        { sub: user.id },
+        {
+          expiresIn: '7d',
+          secret: process.env.JWT_REFRESH_SECRET, // 使用独立密钥
+        },
+      ),
     };
   }
 
@@ -148,80 +115,13 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
-
-      // 从Redis获取存储的Refresh Token
-      const storedToken = await this.redisService.get(
-        `${this.REFRESH_TOKEN_PREFIX}${payload.sub}`,
-      );
-
-      if (!storedToken || storedToken !== refreshToken) {
-        throw new UnauthorizedException('无效的Refresh Token');
-      }
-
-      // 获取用户信息
-      const user = await this.adminRepository.findOne({
-        where: { id: payload.sub },
-        select: ['id', 'username'],
-        relations: ['user', 'user.roles'], // 如果需要角色信息，通过关联查询获取
+      return this.jwtService.sign({
+        sub: payload.sub,
+        email: payload.email,
       });
-      console.log('测试refreshToken user', user);
-
-      if (!user) {
-        throw new UnauthorizedException('用户不存在');
-      }
-
-      const tokens = await this.generateTokenPair(user);
-
-      // 只返回 access_token
-      return {
-        access_token: tokens.access_token,
-      };
-    } catch (error) {
-      console.error('刷新token失败:', error);
-      throw new UnauthorizedException('无效的Refresh Token');
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
     }
-  }
-
-  // 验证Access Token
-  async validateAccessToken(token: string) {
-    try {
-      const payload = this.jwtService.verify(token);
-
-      // 检查Redis中是否存在该Token
-      const storedToken = await this.redisService.get(
-        `${this.ACCESS_TOKEN_PREFIX}${payload.sub}`,
-      );
-
-      if (!storedToken || storedToken !== token) {
-        throw new UnauthorizedException('Token已失效');
-      }
-
-      return payload;
-    } catch (error) {
-      console.log('验证Access Token失败:', error);
-      throw new UnauthorizedException('无效的Token');
-    }
-  }
-
-  /**
-   * 退出登录
-   * @returns
-   */
-  async logout(userId: number): Promise<any> {
-    // 请注意，jwt token是无状态的，所以不需要做任何操作，没法将其置为失效
-    // 但是可以在前端删除token，这样就达到了退出登录的目的
-    // 如果要严格来做，有以下几种方案：
-    // 1. cookie session 方案，后端存储session，前端存储session_id，退出登录时，后端删除session
-    // 2. 双 token 方案，前端存储两个token，一个是access_token，一个是refresh_token，但这个方案依然是无状态的
-    // 3. session + refresh_token 方案
-
-    // 从Redis中删除Refresh Token和Access Token
-    await Promise.all([
-      this.redisService.del(`${this.REFRESH_TOKEN_PREFIX}${userId}`),
-      this.redisService.del(`${this.ACCESS_TOKEN_PREFIX}${userId}`),
-    ]);
-
-    return true;
   }
 
   /**
@@ -239,6 +139,21 @@ export class AuthService {
    */
   async isRefreshTokenRevoked(token: string) {
     return this.tokenBlacklistService.isBlacklisted(token);
+  }
+
+  /**
+   * 退出登录
+   * @returns
+   */
+  async logout(/* user: any */): Promise<any> {
+    // 请注意，jwt token是无状态的，所以不需要做任何操作，没法将其置为失效
+    // 但是可以在前端删除token，这样就达到了退出登录的目的
+    // 如果要严格来做，有以下几种方案：
+    // 1. cookie session 方案，后端存储session，前端存储session_id，退出登录时，后端删除session
+    // 2. 双 token 方案，前端存储两个token，一个是access_token，一个是refresh_token，但这个方案依然是无状态的
+    // 3. session + refresh_token 方案
+
+    return true;
   }
 
   /**
@@ -282,11 +197,14 @@ export class AuthService {
       await this.adminRepository.save(user);
     }
 
-    const tokens = await this.generateTokenPair(user);
-
-    // 只返回 access_token
+    // 返回 Token
+    const payload = { sub: user.id, username: user.username };
     return {
-      access_token: tokens.access_token,
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_REFRESH_SECRET,
+        expiresIn: '7d',
+      }),
     };
   }
 

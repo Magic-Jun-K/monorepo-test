@@ -17,17 +17,13 @@ import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
-    // ConfigModule.forRoot({
-    //   isGlobal: true, // 设置为全局模块
-    //   envFilePath: ['.env'] // 指定环境文件路径
-    // }),
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({
         secret: config.get('JWT_SECRET'),
-        signOptions: { expiresIn: '30m', algorithm: 'HS256' },
+        signOptions: { expiresIn: '1m', algorithm: 'HS256' },
       }),
       inject: [ConfigService], // 注入配置服务
     }),

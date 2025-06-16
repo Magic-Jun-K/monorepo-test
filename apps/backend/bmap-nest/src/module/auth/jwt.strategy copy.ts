@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 
 import { AdminEntity } from '../../entities/admin.entity';
-import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,7 +14,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(AdminEntity)
     private readonly adminRepository: Repository<AdminEntity>,
     private readonly configService: ConfigService, // 注入配置服务
-    private readonly redisService: RedisService,
   ) {
     super({
       // jwtFromRequest: ExtractJwt.fromHeader('token'),
@@ -26,6 +24,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // async validate(payload: any) {
+  //   const user = await this.adminService.validateUser(
+  //     payload.username,
+  //     payload.password,
+  //   );
+  //   return user;
+  // }
+
   // 使用标准Passport流程
   /**
    * 验证用户
@@ -33,23 +39,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * @returns
    */
   async validate(payload: any) {
-    // 检查Redis中是否存在该Token
-    const storedToken = await this.redisService.get(
-      `access_token:${payload.sub}`,
-    );
-
-    if (!storedToken) {
-      throw new UnauthorizedException('Token已失效');
-    }
-
     const user = await this.adminRepository.findOne({
       where: { id: payload.sub },
     });
-
-    if (!user) {
-      throw new UnauthorizedException('用户不存在');
-    }
-
+    if (!user) throw new UnauthorizedException();
     return user;
   }
 }
