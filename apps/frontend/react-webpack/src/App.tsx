@@ -2,14 +2,18 @@ import { FC /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
+import { setupErrorHandlers } from './utils/errorHandler';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
 import '@eggshell/unocss-ui/build/es/index.css'; // 直接引入样式
 import '@eggshell/antd-ui/es/index.css';
+
+setupErrorHandlers(); // 设置错误处理器
 
 const App: FC = () => {
   // useEffect(() => {
@@ -29,6 +33,10 @@ const App: FC = () => {
   // 检查token是否过期
   useTokenExpirationCheck();
 
-  return <RouterProvider router={router} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  );
 };
 export default App;
