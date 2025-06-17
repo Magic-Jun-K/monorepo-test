@@ -42,11 +42,6 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    // console.log('测试auth controller login req', req);
-    // const token = await this.authService.login(
-    //   req.body.username,
-    //   req.body.password,
-    // );
     console.log('测试auth.controller.ts loginDto', loginDto);
     const result = await this.authService.login(
       loginDto.username,
@@ -70,13 +65,12 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
-  // async logout() {
-  //   return { success: await this.authService.logout() };
-  // }
   async logout(@Request() req) {
-    // 从请求头获取refreshToken（需前端传递）
-    const refreshToken = req.body.refresh_token;
-    await this.authService.revokeRefreshToken(refreshToken);
+    // 从 cookie 中获取 refresh_token
+    const refreshToken = req.cookies.refresh_token;
+    if (refreshToken) {
+      await this.authService.revokeRefreshToken(refreshToken);
+    }
     return { success: true };
   }
 
