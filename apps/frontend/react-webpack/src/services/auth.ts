@@ -1,5 +1,4 @@
-import { request } from '@/utils/request';
-import { authStore } from '@/store/auth.store';
+import { request } from '@/utils/httpClient';
 
 export interface LoginPayload {
   username?: string; // 账号登录时使用
@@ -13,8 +12,12 @@ export interface LoginRes {
   message: string;
   data: {
     access_token: string;
-    refresh_token: string;
   };
+}
+
+export interface RefreshRes {
+  success: boolean;
+  data: string;
 }
 
 export interface CurrentUserRes {
@@ -66,8 +69,16 @@ export const emailLogin = async (params: { email: string; code: string }): Promi
  * @returns
  */
 export const logout = async () => {
-  const refreshToken = authStore.getRefreshToken();
-  return await request.post('/auth/logout', { refresh_token: refreshToken });
+  return await request.post('/auth/logout');
+};
+
+/**
+ * 刷新token
+ * @returns 
+ */
+export const refreshToken = async (): Promise<RefreshRes> => {
+  return await request.post('/auth/refresh');
+  // return await request.post('/auth/refresh-error'); // 模拟一个错误的请求，使用一个不存在的路径
 };
 
 /**
