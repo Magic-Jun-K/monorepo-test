@@ -62,7 +62,11 @@ const devConfig = {
         changeOrigin: true,
         pathRewrite: { '^/api': '' }
       }
-    ]
+    ],
+    // 开发环境禁用错误覆盖层（不推荐）
+    client: {
+      overlay: false // 禁用错误覆盖
+    }
   }
 };
 
