@@ -81,7 +81,7 @@ const LoginContent = () => {
       }
 
       if (response.success) {
-        authStore.setTokens(response.data!.access_token, response.data!.refresh_token);
+        authStore.setTokens(response.data!.access_token);
         navigate('/');
       }
     } catch (error: any) {
