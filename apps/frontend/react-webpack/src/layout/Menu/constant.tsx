@@ -22,39 +22,35 @@ export const MENU_CONFIG: MenuItemType[] = [
     key: '/baidu-map',
     label: <Link to="/baidu-map">百度地图</Link>
   },
-  {
-    key: 'dashboard',
-    label: '仪表盘'
-  },
-  {
-    key: 'settings',
-    label: '系统设置',
-    children: [
-      {
-        key: 'account',
-        label: '账户管理'
-      },
-      {
-        key: 'security',
-        label: '安全设置',
-        children: [
-          {
-            key: 'password',
-            label: '密码修改'
-          }
-        ]
-      },
-      {
-        type: 'group',
-        key: 'help',
-        label: '帮助中心',
-        children: [
-          {
-            key: 'help-docs',
-            label: '文档中心'
-          }
-        ]
-      }
-    ]
-  }
+  // {
+  //   key: 'settings',
+  //   label: '系统设置',
+  //   children: [
+  //     {
+  //       key: 'account',
+  //       label: '账户管理'
+  //     },
+  //     {
+  //       key: 'security',
+  //       label: '安全设置',
+  //       children: [
+  //         {
+  //           key: 'password',
+  //           label: '密码修改'
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       type: 'group',
+  //       key: 'help',
+  //       label: '帮助中心',
+  //       children: [
+  //         {
+  //           key: 'help-docs',
+  //           label: '文档中心'
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // }
 ];
