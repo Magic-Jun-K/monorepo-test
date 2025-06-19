@@ -2,14 +2,15 @@ import { FC /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { ToastContainer } from '@/components/Toast/ToastContainer';
+import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
 import '@eggshell/unocss-ui/build/es/index.css';
-import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 
 const App: FC = () => {
   // useEffect(() => {
@@ -30,10 +31,10 @@ const App: FC = () => {
   useTokenExpirationCheck();
 
   return (
-    <>
+    <ErrorBoundary>
       <RouterProvider router={router} />
       <ToastContainer />
-    </>
+    </ErrorBoundary>
   );
 };
 export default App;
