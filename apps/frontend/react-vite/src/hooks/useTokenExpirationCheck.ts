@@ -1,22 +1,106 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { decodeJwt } from 'jose';
 
 import { authStore } from '@/store/auth.store';
-import { request } from '@/utils/request';
+import { refreshToken } from '@/services/auth';
+
+// 时间常量
+const TIME_CONSTANTS = {
+  ONE_DAY: 24 * 3600 * 1000, // 1天
+  ONE_HOUR: 3600 * 1000, // 1小时
+  FIVE_MINUTES: 5 * 60 * 1000, // 5分钟
+  FIVE_SECONDS: 5000, // 5秒
+  ONE_SECOND: 1000 // 1秒
+} as const;
+
+interface TokenPayload {
+  exp: number;
+  [key: string]: any;
+}
+
+interface TokenError extends Error {
+  code?: string;
+  status?: number;
+}
+
+const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutId = null;
+    }, wait);
+  };
+};
 
 /**
  * 监控 token 过期并自动处理的 hook
+ *
+ * 功能：
+ * 1. 定期检查 token 是否过期
+ * 2. 在用户活跃时立即检查
+ * 3. 自动刷新过期的 token
+ * 4. 处理 token 刷新失败的情况
+ *
+ * 检测策略：
+ * - 超过1天：每小时检查
+ * - 超过1小时：每5分钟检查
+ * - 最后5秒：每秒检查
+ *
  * @returns void
  */
 export const useTokenExpirationCheck = (): void => {
-  // 添加一个刷新中的标志
-  const isRefreshing = useRef(false);
-
   useEffect(() => {
     let checkTimer: NodeJS.Timeout;
     const eventTypes = ['click', 'mousemove', 'keydown'];
 
-    // 动态调度检测
+    // 错误处理
+    const handleError = (error: unknown) => {
+      console.error('Token检查出错:', error);
+      authStore.clear();
+    };
+
+    // 检查 token 是否过期
+    const checkTokenExpiration = async (exp: number) => {
+      if (exp * 1000 < Date.now()) {
+        try {
+          // 尝试刷新 token
+          // const { data } = await axios
+          //   .post(
+          //     'api/auth/refresh',
+          //     {},
+          //     {
+          //       withCredentials: true,
+          //       baseURL: '' // 确保使用完整路径
+          //     }
+          //   )
+          //   .then(res => res.data);
+          const res = await refreshToken();
+          authStore.setTokens(res.data);
+          return true;
+        } catch (error) {
+          const tokenError = error as TokenError;
+          console.error('Token刷新失败:', {
+            message: tokenError.message,
+            code: tokenError.code,
+            status: tokenError.status
+          });
+          authStore.clear();
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // 计划检查
     const scheduleCheck = (immediate = false) => {
       clearTimeout(checkTimer);
 
@@ -24,73 +108,49 @@ export const useTokenExpirationCheck = (): void => {
       if (!accessToken) return;
 
       try {
-        const { exp } = decodeJwt(accessToken);
-        if (!exp) return;
+        const { exp } = decodeJwt(accessToken) as TokenPayload;
+        if (!exp) {
+          authStore.clear();
+          return;
+        }
 
         const remaining = exp * 1000 - Date.now();
 
-        // 如果剩余时间小于30秒，提前刷新token
-        if (remaining < 30000 && remaining > 0 && !isRefreshing.current) {
-          const refreshToken = authStore.getRefreshToken();
-          if (refreshToken) {
-            // 设置刷新中标志
-            isRefreshing.current = true;
-
-            request
-              .post('/auth/refresh', { refresh_token: refreshToken })
-              .then((res: any) => {
-                console.log('刷新Token响应:', res);
-                // 检查响应格式是否正确
-                if (res && res.access_token && res.refresh_token) {
-                  // 直接使用顶层数据
-                  const rememberMe = !!localStorage.getItem('refresh_token');
-                  authStore.setTokens(res.access_token, res.refresh_token, rememberMe);
-                  console.log('🔄 Token 已成功刷新！', new Date().toLocaleTimeString());
-                } else if (res && res.data && res.data.access_token && res.data.refresh_token) {
-                  // 使用嵌套的 data 对象
-                  const rememberMe = !!localStorage.getItem('refresh_token');
-                  authStore.setTokens(res.data.access_token, res.data.refresh_token, rememberMe);
-                  console.log('🔄 Token 已成功刷新！', new Date().toLocaleTimeString());
-                } else {
-                  console.error('刷新Token响应格式不正确:', res);
-                }
-              })
-              .catch(err => {
-                console.error('刷新token失败', err);
-              })
-              .finally(() => {
-                // 重置刷新中标志
-                isRefreshing.current = false;
-              });
-          }
-        }
-
-        // 根据剩余时间设置检测策略
+        // 计算下一次检查时间
         const nextCheck =
-          remaining > 24 * 3600 * 1000
-            ? 3600 * 1000 // 超过1天：每小时检查
-            : remaining > 3600 * 1000
-            ? 5 * 60 * 1000 // 超过1小时：每5分钟
-            : remaining > 60 * 1000
-            ? 30 * 1000 // 超过1分钟：每30秒
-            : Math.max(remaining - 5000, 1000); // 最后几秒：每秒检查
+          remaining > TIME_CONSTANTS.ONE_DAY
+            ? TIME_CONSTANTS.ONE_HOUR
+            : remaining > TIME_CONSTANTS.ONE_HOUR
+            ? TIME_CONSTANTS.FIVE_MINUTES
+            : Math.max(remaining - TIME_CONSTANTS.FIVE_SECONDS, TIME_CONSTANTS.ONE_SECOND);
 
-        checkTimer = setTimeout(() => scheduleCheck(), immediate ? 0 : nextCheck);
+        checkTimer = setTimeout(
+          async () => {
+            const isValid = await checkTokenExpiration(exp);
+            if (isValid) {
+              scheduleCheck();
+            }
+          },
+          immediate ? 0 : nextCheck
+        );
       } catch (error) {
-        console.error('Token解析错误', error);
+        handleError(error);
       }
     };
 
-    // 用户活跃时触发立即检测
-    const onUserActive = () => scheduleCheck(true);
+    // 监听用户活动
+    const onUserActive = debounce(() => scheduleCheck(true), 1000);
+    // 添加事件监听器
     eventTypes.forEach(e => window.addEventListener(e, onUserActive));
 
-    // 初始检测
-    scheduleCheck();
+    scheduleCheck(); // 初始检查
 
-    return () => {
+    // 清理资源
+    const cleanup = () => {
       clearTimeout(checkTimer);
       eventTypes.forEach(e => window.removeEventListener(e, onUserActive));
     };
+
+    return cleanup;
   }, []);
 };
