@@ -17,6 +17,11 @@ export interface LoginRes {
   };
 }
 
+export interface RefreshRes {
+  success: boolean;
+  data: string;
+}
+
 export interface CurrentUserRes {
   data: {
     username: string;

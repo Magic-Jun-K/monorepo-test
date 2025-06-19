@@ -48,7 +48,6 @@ function LoginContext() {
   } = form;
 
   const onSubmit = async (data: FormData) => {
-    // console.log('测试onSubmit data', data);
     setLoading(true);
     const encryptedPassword = await encrypt(data.password);
 
@@ -67,7 +66,7 @@ function LoginContext() {
       if (res.success) {
         if (authType === 'login') {
           // console.log('测试登录onSubmit res.data', res.data);
-          authStore.setTokens(res.data.access_token, res.data.refresh_token, true);
+          authStore.setTokens(res.data.access_token);
 
           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
           navigate(redirectUrl);
