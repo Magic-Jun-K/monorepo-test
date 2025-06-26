@@ -18,7 +18,7 @@ export default () => {
       filterOption={(input, option) => (typeof option.label === 'string' ? option.label.includes(input) : false)}
       allowClear
       placeholder="请输入地址"
-      style={{ width: '400px' }}
+      style={{ width: '360px' }}
     />
   );
 };
