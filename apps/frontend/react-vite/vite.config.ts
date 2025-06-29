@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import wasm from 'vite-plugin-wasm';
-import path from 'node:path';
+import { resolve } from 'node:path';
 
 import assemblyscriptPlugin from './plugins/vite-plugin-assemblyscript';
 
@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
         avif: { quality: 70 },
         cache: true,
         includePublic: true,
-        cacheLocation: path.resolve(process.cwd(), 'node_modules/.cache/vite-plugin-image-optimizer')
+        cacheLocation: resolve(process.cwd(), 'node_modules/.cache/vite-plugin-image-optimizer')
       }),
       isProd &&
         visualizer({
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       alias: {
-        '@': '/src'
+        '@': resolve(__dirname, 'src')
       },
       extensions: ['.ts', '.tsx', '.js', '.json']
     },
