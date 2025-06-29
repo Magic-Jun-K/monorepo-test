@@ -1,11 +1,6 @@
 // 消息类型
 type WorkerMessage =
-  | {
-      type: 'generatePoints';
-      count: number;
-      bounds: [number, number, number, number];
-      batchSize?: number;
-    }
+  | { type: 'generatePoints'; count: number; bounds: [number, number, number, number]; batchSize?: number }
   | { type: 'updateViewport'; viewport: [number, number, number, number] }
   | { type: 'destroy' };
 
@@ -16,28 +11,27 @@ let wasmModule: any = null;
 // 加载WebAssembly模块
 async function loadWasm() {
   try {
-    // 创建WebAssembly导入对象
+    // 创建WebAssembly导入对象，提供所需的函数
     const importObject = {
       env: {
         // 提供abort函数用于错误处理
         abort: (msg: number, file: number, line: number, column: number) => {
           console.error('AssemblyScript中止:', { msg, file, line, column });
+        },
+        // 提供seed函数用于随机数生成
+        seed: () => {
+          // 返回一个随机的浮点数作为种子
+          return Math.random();
         }
       }
     };
-
     // 尝试加载WASM - 简化路径处理逻辑
-    const wasmPaths = [
-      '/wasm/release.wasm',
-      location.origin + '/wasm/release.wasm',
-      './wasm/release.wasm'
-    ];
+    const wasmPaths = ['/wasm/release.wasm', location.origin + '/wasm/release.wasm', './wasm/release.wasm'];
 
     let loaded = false;
 
     for (const path of wasmPaths) {
       try {
-        // 动态导入AssemblyScript生成的模块
         const response = await fetch(path);
         if (!response.ok) continue;
 
@@ -67,13 +61,7 @@ async function loadWasm() {
 loadWasm();
 
 // 备用的JS实现，当WASM加载失败时使用
-const generateRandomCoordinatesJS = (
-  minLng: number,
-  maxLng: number,
-  minLat: number,
-  maxLat: number,
-  count: number
-) => {
+const generateRandomCoordinatesJS = (minLng: number, maxLng: number, minLat: number, maxLat: number, count: number) => {
   const points = [];
   for (let i = 0; i < count; i++) {
     points.push({
@@ -85,160 +73,109 @@ const generateRandomCoordinatesJS = (
 };
 
 // 使用WASM生成坐标点
-const generateRandomCoordinatesWasm = (
-  minLng: number,
-  maxLng: number,
-  minLat: number,
-  maxLat: number,
-  count: number
-) => {
-  console.log('测试generateRandomCoordinatesWasm count', count);
-
-  if (count <= 0) return []; // ← 就加在这里
-
-  // 检查WASM是否可用且稳定
-  if (!wasmModule || !wasmModule.generateRandomPoints) {
-    console.warn('WASM不可用，使用JS实现');
+const generateRandomCoordinatesWasm = (minLng: number, maxLng: number, minLat: number, maxLat: number, count: number) => {
+  if (!wasmModule) {
+    console.warn('WebAssembly模块未加载，使用JS实现');
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
 
-  // 对于小数量，直接使用JS实现（更稳定）
-  if (count <= 1000) {
+  // 检查导出的函数
+  console.log('WebAssembly模块导出:', Object.keys(wasmModule));
+
+  // 检查generateRandomPoints函数是否存在
+  if (!wasmModule.generateRandomPoints && !wasmModule.generatePoints) {
+    console.warn('WebAssembly模块中找不到生成点的函数，使用JS实现');
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
+
+  // 尝试使用正确的函数名
+  const generatePointsFunc = wasmModule.generateRandomPoints || wasmModule.generatePoints;
 
   try {
-    // 参数验证和限制
-    const safeCount = Math.min(count, 100000); // 单次WASM调用限制
+    // 调用WASM函数生成点
+    console.log('调用WASM函数，参数:', { count, minLng, maxLng, minLat, maxLat });
+
+    // 参数验证和限制 - 防止传入可能导致WASM崩溃的值
+    const safeCount = Math.min(count, 100000); // 限制单次生成数量
     const safeMinLng = Number.isFinite(minLng) ? minLng : 0;
     const safeMaxLng = Number.isFinite(maxLng) ? maxLng : 180;
     const safeMinLat = Number.isFinite(minLat) ? minLat : 0;
     const safeMaxLat = Number.isFinite(maxLat) ? maxLat : 90;
 
-    // 调用WASM函数生成点
-    console.log('调用WASM函数，参数:', {
-      safeCount,
-      safeMinLng,
-      safeMaxLng,
-      safeMinLat,
-      safeMaxLat
-    });
+    // 获取内存指针
+    const ptrOrArray = generatePointsFunc(safeCount, safeMinLng, safeMaxLng, safeMinLat, safeMaxLat);
+    console.log('WASM返回值:', ptrOrArray);
 
-    // 调用WASM函数，返回内存指针
-    const ptr = wasmModule.generateRandomPoints(
-      safeCount,
-      safeMinLng,
-      safeMaxLng,
-      safeMinLat,
-      safeMaxLat
-    );
+    let pointsArray;
 
-    console.log('WASM函数返回指针:', ptr);
+    // 检查返回值类型
+    if (typeof ptrOrArray === 'number') {
+      // 如果返回的是指针，需要从内存中读取数据
+      console.log('WASM返回了内存指针:', ptrOrArray);
 
-    if (typeof ptr !== 'number' || ptr === 0) {
-      console.error('WASM函数返回无效指针');
+      // 检查是否有内存访问方法
+      if (wasmModule.__getFloat64Array || wasmModule.__getArray || wasmModule.memory) {
+        // 尝试使用AssemblyScript的辅助方法获取数组
+        if (wasmModule.__getFloat64Array) {
+          pointsArray = wasmModule.__getFloat64Array(ptrOrArray);
+        } else if (wasmModule.__getArray) {
+          pointsArray = wasmModule.__getArray(ptrOrArray);
+        } else {
+          // 手动从内存中读取Float64Array
+          const memory = wasmModule.memory.buffer;
+          // 添加边界检查
+          if (ptrOrArray < 0 || ptrOrArray >= memory.byteLength) {
+            throw new Error(`内存指针超出范围: ${ptrOrArray}, 内存大小: ${memory.byteLength}`);
+          }
+          pointsArray = new Float64Array(memory, ptrOrArray, count * 2);
+        }
+      } else {
+        console.error('无法从WebAssembly内存中读取数据');
+        return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
+      }
+    } else {
+      // 如果直接返回了数组
+      pointsArray = ptrOrArray;
+    }
+
+    // 检查返回的数据类型
+    if (!pointsArray) {
+      console.error('WASM函数返回null或undefined');
       return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
     }
 
-    // 从内存中读取Float64Array
-    const memory = wasmModule.memory.buffer;
-
-    // 检查内存边界
-    if (ptr < 0 || ptr >= memory.byteLength - 8) {
-      console.error(`内存指针超出范围: ${ptr}, 内存大小: ${memory.byteLength}`);
-      return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
-    }
-
-    // 直接使用期望的长度
-    const expectedLength = safeCount * 2;
-
-    // 检查是否有足够的内存空间
-    const dataStart = ptr;
-    const dataEnd = dataStart + expectedLength * 8;
-    if (dataEnd > memory.byteLength) {
-      console.error(`数据超出内存范围: ${dataEnd} > ${memory.byteLength}`);
-      return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
-    }
-
-    // 直接读取数据
-    const pointsArray = new Float64Array(memory, dataStart, expectedLength);
-
+    console.log('WASM返回数据类型:', pointsArray.constructor.name);
     console.log('WASM返回数据长度:', pointsArray.length);
 
     // 将Float64Array转换为对象数组
     const points = [];
-    const actualCount = Math.min(safeCount, Math.floor(pointsArray.length / 2));
-
-    console.log('实际处理点数:', actualCount);
-
-    for (let i = 0; i < actualCount; i++) {
+    for (let i = 0; i < count; i++) {
       const lng = pointsArray[i * 2];
       const lat = pointsArray[i * 2 + 1];
 
       // 检查坐标值是否有效
-      if (
-        typeof lng !== 'number' ||
-        typeof lat !== 'number' ||
-        isNaN(lng) ||
-        isNaN(lat) ||
-        lng < -180 ||
-        lng > 180 ||
-        lat < -90 ||
-        lat > 90
-      ) {
+      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
         console.warn(`无效的坐标点 [${i}]: (${lng}, ${lat})`);
+        // 使用有效的随机值替代
         points.push({
-          lng: safeMinLng + Math.random() * (safeMaxLng - safeMinLng),
-          lat: safeMinLat + Math.random() * (safeMaxLat - safeMinLat)
+          lng: minLng + Math.random() * (maxLng - minLng),
+          lat: minLat + Math.random() * (maxLat - minLat)
         });
       } else {
         points.push({ lng, lat });
       }
     }
 
-    // // 如果WASM生成了部分数据，继续用WASM补齐剩余部分
-    // if (actualCount < count) {
-    //   console.log(
-    //     `WASM生成了${actualCount}个点，需要${count}个，继续用WASM生成剩余${count - actualCount}个`
-    //   );
-    //   // 递归调用WASM生成剩余数据
-    //   const remainingPoints: { lng: number; lat: number }[] = generateRandomCoordinatesWasm(
-    //     minLng,
-    //     maxLng,
-    //     minLat,
-    //     maxLat,
-    //     count - actualCount
-    //   );
-    //   points.push(...remainingPoints);
-    // }
-    // 如果WASM生成了部分数据，继续用WASM补齐剩余部分
-    const remaining = count - actualCount;
-    console.log(`[递归防御] count=${count}, actualCount=${actualCount}, remaining=${remaining}`);
-
-    if (remaining > 0 && remaining < count && actualCount > 0) {
-      // 只有在递归参数完全正常时才递归
-      const remainingPoints: { lng: number; lat: number }[] = generateRandomCoordinatesWasm(
-        minLng,
-        maxLng,
-        minLat,
-        maxLat,
-        remaining
-      );
+    // 如果WASM只生成了部分数据，使用JS补齐剩余部分
+    if (safeCount < count) {
+      const remainingPoints = generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count - safeCount);
       points.push(...remainingPoints);
-    } else if (remaining > 0) {
-      // 只要递归参数异常，直接用JS补齐
-      console.error(
-        `WASM递归出口防御触发：count=${count}, actualCount=${actualCount}, remaining=${remaining}，回退到JS实现`
-      );
-      const jsPoints = generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, remaining);
-      points.push(...jsPoints);
     }
 
     console.log('转换后的点数据示例:', points.slice(0, 5));
-    console.log('总生成点数:', points.length);
     return points;
   } catch (error) {
-    console.error('WASM调用失败，回退到JS实现:', error);
+    console.error('调用WASM函数出错:', error);
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
 };
@@ -253,7 +190,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     const {
       count,
       bounds: [minLng, maxLng, minLat, maxLat],
-      batchSize = 50000 // 默认批次大小
+      batchSize = 100000 // 默认批次大小
     } = e.data;
 
     // 计算需要的批次数
@@ -265,9 +202,6 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         // 计算当前批次的起始索引和实际大小
         const startIdx = batch * batchSize;
         const currentBatchSize = Math.min(batchSize, count - startIdx);
-
-        // 防御：如果本批次需要生成的点数 <= 0，直接跳过
-        if (currentBatchSize <= 0) continue;
 
         // 生成当前批次的点，考虑视口优先
         const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
@@ -318,7 +252,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   }
 };
 
-// 修改点生成函数，优先生成视口内的点 - 以WASM为主
+// 修改点生成函数，优先生成视口内的点
 const generatePointsWithViewportPriority = (
   minLng: number,
   maxLng: number,
@@ -327,8 +261,6 @@ const generatePointsWithViewportPriority = (
   count: number,
   viewport: [number, number, number, number] | null
 ) => {
-  if (count <= 0) return [];
-
   // 如果没有视口信息，使用普通生成
   if (!viewport) {
     return wasmModule
@@ -347,33 +279,19 @@ const generatePointsWithViewportPriority = (
 
   // 计算视口占总区域的比例
   const totalArea = (maxLng - minLng) * (maxLat - minLat);
-  const viewportArea =
-    (effectiveViewMaxLng - effectiveViewMinLng) * (effectiveViewMaxLat - effectiveViewMinLat);
+  const viewportArea = (effectiveViewMaxLng - effectiveViewMinLng) * (effectiveViewMaxLat - effectiveViewMinLat);
   const viewportRatio = viewportArea / totalArea;
 
   // 视口内点数，至少生成一些点在视口内
-  let viewportPointCount = Math.max(Math.round(count * viewportRatio * 2), Math.min(1000, count));
-  viewportPointCount = Math.min(viewportPointCount, count); // 防止超出总数
+  const viewportPointCount = Math.max(Math.round(count * viewportRatio * 2), Math.min(1000, count));
   const outsidePointCount = count - viewportPointCount;
 
-  // 生成视口内的点 - 优先使用WASM
+  // 生成视口内的点
   const viewportPoints = wasmModule
-    ? generateRandomCoordinatesWasm(
-        effectiveViewMinLng,
-        effectiveViewMaxLng,
-        effectiveViewMinLat,
-        effectiveViewMaxLat,
-        viewportPointCount
-      )
-    : generateRandomCoordinatesJS(
-        effectiveViewMinLng,
-        effectiveViewMaxLng,
-        effectiveViewMinLat,
-        effectiveViewMaxLat,
-        viewportPointCount
-      );
+    ? generateRandomCoordinatesWasm(effectiveViewMinLng, effectiveViewMaxLng, effectiveViewMinLat, effectiveViewMaxLat, viewportPointCount)
+    : generateRandomCoordinatesJS(effectiveViewMinLng, effectiveViewMaxLng, effectiveViewMinLat, effectiveViewMaxLat, viewportPointCount);
 
-  // 生成视口外的点 - 优先使用WASM
+  // 生成视口外的点
   const outsidePoints = wasmModule
     ? generateRandomCoordinatesWasm(minLng, maxLng, minLat, maxLat, outsidePointCount)
     : generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, outsidePointCount);
