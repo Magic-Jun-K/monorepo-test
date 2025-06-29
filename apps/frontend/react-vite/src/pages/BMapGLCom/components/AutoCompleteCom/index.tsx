@@ -1,6 +1,6 @@
 import { AutoComplete } from '@eggshell/unocss-ui';
 
-export default () => {
+const AutoCompleteCom = () => {
   return (
     <AutoComplete
       options={[
@@ -15,10 +15,13 @@ export default () => {
         { label: '西安', value: 'xa' },
         { label: '武汉', value: 'wh' }
       ]}
-      filterOption={(input, option) => (typeof option.label === 'string' ? option.label.includes(input) : false)}
+      filterOption={(input, option) =>
+        typeof option.label === 'string' ? option.label.includes(input) : false
+      }
       allowClear
       placeholder="请输入地址"
-      style={{ width: '400px' }}
+      style={{ width: '360px' }}
     />
   );
 };
+export default AutoCompleteCom;

@@ -1,4 +1,5 @@
 import { Input } from '@eggshell/unocss-ui';
+// import { MapCom } from '@eggshell/core-business-components';
 import MapCom from './components/MapCom';
 import AutoCompleteCom from './components/AutoCompleteCom';
 import styles from './index.module.scss';
@@ -17,4 +18,4 @@ export default function BMapGLCom() {
       </div>
     </div>
   );
-};
+}
