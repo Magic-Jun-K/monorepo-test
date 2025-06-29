@@ -1,5 +1,4 @@
 import { Modal } from '@eggshell/unocss-ui';
-// import { Modal } from 'antd';
 
 import EChartsCom from '@/components/echarts';
 import { PieOptions } from './constant';
@@ -10,7 +9,7 @@ interface Props {
   visible: boolean;
   onCancel: () => void;
 }
-export default function EChartsTestModal(props: Props) {
+export default (props: Props) => {
   const { visible, onCancel } = props;
 
   return (
@@ -24,4 +23,4 @@ export default function EChartsTestModal(props: Props) {
       <EChartsCom options={options} />
     </Modal>
   );
-}
+};
