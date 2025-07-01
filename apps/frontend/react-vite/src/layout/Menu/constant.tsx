@@ -8,19 +8,15 @@ export const MENU_CONFIG: MenuItemType[] = [
   },
   {
     key: '/form-test',
-    label: <Link to="/form-test">表单测试页</Link>
+    label: <Link to="/form-test">表单测试</Link>
   },
   {
     key: '/table-test',
-    label: <Link to="/table-test">表格测试页</Link>
+    label: <Link to="/table-test">表格测试</Link>
   },
   {
     key: '/baidu-map',
     label: <Link to="/baidu-map">百度地图</Link>
-  },
-  {
-    key: 'dashboard',
-    label: '仪表盘'
   },
   {
     key: 'settings',
