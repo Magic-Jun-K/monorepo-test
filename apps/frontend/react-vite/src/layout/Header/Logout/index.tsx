@@ -19,8 +19,8 @@ function Logout() {
   const navigate = useNavigate();
 
   // 处理退出登录
-  const handleLogout = async (selectedKeys: string[]) => {
-    console.log('退出登录', selectedKeys);
+  const handleLogout = async (/* selectedKeys: string[] */) => {
+    // console.log('退出登录', selectedKeys);
 
     try {
       // 调用退出登录接口
