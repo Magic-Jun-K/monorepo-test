@@ -1,4 +1,4 @@
-name: 后端部署流程
+name: 后端bmap-nest部署流程
 
 on:
   push:
