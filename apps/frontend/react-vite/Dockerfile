@@ -18,6 +18,7 @@ COPY pnpm-lock.yaml* ./
 COPY tsconfig* ./
 COPY packages/unocss-ui/ ./packages/unocss-ui/
 COPY packages/antd-ui/ ./packages/antd-ui/
+COPY packages/core-business-components ./packages/core-business-components/
 COPY apps/frontend/react-vite/ ./apps/frontend/react-vite/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -25,12 +26,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --filter="@eggshell/unocss-ui..." \
     --filter="@eggshell/antd-ui..." \
+    --filter="@eggshell/core-business-components..." \
     --filter="@frontend/react-vite..."
 
 # 阶段3：构建应用
 FROM deps AS fe-build
 RUN pnpm --filter @eggshell/unocss-ui build
 RUN pnpm --filter @eggshell/antd-ui build
+RUN pnpm --filter @eggshell/core-business-components build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-vite
 RUN ls -alR /app/apps/frontend/react-vite
