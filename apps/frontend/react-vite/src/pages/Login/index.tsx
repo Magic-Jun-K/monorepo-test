@@ -1,81 +1,91 @@
-import { useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from '@/components/Toast/useToast';
+import { Controller, FieldError } from 'react-hook-form';
 
+import { useToast } from '@/components/Toast/useToast';
 import LoginTabs from './components/LoginTabs';
 import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 import { encrypt } from '@/utils/hashWasm';
-import * as api from '@/services';
-import { AuthType, LoginType, FormData, loginSchema, phoneLoginSchema, registerSchema } from './types';
+import { emailLogin, login, register, sendCode } from '@/services/auth';
+import {
+  AuthType,
+  LoginType,
+  FormData,
+  LoginFormData,
+  RegisterFormData,
+  EmailLoginFormData,
+  isAccountOrRegister,
+  AuthResponse
+} from './types';
 import { authStore } from '@/store/auth.store';
 import { ToastProvider } from '@/components/Toast';
+import { BASE_URL } from '@/config';
+import { useLoginForm } from './hooks/useLoginForm';
 
 import styles from './index.module.scss';
 
-// 创建 schema 映射关系
-const schemaMap: Record<AuthType, any> = {
-  login: {
-    account: loginSchema,
-    phone: phoneLoginSchema
-  },
-  register: registerSchema
-};
-function LoginContext() {
-  const [authType, setAuthType] = useState<AuthType>('login');
-  const [loginType, setLoginType] = useState<LoginType>('account');
-  const [loading, setLoading] = useState(false);
+const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
+const api = { login, register };
+
+function LoginContent() {
+  const [authType, setAuthType] = useState<AuthType>('login'); // 登录注册
+  const [loginType, setLoginType] = useState<LoginType>('account'); // 登录方式
+  const [loading, setLoading] = useState<boolean>(false); // 登录中
+  const [isSending, setIsSending] = useState<boolean>(false); // 验证码发送中
+  const [countdown, setCountdown] = useState<number>(0); // 倒计时
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(authType === 'login' ? schemaMap.login[loginType] : schemaMap.register),
-    defaultValues: {
-      username: '',
-      phone: '',
-      password: '',
-      code: ''
-    }
-  });
-
+  const form = useLoginForm(authType, loginType);
   const {
     control,
     handleSubmit,
     formState: { errors }
   } = form;
 
+  // 获取表单字段错误信息
+  const getFieldError = (fieldName: string) => {
+    if (loginType === 'account' || authType === 'register') {
+      return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+    } else if (loginType === 'email') {
+      return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+    }
+    return undefined;
+  };
+
+  // 验证码按钮倒计时管理
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (countdown === 0 && isSending) {
+      setIsSending(false);
+    }
+    return () => clearInterval(timer);
+  }, [countdown, isSending]);
+
   const onSubmit = async (data: FormData) => {
     setLoading(true);
-    const encryptedPassword = await encrypt(data.password);
-
-    if (!encryptedPassword) return;
-
     try {
-      if (loginType === 'phone' && !/^1[3-9]\d{9}$/.test(data.phone || '')) {
-        addToast({ message: '请输入有效的手机号', type: 'error' });
-        return;
+      let response: AuthResponse;
+
+      // 类型守卫
+      if (isAccountOrRegister(data)) {
+        response = await handleAccountOrRegister(data); // 此时 data 类型为 LoginFormData | RegisterFormData
+      } else {
+        response = await handleEmailLogin(data); // 此时 data 类型为 EmailLoginFormData
       }
 
-      const res: any = await api[authType]({ ...data, password: encryptedPassword });
-      // console.log('测试onSubmit response', res);
-
       // Handle successful response(处理成功响应)
-      if (res.success) {
-        if (authType === 'login') {
-          // console.log('测试登录onSubmit res.data', res.data);
-          authStore.setTokens(res.data.access_token);
-
-          const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
-          navigate(redirectUrl);
-        } else {
-          addToast({ message: '注册成功，请登录', type: 'success' });
-          setAuthType('login');
-        }
+      if (response.success) {
+        authStore.setTokens(response.data!.access_token);
+        navigate('/');
       } else {
-        addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
+        addToast({ message: '登录失败，请稍后重试', type: 'error' });
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -99,22 +109,86 @@ function LoginContext() {
     }
   };
 
+  // 公共密码处理
+  const handleAccountOrRegister = async (
+    data: LoginFormData | RegisterFormData
+  ): Promise<AuthResponse> => {
+    const encryptedPassword = await encrypt(data.password);
+    return await api[authType]({
+      username: data.username,
+      password: encryptedPassword
+    });
+  };
+
+  // 邮箱登录专用
+  const handleEmailLogin = async (data: EmailLoginFormData): Promise<AuthResponse> => {
+    return await emailLogin({ email: data.email, code: data.code });
+  };
+
+  const handleSendCode = () => {
+    if (countdown > 0) return; // 防止重复点击
+
+    const email = form.getValues('email');
+
+    if (!email) {
+      form.setError('email', { message: '请输入邮箱' });
+      return;
+    }
+
+    setIsSending(true);
+    setCountdown(60); // 设置倒计时60秒
+
+    // 调用发送验证码接口
+    // fetch(`api/auth/send-code?email=${form.getValues('email')}`, { method: 'POST' })
+    //   .then(() => {
+    //     addToast({ message: '验证码已发送，请查收邮箱', type: 'success' });
+    //   })
+    // .catch(() => {
+    //   addToast({ message: '验证码发送失败，请稍后重试', type: 'error' });
+    //   setCountdown(0);
+    // });
+
+    sendCode(email)
+      .then(() => {
+        addToast({ message: '验证码已发送，请查收邮箱', type: 'success' });
+      })
+      .catch(() => {
+        addToast({ message: '验证码发送失败，请稍后重试', type: 'error' });
+        setCountdown(0);
+      });
+  };
+
   return (
-    <div className={styles.loginContainer}>
+    <div
+      className={styles.loginContainer}
+      style={{
+        background: `url(${backgroundImageUrl})`,
+        backgroundSize: 'cover', // 根据需要添加其他背景样式
+        backgroundRepeat: 'no-repeat' // 根据需要添加其他背景样式
+        // background-position: 'left'; // 根据需要添加其他背景样式
+      }}
+    >
       <div className={styles.loginBox}>
-        {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />}
+        {/* {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />} */}
+        <LoginTabs authType={authType} loginType={loginType} setLoginType={setLoginType} />
 
         {authType === 'login' ? (
           <>
+            {/* 账号登录 */}
             {loginType === 'account' ? (
-              <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+              <form
+                key={`${authType}-${loginType}`} // 强制重新挂载
+                className={styles.form}
+                onSubmit={handleSubmit(onSubmit)}
+              >
                 <FormInput
                   control={control}
                   name="username"
                   type="text"
                   placeholder="请输入用户名"
                   rules={{ required: '用户名不能为空' }}
-                  error={errors.username}
+                  // error={errors.username}
+                  error={getFieldError('username')}
                 />
                 <FormInput
                   control={control}
@@ -122,50 +196,77 @@ function LoginContext() {
                   type="password"
                   placeholder="请输入密码"
                   rules={{ required: '密码不能为空' }}
-                  error={errors.password}
+                  // error={errors.password}
+                  error={getFieldError('password')}
                 />
-
+                {/* 密码强度提示 */}
+                {/* {passwordStrength > 0 && (
+                  <div className={styles.passwordStrength}>
+                    <div
+                      className={`${styles.strengthBar} ${getStrengthClass(passwordStrength)}`}
+                    />
+                  </div>
+                )} */}
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             ) : (
+              /* 邮箱登录 */
               <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
                 <FormInput
                   control={control}
-                  name="phone"
-                  type="tel"
-                  placeholder="请输入手机号"
+                  name="email"
+                  type="email"
+                  placeholder="请输入邮箱地址"
                   rules={{
-                    required: '手机号不能为空',
+                    required: '邮箱地址不能为空',
                     pattern: {
-                      value: /^1[3-9]\d{9}$/,
-                      message: '请输入有效的手机号'
+                      value: /^\S+@\S+\.\S+$/,
+                      message: '请输入有效的邮箱地址'
                     }
                   }}
-                  error={errors.phone}
+                  error={getFieldError('email')}
                 />
-
                 <div className={styles.formGroup}>
                   <Controller
                     name="code"
                     control={control}
-                    rules={{ required: '验证码不能为空' }}
+                    defaultValue="" // 添加默认值
+                    rules={{
+                      required: '验证码不能为空',
+                      pattern: {
+                        value: /^\d{6}$/,
+                        message: '验证码必须为6位数字'
+                      }
+                    }}
                     render={({ field }) => (
                       <div className={styles.codeInput}>
-                        <input {...field} type="text" placeholder="请输入验证码" className={errors.code ? styles.error : ''} />
-                        <button type="button" className={styles.getCodeButton}>
-                          获取验证码
+                        <input
+                          {...field}
+                          type="text"
+                          placeholder="请输入验证码"
+                          className={getFieldError('code') ? styles.error : ''}
+                        />
+                        <button
+                          type="button"
+                          className={styles.getCodeButton}
+                          onClick={handleSendCode}
+                          disabled={isSending}
+                        >
+                          {isSending ? `重新发送(${countdown}s)` : '获取验证码'}
                         </button>
                       </div>
                     )}
                   />
-                  {errors.code && <span className={styles.errorMessage}>{errors.code.message}</span>}
+                  {getFieldError('code') && (
+                    <span className={styles.errorMessage}>{getFieldError('code')?.message}</span>
+                  )}
                 </div>
-
                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
               </form>
             )}
           </>
         ) : (
+          /* 账号注册 */
           <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
             <FormInput
               control={control}
@@ -173,21 +274,7 @@ function LoginContext() {
               type="text"
               placeholder="请输入用户名"
               rules={{ required: '用户名不能为空' }}
-              error={errors.username}
-            />
-            <FormInput
-              control={control}
-              name="phone"
-              type="tel"
-              placeholder="请输入手机号"
-              rules={{
-                required: '手机号不能为空',
-                pattern: {
-                  value: /^1[3-9]\d{9}$/,
-                  message: '请输入有效的手机号'
-                }
-              }}
-              error={errors.phone}
+              error={getFieldError('username')}
             />
             <FormInput
               control={control}
@@ -195,24 +282,39 @@ function LoginContext() {
               type="password"
               placeholder="请输入密码"
               rules={{ required: '密码不能为空' }}
-              error={errors.password}
+              error={getFieldError('password')}
             />
 
             <FormButton loading={loading}>{loading ? '注册中...' : '注册'}</FormButton>
           </form>
         )}
 
-        {loginType === 'account' ? <RegisterText authType={authType} setAuthType={setAuthType} /> : null}
+        {loginType === 'account' ? (
+          <RegisterText authType={authType} setAuthType={setAuthType} />
+        ) : null}
       </div>
     </div>
   );
 }
 
-function Login() {
+const FooterRecord = memo(() => {
+  return (
+    <div
+      className={styles['footer-record']}
+      onClick={() => {
+        window.open('https://beian.miit.gov.cn');
+      }}
+    >
+      <span>粤ICP备2025421349号-1</span>
+    </div>
+  );
+});
+
+export default function Login() {
   return (
     <ToastProvider>
-      <LoginContext />
+      <LoginContent />
+      <FooterRecord />
     </ToastProvider>
   );
 }
-export default Login;

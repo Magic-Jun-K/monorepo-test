@@ -1,4 +1,7 @@
+import { memo } from 'react';
+
 import { AuthType } from '../types';
+
 import styles from '../index.module.scss';
 
 interface RegisterTextProps {
@@ -6,9 +9,12 @@ interface RegisterTextProps {
   setAuthType: (type: AuthType) => void;
 }
 
-export default function RegisterText({ authType, setAuthType }: RegisterTextProps) {
+export default memo(function RegisterText({ authType, setAuthType }: RegisterTextProps) {
   return (
-    <div className={styles.registerText} style={{ justifyContent: authType === 'login' ? 'space-between' : 'center' }}>
+    <div
+      className={styles.registerText}
+      style={{ justifyContent: authType === 'login' ? 'space-between' : 'center' }}
+    >
       {authType === 'login' ? (
         <a href="#" className={styles.forgot}>
           忘记密码
@@ -19,4 +25,4 @@ export default function RegisterText({ authType, setAuthType }: RegisterTextProp
       </a>
     </div>
   );
-}
+});
