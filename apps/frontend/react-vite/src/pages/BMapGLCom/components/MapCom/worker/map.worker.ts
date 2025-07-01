@@ -92,7 +92,7 @@ const generateRandomCoordinatesWasm = (
   maxLat: number,
   count: number
 ) => {
-  console.log('测试generateRandomCoordinatesWasm count', count);
+  // console.log('测试generateRandomCoordinatesWasm count', count);
 
   if (count <= 0) return []; // ← 就加在这里
 
@@ -116,13 +116,13 @@ const generateRandomCoordinatesWasm = (
     const safeMaxLat = Number.isFinite(maxLat) ? maxLat : 90;
 
     // 调用WASM函数生成点
-    console.log('调用WASM函数，参数:', {
-      safeCount,
-      safeMinLng,
-      safeMaxLng,
-      safeMinLat,
-      safeMaxLat
-    });
+    // console.log('调用WASM函数，参数:', {
+    //   safeCount,
+    //   safeMinLng,
+    //   safeMaxLng,
+    //   safeMinLat,
+    //   safeMaxLat
+    // });
 
     // 调用WASM函数，返回内存指针
     const ptr = wasmModule.generateRandomPoints(
@@ -133,7 +133,7 @@ const generateRandomCoordinatesWasm = (
       safeMaxLat
     );
 
-    console.log('WASM函数返回指针:', ptr);
+    // console.log('WASM函数返回指针:', ptr);
 
     if (typeof ptr !== 'number' || ptr === 0) {
       console.error('WASM函数返回无效指针');
@@ -196,21 +196,6 @@ const generateRandomCoordinatesWasm = (
       }
     }
 
-    // // 如果WASM生成了部分数据，继续用WASM补齐剩余部分
-    // if (actualCount < count) {
-    //   console.log(
-    //     `WASM生成了${actualCount}个点，需要${count}个，继续用WASM生成剩余${count - actualCount}个`
-    //   );
-    //   // 递归调用WASM生成剩余数据
-    //   const remainingPoints: { lng: number; lat: number }[] = generateRandomCoordinatesWasm(
-    //     minLng,
-    //     maxLng,
-    //     minLat,
-    //     maxLat,
-    //     count - actualCount
-    //   );
-    //   points.push(...remainingPoints);
-    // }
     // 如果WASM生成了部分数据，继续用WASM补齐剩余部分
     const remaining = count - actualCount;
     console.log(`[递归防御] count=${count}, actualCount=${actualCount}, remaining=${remaining}`);
