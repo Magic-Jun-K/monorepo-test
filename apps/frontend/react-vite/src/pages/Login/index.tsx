@@ -19,7 +19,6 @@ import {
   isAccountOrRegister,
   AuthResponse
 } from './types';
-import { authStore } from '@/store/auth.store';
 import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
 import { useLoginForm } from './hooks/useLoginForm';
@@ -82,10 +81,9 @@ function LoginContent() {
 
       // Handle successful response(处理成功响应)
       if (response.success) {
-        authStore.setTokens(response.data!.access_token);
         navigate('/');
       } else {
-        addToast({ message: '登录失败，请稍后重试', type: 'error' });
+        addToast({ message: response.message || 'Login fail', type: 'error' });
       }
     } catch (error: any) {
       console.error('Login error:', error);

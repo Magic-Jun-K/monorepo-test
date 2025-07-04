@@ -67,9 +67,6 @@ export function isAccountOrRegister(data: FormData): data is LoginFormData | Reg
 // 登录响应数据
 export interface AuthResponse {
   success: boolean;
-  data?: {
-    access_token: string;
-  };
   message?: string;
 }
 
