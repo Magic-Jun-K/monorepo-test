@@ -10,14 +10,10 @@ export interface LoginPayload {
 export interface LoginRes {
   success: boolean;
   message: string;
-  data: {
-    access_token: string;
-  };
 }
 
 export interface RefreshRes {
   success: boolean;
-  data: string;
 }
 
 export interface CurrentUserRes {
