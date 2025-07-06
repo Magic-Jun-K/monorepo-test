@@ -6,7 +6,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { ToastContainer } from '@/components/Toast/ToastContainer';
-import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
@@ -26,9 +25,6 @@ const App: FC = () => {
   //   // initPerformanceChecker();
   //   // }
   // }, []);
-
-  // 检查token是否过期
-  useTokenExpirationCheck();
 
   return (
     <ErrorBoundary>
