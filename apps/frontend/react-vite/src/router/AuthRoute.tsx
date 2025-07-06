@@ -1,7 +1,9 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { useAuthCheck } from '@/hooks/useAuthCheck';
+
+import styles from './AuthRoute.module.scss';
 
 interface AuthRouteProps {
   children: JSX.Element;
@@ -10,11 +12,61 @@ interface AuthRouteProps {
 
 const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
   const { loading, isAuthenticated } = useAuthCheck();
-  console.log('测试AuthRoute isAuthenticated', isAuthenticated);
+  const [dots, setDots] = useState('.');
+  const [showHelp, setShowHelp] = useState(false);
+
+  // 动态点动画
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (loading) {
+      interval = setInterval(() => {
+        setDots(prev => (prev.length >= 3 ? '.' : prev + '.'));
+      }, 500);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
+
+  // 超时提示
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
+    if (loading) {
+      timer = setTimeout(() => {
+        setShowHelp(true);
+      }, 8000);
+    } else {
+      setShowHelp(false);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   if (loading) {
-    return <div>正在验证登录状态...</div>;
-    // return null;
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner} />
+        <div className={styles.loadingText}>
+          正在验证身份<span className={styles.dotsAnimation}>{dots}</span>
+        </div>
+        <div className={styles.subText}>我们正在检查您的登录状态，确保您的账户安全</div>
+        <div className={styles.progressContainer}>
+          <div className={styles.progressBar} />
+        </div>
+
+        {showHelp && (
+          <div className={styles.helpText}>
+            验证时间较长，请检查网络连接或
+            <a onClick={() => window.location.reload()}>刷新页面</a>
+          </div>
+        )}
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
