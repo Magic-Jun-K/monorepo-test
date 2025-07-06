@@ -6,25 +6,22 @@ export function useAuthCheck() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    request
-      .get('/auth/current-user')
-      .then(() => {
-        if (isMounted) {
-          setIsAuthenticated(true);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setIsAuthenticated(false);
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-    return () => {
-      isMounted = false;
+    const checkAuth = async () => {
+      try {
+        // Step 1: Attempt token refresh
+        await request.post('/auth/refresh');
+
+        // Step 2: Verify authentication status
+        await request.get('/auth/current-user');
+        setIsAuthenticated(true);
+      } catch {
+        console.log('测试checkAuth catch');
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
     };
+    checkAuth();
   }, []);
 
   return { loading, isAuthenticated };
