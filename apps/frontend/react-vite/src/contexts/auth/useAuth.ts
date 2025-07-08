@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 
-import { AuthContext } from './auth/AuthContext';
+import { AuthContext } from './AuthContext';
 
 export const useAuth = (): NonNullable<React.ContextType<typeof AuthContext>> => {
   const context = useContext(AuthContext);
