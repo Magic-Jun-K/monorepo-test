@@ -68,6 +68,7 @@ export function isAccountOrRegister(data: FormData): data is LoginFormData | Reg
 export interface AuthResponse {
   success: boolean;
   message?: string;
+  data?: string;
 }
 
 export type AccountFormError = { username?: FieldError; password?: FieldError };

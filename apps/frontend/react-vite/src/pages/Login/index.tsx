@@ -22,6 +22,7 @@ import {
 import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
 import { useLoginForm } from './hooks/useLoginForm';
+import { authStore } from '@/store/auth.store';
 
 import styles from './index.module.scss';
 
@@ -81,6 +82,11 @@ function LoginContent() {
 
       // Handle successful response(处理成功响应)
       if (response.success) {
+        // Add type guard for response.data(为response.data添加类型保护)
+        if (!response.data) {
+          throw new Error('Authentication data is missing');
+        }
+        authStore.setToken(response.data);
         navigate('/');
       } else {
         addToast({ message: response.message || 'Login fail', type: 'error' });
