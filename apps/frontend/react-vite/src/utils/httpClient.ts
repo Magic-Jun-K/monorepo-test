@@ -1,7 +1,14 @@
-import axios, { AxiosRequestConfig, CreateAxiosDefaults } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from 'axios';
 
 import { authStore } from '@/store/auth.store';
 // import { reportError } from './monitor';
+
+interface CustomRequest extends AxiosInstance {
+  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+}
 
 // 配置axios实例
 const config: CreateAxiosDefaults = {
@@ -11,7 +18,7 @@ const config: CreateAxiosDefaults = {
 };
 
 // 创建axios实例
-export const request = axios.create(config);
+export const request: CustomRequest = axios.create(config);
 
 // 请求队列和刷新状态
 let isRefreshing = false;
@@ -35,7 +42,7 @@ request.interceptors.request.use(config => {
 
 // 响应拦截器
 request.interceptors.response.use(
-  response => response.data,
+  (response: AxiosResponse) => response.data,
   async error => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retryCount?: number;
