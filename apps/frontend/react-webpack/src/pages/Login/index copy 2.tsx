@@ -1,7 +1,6 @@
 // import { memo, useEffect, useState } from 'react';
 // import { useNavigate } from 'react-router-dom';
-// import { useForm, Controller } from 'react-hook-form';
-// import { zodResolver } from '@hookform/resolvers/zod';
+// import { Controller, FieldError } from 'react-hook-form';
 
 // import { useToast } from '@/components/Toast';
 // import LoginTabs from './components/LoginTabs';
@@ -9,32 +8,27 @@
 // import FormButton from './components/FormButton';
 // import RegisterText from './components/RegisterText';
 // import { encrypt } from '@/utils/hashWasm';
-// import { login, register, sendCode } from '@/services';
+// import { emailLogin, login, register, sendCode } from '@/services';
 // import {
 //   AuthType,
 //   LoginType,
 //   FormData,
-//   loginSchema,
-//   emailLoginSchema,
-//   registerSchema
+//   LoginFormData,
+//   RegisterFormData,
+//   EmailLoginFormData,
+//   isAccountOrRegister,
+//   AuthResponse
 // } from './types';
 // import { authStore } from '@/store/auth.store';
 // import { ToastProvider } from '@/components/Toast';
 // import { BASE_URL } from '@/config';
+// import { useLoginForm } from './hooks/useLoginForm';
 
 // import styles from './index.module.scss';
 
 // const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
-
-// // 创建 schema 映射关系
-// const schemaMap: Record<AuthType, any> = {
-//   login: {
-//     account: loginSchema,
-//     email: emailLoginSchema
-//   },
-//   register: registerSchema
-// };
 // const api = { login, register };
+
 // const LoginContent = () => {
 //   const [authType, setAuthType] = useState<AuthType>('login'); // 登录注册
 //   const [loginType, setLoginType] = useState<LoginType>('account'); // 登录方式
@@ -44,22 +38,24 @@
 //   const navigate = useNavigate();
 //   const { addToast } = useToast();
 
-//   const form = useForm<FormData>({
-//     resolver: zodResolver(authType === 'login' ? schemaMap.login[loginType] : schemaMap.register),
-//     defaultValues: {
-//       username: '',
-//       email: '',
-//       password: '',
-//       code: ''
-//     }
-//   });
-
+//   const form = useLoginForm(authType, loginType);
 //   const {
 //     control,
 //     handleSubmit,
 //     formState: { errors }
 //   } = form;
 
+//   // 获取表单字段错误信息
+//   const getFieldError = (fieldName: string) => {
+//     if (loginType === 'account' || authType === 'register') {
+//       return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+//     } else if (loginType === 'email') {
+//       return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+//     }
+//     return undefined;
+//   };
+
+//   // 验证码按钮倒计时管理
 //   useEffect(() => {
 //     let timer: NodeJS.Timeout;
 //     if (countdown > 0) {
@@ -74,28 +70,19 @@
 
 //   const onSubmit = async (data: FormData) => {
 //     setLoading(true);
-//     const encryptedPassword = await encrypt(data.password);
-
-//     if (!encryptedPassword) return;
-
 //     try {
-//       const res: any = await api[authType]({ ...data, password: encryptedPassword });
-//       // console.log('测试onSubmit response', res);
+//       let response: AuthResponse;
 
-//       // Handle successful response(处理成功响应)
-//       if (res.success) {
-//         if (authType === 'login') {
-//           // console.log('测试登录onSubmit res.data', res.data);
-//           authStore.setTokens(res.data.access_token, res.data.refresh_token);
-
-//           const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
-//           navigate(redirectUrl);
-//         } else {
-//           addToast({ message: '注册成功，请登录', type: 'success' });
-//           setAuthType('login');
-//         }
+//       // 类型守卫
+//       if (isAccountOrRegister(data)) {
+//         response = await handleAccountOrRegister(data); // 此时 data 类型为 LoginFormData | RegisterFormData
 //       } else {
-//         addToast({ message: res.message || '登录失败，请稍后重试', type: 'error' });
+//         response = await handleEmailLogin(data); // 此时 data 类型为 EmailLoginFormData
+//       }
+
+//       if (response.success) {
+//         authStore.setTokens(response.data!.access_token);
+//         navigate('/');
 //       }
 //     } catch (error: any) {
 //       console.error('Login error:', error);
@@ -119,11 +106,26 @@
 //     }
 //   };
 
+//   // 公共密码处理
+//   const handleAccountOrRegister = async (
+//     data: LoginFormData | RegisterFormData
+//   ): Promise<AuthResponse> => {
+//     const encryptedPassword = await encrypt(data.password);
+//     return await api[authType]({
+//       username: data.username,
+//       password: encryptedPassword
+//     });
+//   };
+
+//   // 邮箱登录专用
+//   const handleEmailLogin = async (data: EmailLoginFormData): Promise<AuthResponse> => {
+//     return await emailLogin({ email: data.email, code: data.code });
+//   };
+
 //   const handleSendCode = () => {
 //     if (countdown > 0) return; // 防止重复点击
 
 //     const email = form.getValues('email');
-//     console.log('测试发送验证码', email);
 
 //     if (!email) {
 //       form.setError('email', { message: '请输入邮箱' });
@@ -150,9 +152,6 @@
 //       .catch(() => {
 //         addToast({ message: '验证码发送失败，请稍后重试', type: 'error' });
 //         setCountdown(0);
-//       })
-//       .finally(() => {
-//         setIsSending(false);
 //       });
 //   };
 
@@ -172,15 +171,21 @@
 
 //         {authType === 'login' ? (
 //           <>
+//             {/* 账号登录 */}
 //             {loginType === 'account' ? (
-//               <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+//               <form
+//                 key={`${authType}-${loginType}`} // 强制重新挂载
+//                 className={styles.form}
+//                 onSubmit={handleSubmit(onSubmit)}
+//               >
 //                 <FormInput
 //                   control={control}
 //                   name="username"
 //                   type="text"
 //                   placeholder="请输入用户名"
 //                   rules={{ required: '用户名不能为空' }}
-//                   error={errors.username}
+//                   // error={errors.username}
+//                   error={getFieldError('username')}
 //                 />
 //                 <FormInput
 //                   control={control}
@@ -188,11 +193,21 @@
 //                   type="password"
 //                   placeholder="请输入密码"
 //                   rules={{ required: '密码不能为空' }}
-//                   error={errors.password}
+//                   // error={errors.password}
+//                   error={getFieldError('password')}
 //                 />
+//                 {/* 密码强度提示 */}
+//                 {/* {passwordStrength > 0 && (
+//                   <div className={styles.passwordStrength}>
+//                     <div
+//                       className={`${styles.strengthBar} ${getStrengthClass(passwordStrength)}`}
+//                     />
+//                   </div>
+//                 )} */}
 //                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
 //               </form>
 //             ) : (
+//               /* 邮箱登录 */
 //               <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
 //                 <FormInput
 //                   control={control}
@@ -206,20 +221,27 @@
 //                       message: '请输入有效的邮箱地址'
 //                     }
 //                   }}
-//                   error={errors.email}
+//                   error={getFieldError('email')}
 //                 />
 //                 <div className={styles.formGroup}>
 //                   <Controller
 //                     name="code"
 //                     control={control}
-//                     rules={{ required: '验证码不能为空' }}
+//                     defaultValue="" // 添加默认值
+//                     rules={{
+//                       required: '验证码不能为空',
+//                       pattern: {
+//                         value: /^\d{6}$/,
+//                         message: '验证码必须为6位数字'
+//                       }
+//                     }}
 //                     render={({ field }) => (
 //                       <div className={styles.codeInput}>
 //                         <input
 //                           {...field}
 //                           type="text"
 //                           placeholder="请输入验证码"
-//                           className={errors.code ? styles.error : ''}
+//                           className={getFieldError('code') ? styles.error : ''}
 //                         />
 //                         <button
 //                           type="button"
@@ -232,8 +254,8 @@
 //                       </div>
 //                     )}
 //                   />
-//                   {errors.code && (
-//                     <span className={styles.errorMessage}>{errors.code.message}</span>
+//                   {getFieldError('code') && (
+//                     <span className={styles.errorMessage}>{getFieldError('code')?.message}</span>
 //                   )}
 //                 </div>
 //                 <FormButton loading={loading}>{loading ? '登录中...' : '登录'}</FormButton>
@@ -241,6 +263,7 @@
 //             )}
 //           </>
 //         ) : (
+//           /* 账号注册 */
 //           <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
 //             <FormInput
 //               control={control}
@@ -248,7 +271,7 @@
 //               type="text"
 //               placeholder="请输入用户名"
 //               rules={{ required: '用户名不能为空' }}
-//               error={errors.username}
+//               error={getFieldError('username')}
 //             />
 //             <FormInput
 //               control={control}
@@ -256,7 +279,7 @@
 //               type="password"
 //               placeholder="请输入密码"
 //               rules={{ required: '密码不能为空' }}
-//               error={errors.password}
+//               error={getFieldError('password')}
 //             />
 
 //             <FormButton loading={loading}>{loading ? '注册中...' : '注册'}</FormButton>

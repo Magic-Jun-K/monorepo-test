@@ -80,9 +80,16 @@ const LoginContent = () => {
         response = await handleEmailLogin(data); // 此时 data 类型为 EmailLoginFormData
       }
 
+      // Handle successful response(处理成功响应)
       if (response.success) {
-        authStore.setTokens(response.data!.access_token);
+        // Add type guard for response.data(为response.data添加类型保护)
+        if (!response.data) {
+          throw new Error('Authentication data is missing');
+        }
+        authStore.setToken(response.data);
         navigate('/');
+      } else {
+        addToast({ message: response.message || 'Login fail', type: 'error' });
       }
     } catch (error: any) {
       console.error('Login error:', error);
