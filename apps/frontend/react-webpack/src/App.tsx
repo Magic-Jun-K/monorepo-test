@@ -5,7 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { router } from './router/index';
 // import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
-import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
+// import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 import { setupErrorHandlers } from './utils/errorHandler';
 
 import '@/assets/css/index.scss';
@@ -31,7 +31,7 @@ const App: FC = () => {
   // }, []);
 
   // 检查token是否过期
-  useTokenExpirationCheck();
+  // useTokenExpirationCheck();
 
   return (
     <ErrorBoundary>
