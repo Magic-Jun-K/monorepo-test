@@ -23,7 +23,6 @@ export default function FormInput<T extends FieldValues>({
 }: FormInputProps<T>) {
   return (
     <div className={styles.formGroup}>
-      {/* @ts-expect-error Controller 组件类型定义不兼容本用法 */}
       <Controller
         name={name}
         control={control}
