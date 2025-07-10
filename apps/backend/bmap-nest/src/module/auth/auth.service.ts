@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+// import * as argon2 from 'argon2';
 
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
@@ -64,18 +65,36 @@ export class AuthService {
     );
   }
 
-  // 生成Token对
-  private async generateTokenPair(user: any) {
-    console.log('测试generateTokenPair user', user);
+  /**
+   * 生成Access Token
+   * @param user
+   * @returns
+   */
+  private async generateAccessToken(user: any): Promise<string> {
     const accessToken = this.jwtService.sign(
       {
         sub: user.id,
         username: user.username,
-        // role: user.role,
       },
-      { expiresIn: '1m' }, // Access Token 15分钟过期
+      { expiresIn: '15m' },
     );
 
+    // 将Access Token也存入Redis，用于快速验证和撤销
+    await this.storeTokenInRedis(
+      `${this.ACCESS_TOKEN_PREFIX}${user.id}`,
+      accessToken,
+      15 * 60, // 15 minutes expiration
+    );
+
+    return accessToken;
+  }
+
+  /**
+   * 生成Refresh Token
+   * @param user
+   * @returns
+   */
+  private async generateRefreshToken(user: any): Promise<string> {
     const refreshToken = this.jwtService.sign(
       { sub: user.id },
       {
@@ -84,28 +103,76 @@ export class AuthService {
       },
     );
 
-    console.log('测试generateTokenPair accessToken', accessToken);
-    console.log('测试generateTokenPair refreshToken', refreshToken);
-
-    // 将Refresh Token存入Redis
-    await this.redisService.set(
+    await this.storeTokenInRedis(
       `${this.REFRESH_TOKEN_PREFIX}${user.id}`,
       refreshToken,
-      7 * 24 * 60 * 60, // 7天过期
+      7 * 24 * 60 * 60, // 7 days expiration(7天过期)
     );
 
-    // 将Access Token也存入Redis，用于快速验证和撤销
-    await this.redisService.set(
-      `${this.ACCESS_TOKEN_PREFIX}${user.id}`,
-      accessToken,
-      15 * 60, // 15分钟过期
-    );
+    return refreshToken;
+  }
+
+  /**
+   * 存储Token到Redis
+   * @param key
+   * @param token
+   * @param ttl
+   * @returns
+   */
+  private async storeTokenInRedis(
+    key: string,
+    token: string,
+    ttl: number,
+  ): Promise<void> {
+    await this.redisService.set(key, token, ttl);
+  }
+
+  /**
+   * 生成Token对
+   * @param user
+   * @returns
+   */
+  private async generateTokenPair(user: any) {
+    console.log('Generating token pair for user:', user);
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.generateAccessToken(user),
+      this.generateRefreshToken(user),
+    ]);
+
+    console.log('Generated accessToken:', accessToken);
+    console.log('Generated refreshToken:', refreshToken);
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
   }
+
+  // 新增设备指纹方法
+  // private getDeviceFingerprint(req: Request): string {
+  //   const userAgent = req.headers['user-agent'] || '';
+  //   const ip = req.ip || '';
+  //   return argon2
+  //     .createHash('sha256')
+  //     .update(`${userAgent}:${ip}`)
+  //     .digest('hex');
+  // }
+
+  // private async generateTokenPair(user: any) {
+  //   // 获取设备指纹
+  //   // const deviceFingerprint = this.getDeviceFingerprint(req);
+
+  //   const accessToken = this.jwtService.sign(
+  //     {
+  //       sub: user.id,
+  //       username: user.username,
+  //       // role: user.role,
+  //       // device: deviceFingerprint, // 设备指纹
+  //     },
+  //     { expiresIn: '15m' }, // Access Token 15分钟过期
+  //   );
+  // }
 
   /**
    * 登录
@@ -129,9 +196,9 @@ export class AuthService {
       throw new UnauthorizedException('密码错误');
     }
 
-    const tokens = await this.generateTokenPair(user);
+    // const tokens = await this.generateTokenPair(user);
+    const tokens = await this.generateTokenPair(admin);
 
-    // 只返回 access_token
     return {
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
@@ -154,6 +221,7 @@ export class AuthService {
         `${this.REFRESH_TOKEN_PREFIX}${payload.sub}`,
       );
 
+      // 检查Redis中存储的Refresh Token是否匹配
       if (!storedToken || storedToken !== refreshToken) {
         throw new UnauthorizedException('无效的Refresh Token');
       }
@@ -162,7 +230,7 @@ export class AuthService {
       const user = await this.adminRepository.findOne({
         where: { id: payload.sub },
         select: ['id', 'username'],
-        relations: ['user', 'user.roles'], // 如果需要角色信息，通过关联查询获取
+        // relations: ['user', 'user.roles'], // 如果需要角色信息，通过关联查询获取
       });
       console.log('测试refreshToken user', user);
 
@@ -170,12 +238,9 @@ export class AuthService {
         throw new UnauthorizedException('用户不存在');
       }
 
-      const tokens = await this.generateTokenPair(user);
+      const accessToken = await this.generateAccessToken(user);
 
-      // 只返回 access_token
-      return {
-        access_token: tokens.access_token,
-      };
+      return { access_token: accessToken };
     } catch (error) {
       console.error('刷新token失败:', error);
       throw new UnauthorizedException('无效的Refresh Token');
@@ -229,7 +294,18 @@ export class AuthService {
    * @param token
    */
   async revokeRefreshToken(token: string) {
+    // 添加到黑名单
     await this.tokenBlacklistService.addToBlacklist(token);
+
+    // 同时从Redis删除
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      await this.redisService.del(`${this.REFRESH_TOKEN_PREFIX}${payload.sub}`);
+    } catch (e) {
+      console.warn('无法解析刷新令牌进行撤销', e);
+    }
   }
 
   /**
@@ -284,9 +360,9 @@ export class AuthService {
 
     const tokens = await this.generateTokenPair(user);
 
-    // 只返回 access_token
     return {
       access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
     };
   }
 
