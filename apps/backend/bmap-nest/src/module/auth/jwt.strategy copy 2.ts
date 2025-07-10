@@ -4,7 +4,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-// import { Request } from 'express';
 
 import { AdminEntity } from '../../entities/admin.entity';
 import { RedisService } from '../redis/redis.service';
@@ -19,21 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly redisService: RedisService,
   ) {
     super({
-      // 自定义 token 提取方式（从Cookie中获取access_token）
-      // jwtFromRequest: ExtractJwt.fromExtractors([
-      //   (req: Request) => {
-      //     let token = null;
-      //     if (req && req.cookies) {
-      //       token = req.cookies['access_token'];
-      //     }
-      //     return token;
-      //   },
-      // ]),
-      // 从 Authorization 头获取 token
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false, // 忽略过期时间
-      secretOrKey: process.env.JWT_SECRET, // 密钥
-      passReqToCallback: false, // 忽略请求对象
+      // jwtFromRequest: ExtractJwt.fromHeader('token'),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // 从Authorization头部提取Bearer token
+      ignoreExpiration: false, // 不忽略过期时间
+      secretOrKey: configService.get('JWT_SECRET'), // 使用配置服务获取
+      algorithms: ['HS256'], // 明确指定允许的算法
     });
   }
 
@@ -44,9 +33,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * @returns
    */
   async validate(payload: any) {
-    // 如果没有 payload 直接返回
-    if (!payload || !payload.sub) return null;
-
     // 检查Redis中是否存在该Token
     const storedToken = await this.redisService.get(
       `access_token:${payload.sub}`,
@@ -64,10 +50,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('用户不存在');
     }
 
-    console.log('测试jwt validate payload', payload);
-    console.log('测试jwt validate user', user);
-
-    // 简化返回，避免暴露过多信息
-    return { username: payload.username };
+    return user;
   }
 }
