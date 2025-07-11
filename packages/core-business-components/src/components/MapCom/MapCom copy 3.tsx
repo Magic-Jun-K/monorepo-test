@@ -41,10 +41,6 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       const blob = new Blob([mapWorkerCode], { type: 'application/javascript' });
       workerRef.current = new Worker(URL.createObjectURL(blob));
 
-      // 传递 wasm 路径给 worker
-      const wasmUrl = new URL('/wasm/release.wasm', window.location.origin).toString();
-      workerRef.current.postMessage({ type: 'initWasm', wasmUrl });
-
       // 修改Worker消息处理
       workerRef.current.onmessage = e => {
         console.log('Main thread received from worker:', e.data);

@@ -8,36 +8,64 @@ type WorkerMessage =
       batchSize?: number;
     }
   | { type: 'updateViewport'; viewport: [number, number, number, number] }
-  | { type: 'destroy' }
-  | { type: 'initWasm'; wasmUrl: string };
+  | { type: 'destroy' };
 
 // 导入WebAssembly模块
 // 注意：这里使用相对路径，Worker的基础路径是项目根目录
 let wasmModule: any = null;
 
 // 加载WebAssembly模块
-async function loadWasm(wasmUrl?: string) {
+async function loadWasm() {
   try {
+    // 创建WebAssembly导入对象
     const importObject = {
       env: {
+        // 提供abort函数用于错误处理
         abort: (msg: number, file: number, line: number, column: number) => {
           console.error('AssemblyScript中止:', { msg, file, line, column });
         }
       }
     };
-    const url = wasmUrl || '/wasm/release.wasm';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('fetch failed');
-    const buffer = await response.arrayBuffer();
-    const module = await WebAssembly.compile(buffer);
-    const instance = await WebAssembly.instantiate(module, importObject);
-    wasmModule = instance.exports;
-    console.log(`WebAssembly模块加载成功: ${url}`);
+
+    // 尝试加载WASM - 简化路径处理逻辑
+    const wasmPaths = [
+      '/wasm/release.wasm',
+      location.origin + '/wasm/release.wasm',
+      './wasm/release.wasm'
+    ];
+
+    let loaded = false;
+
+    for (const path of wasmPaths) {
+      try {
+        // 动态导入AssemblyScript生成的模块
+        const response = await fetch(path);
+        if (!response.ok) continue;
+
+        const buffer = await response.arrayBuffer();
+        const module = await WebAssembly.compile(buffer);
+        const instance = await WebAssembly.instantiate(module, importObject);
+
+        wasmModule = instance.exports;
+        console.log(`WebAssembly模块加载成功: ${path}`);
+        loaded = true;
+        break;
+      } catch (error) {
+        console.warn(`路径 ${path} 加载失败:`, error);
+      }
+    }
+
+    if (!loaded) {
+      throw new Error('所有WebAssembly加载路径都失败');
+    }
   } catch (error) {
     console.error('WebAssembly加载失败:', error);
     // 如果WASM加载失败，使用备用的JS实现
   }
 }
+
+// 加载WASM模块
+loadWasm();
 
 // 备用的JS实现，当WASM加载失败时使用
 const generateRandomCoordinatesJS = (
@@ -204,16 +232,8 @@ const generateRandomCoordinatesWasm = (
 // 存储当前视口
 let currentViewport: [number, number, number, number] | null = null;
 
-let wasmUrlFromMain: string | null = null;
-
 // 在onmessage中处理视口更新
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {
-  if (e.data.type === 'initWasm' && e.data.wasmUrl) {
-    wasmUrlFromMain = e.data.wasmUrl;
-    loadWasm(wasmUrlFromMain); // 加载WASM模块
-    return;
-  }
-
   console.log('Worker received:', e.data);
   if (e.data.type === 'generatePoints') {
     // 现有的处理逻辑...
