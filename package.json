@@ -1,7 +1,6 @@
 {
   "name": "canvaskit-react-test",
   "version": "0.0.1",
-  "packageManager": "pnpm@10.12.1",
   "main": "index.js",
   "scripts": {
     "dev": "turbo dev",
@@ -34,23 +33,24 @@
     ]
   },
   "devDependencies": {
-    "eslint": "9.29.0",
-    "@eslint/js": "9.29.0",
+    "eslint": "9.31.0",
+    "@eslint/js": "9.31.0",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.34.1",
-    "cspell": "9.1.1",
-    "stylelint": "16.20.0",
+    "typescript-eslint": "8.37.0",
+    "cspell": "9.1.5",
+    "stylelint": "16.21.1",
     "husky": "9.1.7",
     "commitlint": "19.8.1",
-    "cz-git": "1.11.2",
+    "cz-git": "1.12.0",
     "commitizen": "4.3.1",
     "@commitlint/config-conventional": "19.8.1",
     "lint-staged": "16.1.2",
-    "turbo": "2.5.4",
+    "turbo": "2.5.5",
     "fast-glob": "3.3.3"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "packageManager": "pnpm@10.13.1"
 }
