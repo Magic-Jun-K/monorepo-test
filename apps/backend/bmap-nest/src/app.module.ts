@@ -17,6 +17,7 @@ import { AuthModule } from './module/auth/auth.module';
 import { UserModule } from './module/user/user.module';
 import { ImageModule } from './module/image/image.module';
 import { TableModule } from './module/table/table.module';
+import { ExampleModule } from './module/example/example.module';
 import database from './config/database';
 
 @Module({
@@ -60,7 +61,8 @@ import database from './config/database';
     DetailModule,
     FileModule,
     ImageModule,
-    TableModule
+    TableModule,
+    ExampleModule
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
