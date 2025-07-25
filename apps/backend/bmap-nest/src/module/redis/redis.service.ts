@@ -32,4 +32,13 @@ export class RedisService {
   async del(key: string): Promise<void> {
     await this.redis.del(key);
   }
+
+  /**
+   * 获取缓存的剩余时间
+   * @param key 键
+   * @returns 剩余时间（秒）
+   */
+  async ttl(key: string): Promise<number> {
+    return await this.redis.ttl(key);
+  }
 }
