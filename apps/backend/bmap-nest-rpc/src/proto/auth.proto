@@ -8,6 +8,8 @@ service AuthService {
   rpc refreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc getCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
   rpc validateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc sendVerificationCode(SendVerificationCodeRequest) returns (SendVerificationCodeResponse);
+  rpc emailLogin(EmailLoginRequest) returns (EmailLoginResponse);
 }
 
 message LoginRequest {
@@ -19,6 +21,7 @@ message LoginResponse {
   bool success = 1;
   string message = 2;
   TokenData data = 3;
+  int32 remaining_attempts = 4;
 }
 
 message TokenData {
@@ -42,7 +45,7 @@ message RefreshTokenRequest {
 message RefreshTokenResponse {
   bool success = 1;
   string message = 2;
-  TokenData data = 3;
+  string data = 3;
 }
 
 message GetCurrentUserRequest {
@@ -58,7 +61,8 @@ message GetCurrentUserResponse {
 message UserData {
   int32 id = 1;
   string username = 2;
-  string role = 3;
+  string email = 3;
+  string role = 4;
 }
 
 message ValidateTokenRequest {
@@ -68,4 +72,24 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   bool valid = 1;
   UserData user = 2;
+}
+
+message SendVerificationCodeRequest {
+  string email = 1;
+}
+
+message SendVerificationCodeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message EmailLoginRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message EmailLoginResponse {
+  bool success = 1;
+  string message = 2;
+  TokenData data = 3;
 }
