@@ -90,8 +90,13 @@ export default defineConfig(({ mode }) => {
       // port: 3000,
       // open: true, // 启动自动打开浏览器
       proxy: {
+        '/api/grpc': {
+          target: 'http://localhost:7100',
+          changeOrigin: true,
+          rewrite: path => path.replace(/^\/api\/grpc/, '/grpc')
+        },
         '/api': {
-          target: 'http://localhost:7000',
+          target: 'http://localhost:7100',
           changeOrigin: true,
           rewrite: path => path.replace(/^\/api/, '')
         }
