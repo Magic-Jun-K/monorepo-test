@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  CreateAxiosDefaults
+} from 'axios';
 
 import { authStore } from '@/store/auth.store';
 // import { reportError } from './monitor';
