@@ -1,5 +1,5 @@
 export const grpcConfig = {
-  url: '0.0.0.0:7001',
+  url: '0.0.0.0:7101',
   loader: {
     keepCase: true, // 保持字段名称的大小写
     longs: String, // 使用字符串表示长整型
