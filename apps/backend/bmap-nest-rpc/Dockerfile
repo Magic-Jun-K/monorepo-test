@@ -42,5 +42,5 @@ COPY --from=builder /app/apps/backend/bmap-nest/package.json ./
 RUN pnpm install --prod --unsafe-perm
 
 # 暴露端口
-EXPOSE 7000
+EXPOSE 7100
 CMD ["node", "--experimental-specifier-resolution=node", "dist/main.js"]
