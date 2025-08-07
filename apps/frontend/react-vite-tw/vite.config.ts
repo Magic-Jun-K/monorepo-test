@@ -74,8 +74,7 @@ export default defineConfig(({ mode }) => {
               { name: 'data-grid', test: /@glideapps[\\/]/ },
               { name: 'echarts', test: /echarts[\\/]/ },
               { name: 'axios', test: /axios[\\/]/ },
-              { name: 'core-js', test: /core-js[\\/]/ },
-              { name: 'lodash', test: /lodash[\\/]/ }
+              { name: 'core-js', test: /core-js[\\/]/ }
             ];
             if (id.includes('node_modules')) {
               const matched = patterns.find(p => p.test.test(id));
