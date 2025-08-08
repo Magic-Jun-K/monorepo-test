@@ -382,16 +382,6 @@ const baseConfig = env => {
             priority: 45,
             enforce: true
           },
-          // 高频更新工具库 (单独分包)
-          utilsHot: {
-            test: /[\\/]node_modules[\\/]lodash[\\/]/,
-            name: 'utils-hot',
-            priority: 40,
-            minSize: 0, // 强制独立
-            chunks: 'all', // 所有类型的 chunks 都可以使用这个缓存组,
-            enforce: true, // 强制独立打包
-            reuseExistingChunk: true // 重用已经存在的 chunk
-          },
           // 低频稳定工具库 (合并)
           utilsStable: {
             test: /[\\/]node_modules[\\/]axios[\\/]/,
