@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { AuthUtils } from '../../common/utils/auth.utils';
-import { AdminEntity } from '../../entities/admin.entity';
+import { UserEntity } from '../../entities/user.entity';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectRepository(AdminEntity)
-    private readonly adminRepository: Repository<AdminEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly authUtils: AuthUtils,
   ) {}
 
@@ -19,10 +19,10 @@ export class AdminService {
    * @returns
    */
   async register(body) {
-    const adminIsExist = await this.adminRepository.findOne({
+    const userIsExist = await this.userRepository.findOne({
       where: { username: body.username },
     });
-    if (adminIsExist) {
+    if (userIsExist) {
       throw new HttpException(
         { message: '用户已存在', error: 'user is existed' },
         400,
@@ -32,10 +32,10 @@ export class AdminService {
     // 只在提供了手机号时才检查手机号
     if (body.phone) {
       // Check for existing phone number(检查是否存在手机号)
-      const adminByPhone = await this.adminRepository.findOne({
+      const userByPhone = await this.userRepository.findOne({
         where: { phone: body.phone },
       });
-      if (adminByPhone) {
+      if (userByPhone) {
         throw new HttpException(
           {
             message: '手机号已被注册',
@@ -49,10 +49,10 @@ export class AdminService {
     // 只在提供了邮箱时才检查邮箱
     if (body.email) {
       // Check for existing email(检查是否存在邮箱)
-      const adminByEmail = await this.adminRepository.findOne({
+      const userByEmail = await this.userRepository.findOne({
         where: { email: body.email },
       });
-      if (adminByEmail) {
+      if (userByEmail) {
         throw new HttpException(
           { message: '邮箱已被注册', error: 'email already registered' },
           400,
@@ -62,11 +62,13 @@ export class AdminService {
 
     // Hash password before saving(保存前对密码进行哈希)
     const hashedPassword = await this.authUtils.hashPassword(body.password);
-    const admin = await this.adminRepository.create({
+    const user = await this.userRepository.create({
       ...body,
       password: hashedPassword,
+      userType: 'admin', // 设置用户类型为管理员
+      isActive: true, // 默认激活
     });
-    await this.adminRepository.save(admin);
-    return admin;
+    await this.userRepository.save(user);
+    return user;
   }
 }
