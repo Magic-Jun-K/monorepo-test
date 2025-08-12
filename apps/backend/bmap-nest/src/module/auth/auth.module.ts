@@ -4,8 +4,8 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AdminModule } from '../admin/admin.module';
-import { AdminEntity } from '../../entities/admin.entity';
+import { UserModule } from '../user/user.module';
+import { UserEntity } from '../../entities/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
@@ -14,6 +14,7 @@ import { AuthUtils } from '../../common/utils/auth.utils';
 import { RedisModule } from '../redis/redis.module';
 import { TokenBlacklistService } from './token-backlist.service';
 import { MailModule } from '../mail/mail.module';
+import { LoginAttemptsService } from './login-attempts.service';
 
 @Module({
   imports: [
@@ -27,8 +28,8 @@ import { MailModule } from '../mail/mail.module';
       }),
       inject: [ConfigService], // 注入配置服务
     }),
-    AdminModule,
-    TypeOrmModule.forFeature([AdminEntity]),
+    UserModule,
+    TypeOrmModule.forFeature([UserEntity]),
     RedisModule,
     MailModule
   ],
@@ -38,8 +39,9 @@ import { MailModule } from '../mail/mail.module';
     LocalStrategy,
     JwtStrategy,
     AuthUtils,
-    TokenBlacklistService
+    TokenBlacklistService,
+    LoginAttemptsService
   ],
-  exports: [AuthService],
+  exports: [AuthService, LoginAttemptsService],
 })
 export class AuthModule {}
