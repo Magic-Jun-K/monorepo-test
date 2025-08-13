@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2018", // 设置编译后的 JavaScript 版本
+    "target": "ES2015", // 设置编译后的 JavaScript 版本
     "alwaysStrict": false, // 启用严格模式
     "declaration": true, // 生成 .d.ts 类型声明文件
     "declarationMap": true, // 生成 .d.ts.map 类型声明文件
