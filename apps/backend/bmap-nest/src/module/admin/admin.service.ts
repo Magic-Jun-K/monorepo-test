@@ -65,7 +65,7 @@ export class AdminService {
     const user = await this.userRepository.create({
       ...body,
       password: hashedPassword,
-      userType: 'admin', // 设置用户类型为管理员
+      userType: 'user', // 设置用户类型为普通用户
       isActive: true, // 默认激活
     });
     await this.userRepository.save(user);
