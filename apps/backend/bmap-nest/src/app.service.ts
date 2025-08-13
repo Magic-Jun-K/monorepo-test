@@ -6,27 +6,10 @@
  */
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Pool/* , PoolConfig */ } from 'pg';
-
-// const dsConfig: PoolConfig = {
-//   // host: 'localhost',
-//   // port: 5432,
-//   // user: 'postgres',
-//   // password: 'test123',
-//   // database: 'postgres',
-//   host: process.env.PG_HOST,
-//   port: parseInt(process.env.PG_PORT, 10),
-//   user: process.env.PG_USER,
-//   password: process.env.PG_PASSWORD,
-//   database: process.env.PG_DATABASE_NAME,
-// };
+import { Pool } from 'pg';
 
 @Injectable() // @Injectable()告诉NestJS，这个类是可以依赖注入的服务
-export class AppService {
-  // getHello(): string {
-  //   return 'Hello World!';
-  // }
-}
+export class AppService {}
 
 // nest 对于模块有统一的管理
 // 数据库连接池是在对象初始化时创建
