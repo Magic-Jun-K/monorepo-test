@@ -6,15 +6,15 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 // import { Request } from 'express';
 
-import { AdminEntity } from '../../entities/admin.entity';
+import { UserEntity } from '../../entities/user.entity';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     // private readonly adminService: AdminService
-    @InjectRepository(AdminEntity)
-    private readonly adminRepository: Repository<AdminEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly configService: ConfigService, // 注入配置服务
     private readonly redisService: RedisService,
   ) {
@@ -56,18 +56,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token已失效');
     }
 
-    const user = await this.adminRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: payload.sub },
+      relations: ['roles'],
     });
 
     if (!user) {
       throw new UnauthorizedException('用户不存在');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('账户已被禁用');
+    }
+
     console.log('测试jwt validate payload', payload);
     console.log('测试jwt validate user', user);
 
-    // 简化返回，避免暴露过多信息
-    return { username: payload.username };
+    // 返回包含用户类型和角色的完整用户信息
+    const { password, ...userWithoutPassword } = user;
+    console.log('测试jwt validate password', password);
+    return userWithoutPassword;
   }
 }
