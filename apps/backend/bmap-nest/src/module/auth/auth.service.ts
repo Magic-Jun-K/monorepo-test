@@ -8,11 +8,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 // import * as argon2 from 'argon2';
 
-import { AdminEntity } from '../../entities/admin.entity';
+import { UserEntity } from '../../entities/user.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
+import { AuthUser, AuthRole } from './types/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -21,8 +22,8 @@ export class AuthService {
 
   constructor(
     private readonly jwtService: JwtService,
-    @InjectRepository(AdminEntity)
-    private readonly adminRepository: Repository<AdminEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly authUtils: AuthUtils,
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly redisService: RedisService,
@@ -35,16 +36,15 @@ export class AuthService {
    * @param password
    * @returns
    */
-  async validateUser(username: string /* , password: string */): Promise<any> {
-    const admin = await this.adminRepository.findOne({
+  async validateUser(username: string): Promise<any> {
+    const user = await this.userRepository.findOne({
       where: { username },
-      select: ['id', 'username', 'password' /* , 'roles' */],
+      select: ['id', 'username', 'password', 'userType', 'isActive'],
+      relations: ['roles'],
     });
 
-    if (admin) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = admin;
-      return result;
+    if (user && user.isActive) {
+      return user;
     }
     return null;
   }
@@ -70,11 +70,15 @@ export class AuthService {
    * @param user
    * @returns
    */
-  private async generateAccessToken(user: any): Promise<string> {
+  private async generateAccessToken(user: AuthUser): Promise<string> {
+    const roles = user.roles ? user.roles.map((role: AuthRole) => role.name) : [];
+    
     const accessToken = this.jwtService.sign(
       {
         sub: user.id,
         username: user.username,
+        userType: user.userType,
+        roles: roles,
       },
       { expiresIn: '15m' },
     );
@@ -94,7 +98,7 @@ export class AuthService {
    * @param user
    * @returns
    */
-  private async generateRefreshToken(user: any): Promise<string> {
+  private async generateRefreshToken(user: AuthUser): Promise<string> {
     const refreshToken = this.jwtService.sign(
       { sub: user.id },
       {
@@ -132,7 +136,7 @@ export class AuthService {
    * @param user
    * @returns
    */
-  private async generateTokenPair(user: any) {
+  private async generateTokenPair(user: AuthUser) {
     console.log('Generating token pair for user:', user);
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -179,25 +183,10 @@ export class AuthService {
    * @param user
    * @returns
    */
-  async login(user: any, password: string): Promise<any> {
-    // 首先验证密码
-    const admin = await this.adminRepository.findOne({
-      where: { username: user.username },
-      select: ['id', 'username', 'password'],
-    });
+  async login(user: AuthUser): Promise<any> {
+    console.log('login 登录用户:', user);
 
-    if (!admin) {
-      throw new UnauthorizedException('用户不存在');
-    }
-
-    // 验证密码
-    const isPasswordValid = await this.verifyPassword(admin.password, password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('密码错误');
-    }
-
-    // const tokens = await this.generateTokenPair(user);
-    const tokens = await this.generateTokenPair(admin);
+    const tokens = await this.generateTokenPair(user);
 
     return {
       access_token: tokens.access_token,
@@ -227,10 +216,10 @@ export class AuthService {
       }
 
       // 获取用户信息
-      const user = await this.adminRepository.findOne({
+      const user = await this.userRepository.findOne({
         where: { id: payload.sub },
         select: ['id', 'username'],
-        // relations: ['user', 'user.roles'], // 如果需要角色信息，通过关联查询获取
+        relations: ['roles'], // 如果需要角色信息，通过关联查询获取
       });
       console.log('测试refreshToken user', user);
 
@@ -342,7 +331,7 @@ export class AuthService {
       throw new BadRequestException('验证码错误或已过期');
     }
 
-    let user = await this.adminRepository.findOne({ where: { email } });
+    let user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
       // 首次登录：自动注册
@@ -350,12 +339,14 @@ export class AuthService {
         this.generateRandomPassword(),
       );
       const username = this.generateUniqueUsername(email);
-      user = this.adminRepository.create({
+      user = this.userRepository.create({
         email,
         password: hashedPassword,
         username,
+        userType: 'user',
+        isActive: true,
       });
-      await this.adminRepository.save(user);
+      await this.userRepository.save(user);
     }
 
     const tokens = await this.generateTokenPair(user);
