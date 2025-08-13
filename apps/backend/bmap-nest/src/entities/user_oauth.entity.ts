@@ -30,7 +30,7 @@ export class UserOAuthEntity {
   @Column({ nullable: true })
   avatar: string; // 第三方头像
 
-  // ManyToOne是多对一的关系，UserOauthEntity 是多的一方，UserEntity 是一的一方
+  // ManyToOne是多对一的关系，UserOAuthEntity 是多的一方，UserEntity 是一的一方
   @ManyToOne(() => UserEntity, (user) => user.oAuths)
   user: UserEntity;
 }
