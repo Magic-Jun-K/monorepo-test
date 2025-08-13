@@ -3,20 +3,20 @@
  */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { /* APP_GUARD, */ Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
 
-// import { AuthGuard } from './common/guards/auth.guard';
 import { AppController } from './app.controller';
 import { AppService, PgService } from './app.service';
-import { DetailModule } from './module/detail/detail.module';
-import { FileModule } from './module/file/file.module';
+import { AdminModule } from './module/admin/admin.module';
 import { AuthModule } from './module/auth/auth.module';
 import { UserModule } from './module/user/user.module';
 import { ImageModule } from './module/image/image.module';
 import { TableModule } from './module/table/table.module';
+import { DetailModule } from './module/detail/detail.module';
+import { FileModule } from './module/file/file.module';
 import { ExampleModule } from './module/example/example.module';
 import database from './config/database';
 
@@ -56,29 +56,17 @@ import database from './config/database';
         },
       },
     }),
+    AdminModule,
     AuthModule,
     UserModule,
     DetailModule,
     FileModule,
     ImageModule,
     TableModule,
-    ExampleModule
+    ExampleModule,
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
-  providers: [
-    AppService,
-    PgService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
-    Reflector,
-  ], // 提供可注入的一些服务
+  providers: [AppService, PgService, Reflector], // 提供可注入的一些服务
 })
-export class AppModule {
-  // 这种全局中间件，建议按照全局注册的方式来处理
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(LoggerMiddleware).forRoutes('*');
-  // }
-}
+export class AppModule {}
