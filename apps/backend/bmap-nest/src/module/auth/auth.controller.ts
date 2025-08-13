@@ -8,26 +8,24 @@ import {
   Body,
   Res,
   Req,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
-import { AdminEntity } from '../../entities/admin.entity';
 import { AuthService } from './auth.service';
+import { LoginAttemptsService } from './login-attempts.service';
 import { Public } from '@/common/decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
+import { AuthRequest } from './types/auth-request.interface';
 
 // 路由拦截
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    @InjectRepository(AdminEntity)
-    private readonly adminRepository: Repository<AdminEntity>,
-    private readonly jwtService: JwtService,
+    private readonly loginAttemptsService: LoginAttemptsService,
   ) {}
 
   /**
@@ -39,40 +37,79 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(
-    @Body() loginDto: LoginDto,
+    @Req() req: AuthRequest, // 使用 @Req() 装饰器获取请求对象
+    @Body() loginDto: LoginDto, // 使用 @Body 装饰器获取请求体数据
     @Res({ passthrough: true }) response: Response,
   ) {
-    console.log('测试auth.controller.ts loginDto', loginDto);
-    const { access_token, refresh_token } = await this.authService.login(
-      loginDto.username,
-      loginDto.password,
-    );
+    try {
+      console.log('测试auth.controller.ts loginDto', loginDto);
 
-    console.log('登录时生成的 refresh_token:', refresh_token);
+      // 检查是否被锁定
+      const isBlocked = await this.loginAttemptsService.isBlocked(
+        loginDto.username,
+      );
+      if (isBlocked) {
+        const remainingTime = await this.getLockoutRemainingTime(
+          loginDto.username,
+        );
+        throw new HttpException(
+          {
+            message: `账户已被锁定，请${remainingTime}分钟后重试`,
+            success: false,
+            code: 'ACCOUNT_LOCKED',
+          },
+          HttpStatus.TOO_MANY_REQUESTS, // 429状态码
+        );
+      }
 
-    /* 设置 httpOnly cookie */
-    // 设置 access_token
-    // response.cookie('access_token', access_token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict', // 防御CSRF
-    //   maxAge: 15 * 60 * 1000, // 15分钟
-    //   // path: '/', // 修改为根路径，这样所有路径都能访问到这个cookie
-    //   path: '/', // ✅ Restrict to API routes
-    //   domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
-    // });
+      const { access_token, refresh_token } = await this.authService.login(
+        req.user, // 来自LocalStrategy的用户对象
+      );
 
-    // 设置 refresh_token
-    response.cookie('refresh_token', refresh_token, {
-      httpOnly: true, // 表示该 cookie 只能在服务器端访问，不能在客户端 JS 中访问
-      secure: process.env.NODE_ENV === 'production', // 生产环境使用 HTTPS
-      sameSite: 'strict', // 表示该 cookie 只允许在当前域名下访问，不允许在子域下访问。防御CSRF
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
-      path: '/', // 只允许在刷新接口使用 Restrict to refresh endpoint
-      // domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
-    });
+      console.log('登录时生成的 refresh_token:', refresh_token);
 
-    return { data: access_token, message: '登录成功', success: true };
+      /* 设置 httpOnly cookie */
+      // 设置 refresh_token
+      response.cookie('refresh_token', refresh_token, {
+        httpOnly: true, // 表示该 cookie 只能在服务器端访问，不能在客户端 JS 中访问
+        secure: process.env.NODE_ENV === 'production', // 生产环境使用 HTTPS
+        sameSite: 'strict', // 表示该 cookie 只允许在当前域名下访问，不允许在子域下访问。防御CSRF
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+        path: '/', // 只允许在刷新接口使用 Restrict to refresh endpoint
+        // domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
+      });
+
+      return { data: access_token, message: '登录成功', success: true };
+    } catch (error) {
+      // 如果是账户锁定错误，直接抛出
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // 记录失败尝试
+      await this.loginAttemptsService.recordFailedAttempt(loginDto.username);
+
+      // 获取剩余尝试次数
+      const remainingAttempts =
+        await this.loginAttemptsService.getRemainingAttempts(loginDto.username);
+
+      throw new UnauthorizedException({
+        message: '登录失败',
+        error: error.message,
+        remainingAttempts,
+        success: false,
+      });
+    }
+  }
+
+  /**
+   * 获取锁定剩余时间（分钟）
+   * @param identifier 用户标识符
+   */
+  private async getLockoutRemainingTime(identifier: string): Promise<number> {
+    const key = `login_attempts:${identifier}`;
+    const ttl = await this.loginAttemptsService.getTTL(key);
+    return Math.ceil(ttl / 60);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -107,6 +144,14 @@ export class AuthController {
     console.log('Refresh token from cookie:', refreshToken);
     console.log('All cookies:', req.cookies);
 
+    // 如果没有refresh token，返回明确的错误
+    if (!refreshToken) {
+      throw new UnauthorizedException({
+        message: '未找到刷新令牌',
+        code: 'REFRESH_TOKEN_MISSING',
+      });
+    }
+
     // 黑名单验证
     if (await this.authService.isRefreshTokenRevoked(refreshToken)) {
       throw new UnauthorizedException('令牌已失效');
@@ -117,16 +162,6 @@ export class AuthController {
         await this.authService.refreshToken(refreshToken);
 
       console.log('✅ 后端 Token 刷新成功！:', access_token);
-
-      // 设置新的 access_token
-      // response.cookie('access_token', access_token, {
-      //   httpOnly: true,
-      //   secure: process.env.NODE_ENV === 'production',
-      //   sameSite: 'strict', // 防御CSRF
-      //   maxAge: 15 * 60 * 1000, // 15分钟
-      //   path: '/',
-      //   domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
-      // });
 
       return { success: true, data: access_token };
     } catch (error) {
