@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "compress-images": "ts-node src/scripts/compress-images.ts"
+    "compress-images": "ts-node scripts/compress-images.ts",
+    "init-super-admin": "ts-node scripts/init-super-admin.ts",
+    "reset-super-admin": "ts-node scripts/reset-super-admin.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
@@ -31,6 +33,7 @@
     "@nestjs/jwt": "11.0.0",
     "@nestjs-modules/ioredis": "2.0.2",
     "@nestjs/microservices": "11.1.6",
+    "@nestjs/swagger": "11.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "typeorm": "0.3.25",
@@ -41,6 +44,7 @@
     "passport-local": "1.0.0",
     "nanoid": "5.1.5",
     "argon2": "0.44.0",
+    "jose": "6.0.12",
     "sharp": "0.34.3",
     "file-type": "21.0.0",
     "zod": "4.0.17",
@@ -57,7 +61,7 @@
     "@nestjs/testing": "^11.1.6",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.3.0",
     "@types/supertest": "^6.0.3",
     "@types/pg": "8.15.5",
     "@types/multer": "2.0.0",
