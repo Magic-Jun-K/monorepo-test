@@ -42,3 +42,14 @@ export async function exportUsers(params: unknown) {
     responseType: 'blob'
   });
 }
+
+/**
+ * 批量导出用户
+ * @param ids 
+ * @returns 
+ */
+export async function batchExportUsers(ids: number[]) {
+  return request.post('/users/batch-export', { ids }, {
+    responseType: 'blob'
+  });
+}

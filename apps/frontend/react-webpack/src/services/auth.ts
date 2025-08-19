@@ -23,8 +23,19 @@ export interface RefreshRes {
 
 export interface CurrentUserRes {
   data: {
+    id: number;
     username: string;
     email: string;
+    userType?: string;
+    isActive?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    roles?: Array<{
+      id: number;
+      name: string;
+      code: string;
+      level: number;
+    }>;
   };
 }
 
@@ -87,5 +98,8 @@ export const refreshToken = async (): Promise<RefreshRes> => {
  * @returns
  */
 export const currentUser = async (): Promise<CurrentUserRes> => {
-  return await request.get('/current-user');
+  const user = await request.get('/auth/current-user');
+  return {
+    data: user
+  };
 };

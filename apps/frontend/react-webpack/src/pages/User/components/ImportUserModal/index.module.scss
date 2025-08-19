@@ -1,0 +1,35 @@
+.uploadarea {
+  padding: 20px 0;
+
+  .ant-upload-drag {
+    height: 200px;
+  }
+
+  .ant-upload-text {
+    font-size: 16px;
+    color: #666;
+    margin-top: 8px;
+  }
+
+  .ant-upload-hint {
+    color: #999;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+}
+
+// 上传区域样式
+.ant-upload-drag {
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  background-color: #fafafa;
+
+  &:hover {
+    border-color: #667eea;
+  }
+
+  .ant-upload-drag-icon {
+    color: #667eea;
+    margin-bottom: 16px;
+  }
+}
