@@ -20,6 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       className,
       htmlType = 'button', // 默认类型为 button
+      loading = false,
       ...props
     },
     ref
@@ -27,8 +28,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const buttonStyles = getButtonStyles({ type, size, danger, color, variant });
 
     return (
-      <button ref={ref} type={htmlType} className={clsx(buttonStyles, className)} {...props}>
-        {icon && <span className="mr-2">{icon}</span>}
+      <button
+        ref={ref}
+        type={htmlType}
+        className={clsx(buttonStyles, className, {
+          'opacity-70 cursor-not-allowed': loading
+        })}
+        disabled={loading || props.disabled}
+        {...props}
+      >
+        {loading && (
+          <span className="mr-2 inline-block w-4 h-4 border-t-2 border-r-2 border-current rounded-full animate-spin"></span>
+        )}
+        {icon && !loading && <span className="mr-2">{icon}</span>}
         {children}
       </button>
     );

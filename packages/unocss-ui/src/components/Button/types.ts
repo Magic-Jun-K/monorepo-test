@@ -35,4 +35,8 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
    * 按钮变体
    */
   variant?: ButtonVariant;
+  /**
+   * 是否加载中
+   */
+  loading?: boolean;
 }
