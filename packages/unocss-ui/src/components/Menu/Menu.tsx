@@ -27,14 +27,12 @@ const MenuItem: React.FC<{
     onSubmenuToggle,
     onCloseAllSubmenus
   }) => {
-    // const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
     const key = getItemKey(item);
     const isSubmenuOpen = openSubmenus.has(key);
     const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
     const handleMouseEnter = useCallback(() => {
       if ('children' in item && !('type' in item && item.type === 'group')) {
-        // setIsSubmenuOpen(true);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -46,7 +44,6 @@ const MenuItem: React.FC<{
 
     const handleMouseLeave = useCallback(() => {
       if ('children' in item && !('type' in item && item.type === 'group')) {
-        // setIsSubmenuOpen(false);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -58,9 +55,20 @@ const MenuItem: React.FC<{
 
     const handleClick = (e: React.MouseEvent) => {
       if (!('children' in item) && !item.disabled) {
-        // 点击普通菜单项时，关闭所有子菜单
-        onCloseAllSubmenus();
-        onSelect?.(key);
+        // 检查是否包含Link组件，如果有则让Link处理导航
+        const isLinkItem = React.isValidElement(item.label);
+
+        if (isLinkItem) {
+          // 如果是Link菜单项，直接触发Link的点击事件
+          const linkElement = e.currentTarget.querySelector('a');
+          if (linkElement) {
+            linkElement.click();
+          }
+        } else {
+          // 只有非Link菜单项才关闭子菜单和触发选择
+          onCloseAllSubmenus();
+          onSelect?.(key);
+        }
         onClick?.({ key, keyPath: [key], item, domEvent: e });
       }
     };
@@ -95,10 +103,7 @@ const MenuItem: React.FC<{
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <div
-            // ${selectedKey !== key ? 'menu-ancestor-selected' : ''}
-            className={'submenu-title w-full'}
-          >
+          <div className="submenu-title w-full">
             {item.icon && <span className="menu-item-icon mr-2">{item.icon}</span>}
             <span className="menu-item-label">{item.label}</span>
             <span className="submenu-arrow"></span>
@@ -147,6 +152,32 @@ const MenuItem: React.FC<{
         </li>
       );
     }
+    // 检查是否包含Link组件
+    const isLinkItem = React.isValidElement(item.label);
+
+    if (isLinkItem) {
+      // 如果是Link菜单项，让整个li区域都能触发Link点击
+      return (
+        <li
+          className={`menu-item${selectedKey === key ? ' menu-item-selected' : ''} ${
+            item.disabled ? ' menu-item-disabled' : ''
+          } ${item.danger ? ' menu-item-danger' : ''}`}
+          style={mode === 'horizontal' ? { position: 'relative' } : {}}
+          onClick={e => {
+            // 阻止事件冒泡，并触发Link组件的点击事件
+            e.stopPropagation();
+            const linkElement = e.currentTarget.querySelector('a');
+            if (linkElement) {
+              linkElement.click();
+            }
+          }}
+        >
+          {item.icon && <span className="menu-item-icon mr-2">{item.icon}</span>}
+          {item.label}
+        </li>
+      );
+    }
+
     return (
       <li
         className={`menu-item${selectedKey === key ? ' menu-item-selected' : ''} ${
