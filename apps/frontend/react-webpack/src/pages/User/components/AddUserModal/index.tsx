@@ -23,6 +23,7 @@ export default function AddUserModal({ visible, onOk, onCancel, onSuccess }: Add
         form.resetFields();
         onOk();
         onSuccess?.();
+        onCancel();
       } else {
         messageApi.error(response.message || '新增用户失败');
       }
@@ -32,18 +33,15 @@ export default function AddUserModal({ visible, onOk, onCancel, onSuccess }: Add
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onCancel();
+  };
+
   return (
     <>
       {contextHolder}
-      <Modal
-        title="新增用户"
-        open={visible}
-        onOk={handleAddUser}
-        onCancel={() => {
-          form.resetFields();
-          onCancel();
-        }}
-      >
+      <Modal title="新增用户" open={visible} onOk={handleAddUser} onCancel={handleCancel}>
         <Form form={form} layout="vertical">
           <Form.Item
             name="username"
