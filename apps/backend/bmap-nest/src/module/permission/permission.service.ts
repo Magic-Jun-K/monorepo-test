@@ -15,7 +15,7 @@ import {
   PermissionType,
   ResourceType,
 } from '../../entities/permission.entity';
-import { RoleEntity } from '../../entities/user_role.entity';
+import { RoleEntity } from '../../entities/role.entity';
 import {
   RolePermissionEntity,
   PermissionAssignmentStatus,

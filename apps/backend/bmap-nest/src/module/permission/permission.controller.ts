@@ -35,7 +35,7 @@ import {
   RequirePermissions,
   RequireRoleLevel,
 } from '../../common/guards/permission.guard';
-import { RoleLevel } from '../../entities/user_role.entity';
+import { RoleLevel } from '../../entities/role.entity';
 
 @ApiTags('权限管理')
 @Controller('api/permissions')
