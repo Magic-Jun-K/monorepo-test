@@ -26,7 +26,7 @@ import {
   RoleEntity,
   RoleType,
   RoleLevel,
-} from '../../entities/user_role.entity';
+} from '../../entities/role.entity';
 import { RoleService } from './role.service';
 import {
   PermissionGuard,
