@@ -1,0 +1,40 @@
+{
+  "root": true,
+  "extends": ["recommended", "typescript"],
+  "rules": {
+    "no-console": "warn",
+    "no-require-imports": "error",
+    "no-explicit-any": "warn",
+    "typescript/no-unused-vars": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-return": "error",
+    "prefer-const": "warn",
+    "no-var": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "typescript/no-floating-promises": "warn"
+  },
+  "ignore": [
+    "apps/**/*/{tmp,.dumi}/**/*",
+    "*.js",
+    "**/*/build/**/*",
+    "**/*/es/**/*",
+    "**/*/dist/**/*",
+    "apps/**/*/public/**/*",
+    "node_modules/**/*",
+    "**/*.d.ts"
+  ],
+  "settings": {
+    "typescript": {
+      "project": [
+        "./tsconfig.json",
+        "./apps/frontend/react-webpack/tsconfig.json",
+        "./apps/frontend/react-vite/tsconfig.json",
+        "./apps/frontend/react-vite-tw/tsconfig.json",
+        "./apps/backend/bmap-nest/tsconfig.json"
+      ]
+    }
+  }
+}
