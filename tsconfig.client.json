@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ES2015", // 设置编译后的 JavaScript 版本，影响输出 JS 代码的兼容性（生产环境相关）
+    "target": "ES2018", // 设置编译后的 JavaScript 版本，影响输出 JS 代码的兼容性（生产环境相关）
     "useDefineForClassFields": true, // 启用 useDefineForClassFields
     "lib": ["ES2018", "DOM", "DOM.Iterable"], // 指定编译时使用的库（默认包括 ES5），只影响类型检查和开发体验（开发环境相关）
     "module": "ESNext", // 设置模块系统（例如：ES6模块、CommonJS）
