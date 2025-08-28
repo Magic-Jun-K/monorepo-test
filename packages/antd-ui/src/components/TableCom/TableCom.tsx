@@ -10,13 +10,21 @@ import { heightManager } from '../../utils/heightManager';
 import styles from './index.module.css';
 
 export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) => {
-  const { className, pagination, showPagination = true, defaultPageSize = 10, onChange, onPageChange, ...restProps } = props;
+  const {
+    className,
+    pagination,
+    showPagination = true,
+    defaultPageSize = 10,
+    onChange,
+    onPageChange,
+    ...restProps
+  } = props;
   const [currentHeight, setCurrentHeight] = useState(0);
 
   // 订阅逻辑
   useEffect(() => {
     const updateHeight = (height: number) => {
-      console.log('[TableCom] 收到新高度:', height);
+      // console.log('[TableCom] 收到新高度:', height);
       setCurrentHeight(height);
     };
     heightManager.subscribe(updateHeight);
@@ -51,25 +59,44 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
 
   // 动态计算表格高度
   const tableHeight = useMemo(() => {
-    // 安全高度计算（包含以下部分）：
-    // 1. 页面顶部导航栏（约 68px）
-    // 2. 搜索栏高度（动态的 searchHeight，默认是76px(收起)）
-    // 3. 表头高度（55px）
-    // 4. 表格分页器高度（约 48px）
-    // 5. 安全边距（64px）
-    // const safeHeight = `calc(100vh - 68px - 76px - 55px - 48px - 32px )`;
-    const baseHeight = 68 + 64 + 55 + 48; // 静态部分总和
-    const dynamicHeight = window.innerHeight - baseHeight - currentHeight;
-    console.log('[TableCom]最终计算高度:', {
-      windowHeight: window.innerHeight,
-      baseHeight,
-      currentHeight,
-      dynamicHeight
-    });
-    return dynamicHeight > 300 ? dynamicHeight : 300;
+    // 计算表格内容区域的最大高度（scroll.y）
+    // 总可用高度 = 窗口高度 - 顶部导航 - 搜索栏 - 按钮区域 - 容器padding - 安全边距
+    // 然后减去表头高度和分页器高度，得到表格内容区域的高度
+    const buttonAreaHeight = 60; // 按钮区域高度（包含padding-bottom）
+    // 计算可用高度
+    // 可用高度 = 窗口高度(window.innerHeight) - 顶部导航(68) - 搜索栏(currentHeight) - 按钮区域(buttonAreaHeight) - 容器padding(32) - 安全边距(32)
+    const availableHeight = window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32; // 减去导航、搜索、按钮、padding、边距
+    // 计算内容高度
+    // 内容高度 = 可用高度 - 表头高度(55) - 分页器高度(64)
+    const contentHeight = availableHeight - 55 - 64; // 减去表头和分页器高度
+    // console.log('[TableCom]最终计算高度:', {
+    //   windowHeight: window.innerHeight,
+    //   currentHeight,
+    //   buttonAreaHeight,
+    //   availableHeight,
+    //   contentHeight
+    // });
+    return Math.max(contentHeight, 200); // 确保最小内容高度为200px
   }, [currentHeight]);
 
-  console.log('测试restProps', restProps);
+  // 处理窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      // 触发重新计算高度
+      const buttonAreaHeight = 60; // 按钮区域高度（包含padding-bottom）
+      // 计算新的可用高度
+      const availableHeight = window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32;
+      const contentHeight = availableHeight - 55 - 64;
+      // console.log('[TableCom]窗口大小变化，重新计算高度:', contentHeight);
+      // 发布新高度
+      heightManager.updateHeight(contentHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [currentHeight]);
+
+  // console.log('测试restProps', restProps);
 
   return (
     <div className={clsx(styles['combined-table-container'], className)}>
@@ -80,8 +107,8 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
         onChange={handleTableChange}
         scroll={{
           ...restProps.scroll,
-          // 调整 y 轴滚动高度计算
-          y: restProps.scroll?.y || tableHeight
+          x: restProps.scroll?.x || 'max-content',
+          y: tableHeight
         }}
       />
     </div>
