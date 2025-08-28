@@ -22,7 +22,7 @@ export default defineConfig({
       fileName: 'index'
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'antd', '@ant-design/icons', 'styled-components', 'clsx'],
+      external: ['react', 'react-dom', 'antd', '@ant-design/icons', 'clsx'],
       output: {
         preserveModules: false, // 不保留模块结构
         // 确保外部化处理那些你不想打包进库的依赖
@@ -31,7 +31,6 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           // 'antd': 'antd',
           // '@ant-design/icons': 'AntDesignIcons',
-          // 'styled-components': 'styled',
           clsx: 'clsx'
         },
         entryFileNames: 'index.mjs', // 固定入口文件名
