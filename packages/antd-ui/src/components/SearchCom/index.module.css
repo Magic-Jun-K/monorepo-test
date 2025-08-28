@@ -1,0 +1,5 @@
+.search-form-right {
+  width: 270px;
+  display: flex;
+  align-items: flex-start;
+}

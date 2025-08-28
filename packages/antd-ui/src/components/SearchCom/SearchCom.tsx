@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, TreeSelect, Button, Row, Col, Space } from 'antd';
 import { SearchOutlined, ReloadOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 
 import { SearchComProps, SearchItem } from './types';
 import { heightManager } from '../../utils/heightManager';
+
+import styles from './index.module.css';
 
 const { RangePicker } = DatePicker;
 
@@ -41,14 +43,14 @@ export const SearchCom: React.FC<SearchComProps> = ({
 
     // 强制初始化测量
     const initHeight = container.offsetHeight;
-    console.log('[SearchCom] 发布初始高度:', initHeight);
+    // console.log('[SearchCom] 发布初始高度:', initHeight);
     updateSearchHeight(initHeight);
 
     const observer = new ResizeObserver(entries => {
       // 防抖处理
       requestAnimationFrame(() => {
         const newHeight = entries[0]?.contentRect.height ?? 0;
-        console.log('ResizeObserver检测到新高度:', newHeight);
+        // console.log('ResizeObserver检测到新高度:', newHeight);
         updateSearchHeight(newHeight);
       });
     });
@@ -69,14 +71,14 @@ export const SearchCom: React.FC<SearchComProps> = ({
     const container = containerRef.current;
     if (container) {
       const height = container.clientHeight;
-      console.log('展开/收起状态变化，新高度:', height, '展开状态:', expanded);
+      // console.log('展开/收起状态变化，新高度:', height, '展开状态:', expanded);
       updateSearchHeight(height);
     }
   }, [expanded, updateSearchHeight]);
 
   // 切换展开/收起状态
   const toggleExpand = () => {
-    console.log('切换展开/收起状态，当前状态:', expanded);
+    // console.log('切换展开/收起状态，当前状态:', expanded);
     setExpanded(!expanded);
   };
 
@@ -105,9 +107,24 @@ export const SearchCom: React.FC<SearchComProps> = ({
       case 'input':
         return <Input {...commonProps} placeholder={item.placeholder} {...item.inputProps} />;
       case 'select':
-        return <Select {...commonProps} placeholder={item.placeholder} options={item.options} allowClear {...item.selectProps} />;
+        return (
+          <Select
+            {...commonProps}
+            placeholder={item.placeholder}
+            options={item.options}
+            allowClear
+            {...item.selectProps}
+          />
+        );
       case 'datePicker':
-        return <DatePicker {...commonProps} placeholder={item.placeholder} style={{ width: '100%' }} {...item.datePickerProps} />;
+        return (
+          <DatePicker
+            {...commonProps}
+            placeholder={item.placeholder}
+            style={{ width: '100%' }}
+            {...item.datePickerProps}
+          />
+        );
       case 'rangePicker':
         return (
           <RangePicker
@@ -118,19 +135,28 @@ export const SearchCom: React.FC<SearchComProps> = ({
           />
         );
       case 'treeSelect':
-        return <TreeSelect {...commonProps} placeholder={item.placeholder} treeData={item.treeData} allowClear style={{ width: '100%' }} {...item.treeSelectProps} />;
+        return (
+          <TreeSelect
+            {...commonProps}
+            placeholder={item.placeholder}
+            treeData={item.treeData}
+            allowClear
+            style={{ width: '100%' }}
+            {...item.treeSelectProps}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className={clsx('search-form-container', className)} style={{ position: 'relative' }} ref={containerRef}>
+    <div className={clsx('search-form-container', className)} ref={containerRef}>
       <Form form={form} layout="vertical">
-        <div style={{ display: 'flex', flexWrap: 'wrap', minHeight: '76px' }}>
+        <div style={{ display: 'flex', minHeight: '76px' }}>
           {/* 左侧搜索表单项区域 */}
-          <div style={{ flex: '1 1 auto', marginRight: '200px' }}>
-            <Row gutter={rowGutter}>
+          <div style={{ flex: '1 1 auto', marginRight: '4vw', display: 'flex', flexWrap: 'wrap' }}>
+            <Row gutter={rowGutter} style={{ flex: 1 }}>
               {items
                 .filter((item, index) => {
                   // 展开状态显示所有项，收起状态只显示第一行
@@ -157,19 +183,7 @@ export const SearchCom: React.FC<SearchComProps> = ({
           </div>
 
           {/* 右侧固定按钮区域 */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '0',
-              right: '0',
-              width: '180px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              alignItems: 'flex-start',
-              gap: '8px'
-            }}
-          >
+          <div className={styles['search-form-right']}>
             <Space>
               {showSearchButton && (
                 <Button
@@ -183,14 +197,24 @@ export const SearchCom: React.FC<SearchComProps> = ({
                 </Button>
               )}
               {showResetButton && (
-                <Button icon={<ReloadOutlined />} onClick={handleReset} loading={resetLoading} style={{ fontSize: '1rem' }}>
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={handleReset}
+                  loading={resetLoading}
+                  style={{ fontSize: '1rem' }}
+                >
                   {resetButtonText}
                 </Button>
               )}
             </Space>
 
             {/* 展开/收起按钮 */}
-            <Button type="link" onClick={toggleExpand} icon={expanded ? <UpOutlined /> : <DownOutlined />} style={{ fontSize: '1rem' }}>
+            <Button
+              type="link"
+              onClick={toggleExpand}
+              icon={expanded ? <UpOutlined /> : <DownOutlined />}
+              style={{ fontSize: '1rem' }}
+            >
               {expanded ? '收起' : '展开'}
             </Button>
           </div>
