@@ -18,20 +18,17 @@ export function debounce<T extends any[]>(func: (...args: T) => void, wait: numb
     const context = this;
 
     // 立即执行相关逻辑
-    const callImmediately = options.leading && !timeoutId;
+    const callImmediately = options.leading && !isLeadingCalled;
 
     // 清除已有定时器
     if (timeoutId) {
       clearTimeout(timeoutId);
-      timeoutId = null;
     }
 
     // 处理 leading 立即执行
     if (callImmediately) {
       func.apply(context, args);
       isLeadingCalled = true;
-    } else {
-      isLeadingCalled = false;
     }
 
     // 设置新的定时器
@@ -45,6 +42,7 @@ export function debounce<T extends any[]>(func: (...args: T) => void, wait: numb
         func.apply(context, args);
       }
       timeoutId = null;
+      isLeadingCalled = false; // 重置 leading 状态
     }, wait);
   };
 }
