@@ -2,11 +2,12 @@
  * @file Modal.tsx
  * @description 模态框组件
  */
-import { useEffect } from 'react';
+import { useEffect, createElement } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Button } from '../Button';
-import type { ModalProps } from './types';
+import { ConfirmModal } from './ConfirmModal';
+import type { ModalProps, ConfirmModalProps } from './types';
 
 export const Modal = ({
   open,
@@ -16,7 +17,8 @@ export const Modal = ({
   children,
   footer,
   width = 520,
-  styles = {}
+  styles = {},
+  confirmLoading = false
 }: ModalProps) => {
   useEffect(() => {
     if (open) {
@@ -24,14 +26,25 @@ export const Modal = ({
     } else {
       document.body.style.overflow = '';
     }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [open]);
+
+  const handleMaskClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onCancel?.();
+    }
+  };
 
   if (!open) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000"
       style={styles.mask}
+      onClick={handleMaskClick}
     >
       <div
         className="bg-white rounded-lg w-full"
@@ -44,7 +57,7 @@ export const Modal = ({
           className="p-4 border-b border-gray-200 flex justify-between items-center relative"
           style={styles.header}
         >
-          <h3 className="text-lg font-semibold">{title}</h3>
+          {title !== undefined && <h3 className="text-lg font-semibold">{title}</h3>}
           <button
             onClick={onCancel}
             className="absolute top-1/2 right-4 -translate-y-1/2 z-10 p-0 w-8 h-8 border-0 rounded-md bg-transparent cursor-pointer text-base flex items-center justify-center text-gray-400 transition-all hover:text-gray-600 hover:bg-black/[0.03] active:text-gray-800 active:bg-black/[0.06]"
@@ -67,19 +80,106 @@ export const Modal = ({
           {children}
         </div>
 
-        {footer ?? (
+        {footer === undefined ? (
           <div
             className="p-4 border-t border-gray-200 flex justify-end gap-2"
             style={styles.footer}
           >
             <Button onClick={onCancel}>取消</Button>
-            <Button type="primary" onClick={onOk}>
+            <Button type="primary" onClick={onOk} loading={confirmLoading}>
               确定
             </Button>
           </div>
+        ) : (
+          footer
         )}
       </div>
     </div>,
     document.body
   );
+};
+
+// 静态方法
+Modal.confirm = (props: ConfirmModalProps) => {
+  return new Promise<void>((resolve, reject) => {
+    // 创建一个容器来渲染ConfirmModal
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    let isResolved = false;
+    let isRejected = false;
+    let root: any = null;
+
+    const destroy = () => {
+      if (root) {
+        root.unmount();
+        root = null;
+      }
+      if (container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
+    };
+
+    // 创建props副本，添加resolve和reject处理
+    const modalProps = {
+      ...props,
+      destroy,
+      onOk: async () => {
+        if (isResolved || isRejected) return;
+
+        try {
+          if (props.onOk) {
+            const result = props.onOk();
+            if (result instanceof Promise) {
+              await result;
+            }
+          }
+          isResolved = true;
+          resolve();
+          setTimeout(destroy, 300);
+        } catch (error) {
+          if (!isRejected) {
+            isRejected = true;
+            reject(error);
+            setTimeout(destroy, 300);
+          }
+        }
+      },
+      onError: (error: any) => {
+        if (!isRejected) {
+          isRejected = true;
+          reject(error);
+          setTimeout(destroy, 300);
+        }
+      },
+      onCancel: () => {
+        if (isResolved || isRejected) return;
+
+        // 取消操作不应该reject Promise，而是resolve但不执行删除逻辑
+        isResolved = true;
+        props.onCancel?.();
+        resolve();
+        setTimeout(destroy, 300);
+      }
+    };
+
+    // 使用React.createElement创建ConfirmModal元素
+    const modalElement = createElement(ConfirmModal, modalProps);
+
+    // 使用ReactDOM.createRoot进行渲染
+    // 注意：这里需要动态导入ReactDOM以避免循环依赖
+    import('react-dom/client')
+      .then(({ createRoot }) => {
+        root = createRoot(container);
+        root.render(modalElement);
+      })
+      .catch(error => {
+        if (!isRejected) {
+          isRejected = true;
+          console.error('Failed to render modal:', error);
+          reject(error);
+        }
+        destroy();
+      });
+  });
 };
