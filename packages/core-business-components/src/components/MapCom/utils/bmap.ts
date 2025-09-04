@@ -21,23 +21,21 @@ export const loadBMapScript = () => {
     return scriptPromise;
   }
 
-  if (!scriptPromise) {
-    scriptPromise = new Promise((resolve, reject) => {
-      // 百度地图异步加载回调处理
-      window.onBMapCallback = function () {
-        if (window.BMapGL) {
-          console.log('BMapGL 初始化完成', window.BMapGL);
-          resolve(window.BMapGL);
-        } else {
-          reject(new Error('BMapGL 未定义'));
-        }
-      };
+  scriptPromise = new Promise((resolve, reject) => {
+    // 百度地图异步加载回调处理
+    window.onBMapCallback = function () {
+      if (window.BMapGL) {
+        console.log('BMapGL 初始化完成', window.BMapGL);
+        resolve(window.BMapGL);
+      } else {
+        reject(new Error('BMapGL 未定义'));
+      }
+    };
 
-      loadScript(
-        `//api.map.baidu.com/api?v=3.0&type=webgl&ak=${MAP_CONFIG.AK}&callback=onBMapCallback`
-      ).catch(reject);
-    });
-  }
+    loadScript(
+      `//api.map.baidu.com/api?v=3.0&type=webgl&ak=${MAP_CONFIG.AK}&callback=onBMapCallback`
+    ).catch(reject);
+  });
   return scriptPromise;
 };
 

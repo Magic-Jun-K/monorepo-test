@@ -12,8 +12,11 @@ const MAP_CONFIG = {
   // ICON_CLUSTER: `${BASE_URL}/images/iconCluster.png`,
   // ICON_IMAGE: `${BASE_URL}/images/image.png`,
   DATA_BOUNDS: [113.25167, 113.42317, 23.10791, 23.09372] as [number, number, number, number], // 数据边界
-  POINT_COUNT: 1000000 // 落点数量
+  POINT_COUNT: 1000000 // 保持100万落点数据
 };
+
+// 导出MapInstance类型
+export type MapInstance = InstanceType<typeof window.BMapGL.Map>;
 
 export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
@@ -26,10 +29,8 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
   const workerRef = useRef<Worker | null>(null);
   // 在组件中添加状态跟踪已加载的数据
   const allMapData = useRef<any[]>([]);
-  // 添加状态跟踪是否已经开始渲染
-  // const hasStartedRendering = useRef<boolean>(false);
-  // 添加状态跟踪首批数据是否已加载
-  const firstBatchLoaded = useRef<boolean>(false);
+  // 添加状态跟踪渲染定时器
+  const renderTimer = useRef<NodeJS.Timeout | null>(null);
 
   // 初始化 Web Worker
   useEffect(() => {
@@ -42,6 +43,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       workerRef.current = new Worker(URL.createObjectURL(blob));
 
       // 传递 wasm 路径给 worker
+      // 使用完整的URL路径
       const wasmUrl = new URL('/wasm/release.wasm', window.location.origin).toString();
       workerRef.current.postMessage({ type: 'initWasm', wasmUrl });
 
@@ -59,7 +61,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
           );
         } else if (e.data.type === 'pointsBatch') {
           // 处理批次数据
-          const { buffer, count, batch, totalBatches, isLastBatch } = e.data;
+          const { buffer, count, isLastBatch } = e.data;
           const pointsArray = new Float64Array(buffer);
 
           // 构建当前批次的地图数据
@@ -77,30 +79,37 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
           // 添加到总数据集
           allMapData.current = [...allMapData.current, ...batchData];
 
-          // 关键优化：每批数据到达后立即渲染
-          // 如果是第一批数据，立即渲染以提供快速反馈
-          if (batch === 0 || !firstBatchLoaded.current) {
-            firstBatchLoaded.current = true;
-            iconClusterLayerInstance.current?.setData(allMapData.current);
-            console.log(`首批数据加载完成，渲染 ${allMapData.current.length} 个点位`);
-          } else {
-            // 对于后续批次，可以控制更新频率，避免频繁渲染导致性能问题
-            // 例如每5个批次更新一次，或者根据批次大小动态调整
-            if (batch % 5 === 0 || isLastBatch) {
-              iconClusterLayerInstance.current?.setData(allMapData.current);
-              console.log(
-                `批次 ${batch + 1}/${totalBatches} 加载完成，当前共 ${
-                  allMapData.current.length
-                } 个点位`
-              );
-            }
+          // 优化渲染策略：使用防抖机制，避免频繁渲染
+          if (renderTimer.current) {
+            clearTimeout(renderTimer.current);
           }
 
-          // 如果是最后一批，可以做一些清理工作
-          if (isLastBatch) {
-            console.log(`所有数据加载完成，共 ${allMapData.current.length} 个点位`);
-            // 确保最后一次渲染包含所有数据
+          // 对于前几个批次，立即渲染以提供快速反馈
+          if (allMapData.current.length <= 150000) {
+            const renderStart = performance.now();
             iconClusterLayerInstance.current?.setData(allMapData.current);
+            const renderEnd = performance.now();
+            console.log(`快速渲染 ${allMapData.current.length} 个点位，耗时: ${renderEnd - renderStart}ms`);
+          } else {
+            // 对于后续批次，使用防抖机制
+            renderTimer.current = setTimeout(() => {
+              const renderStart = performance.now();
+              iconClusterLayerInstance.current?.setData(allMapData.current);
+              const renderEnd = performance.now();
+              console.log(`防抖渲染 ${allMapData.current.length} 个点位，耗时: ${renderEnd - renderStart}ms`);
+            }, 20); // 减少防抖延迟到20ms
+          }
+
+          // 如果是最后一批，确保立即渲染
+          if (isLastBatch) {
+            if (renderTimer.current) {
+              clearTimeout(renderTimer.current);
+              renderTimer.current = null;
+            }
+            const renderStart = performance.now();
+            iconClusterLayerInstance.current?.setData(allMapData.current);
+            const renderEnd = performance.now();
+            console.log(`最终渲染 ${allMapData.current.length} 个点位，耗时: ${renderEnd - renderStart}ms`);
           }
         }
       };
@@ -111,7 +120,12 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       generateDataInMainThread();
     }
 
-    return () => workerRef.current?.terminate();
+    return () => {
+      if (renderTimer.current) {
+        clearTimeout(renderTimer.current);
+      }
+      workerRef.current?.terminate();
+    };
   }, []);
 
   // 添加主线程数据生成函数作为降级方案
@@ -167,50 +181,59 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
         mapInstance.current.enableScrollWheelZoom(true); // 启用滚轮缩放
         mapInstance.current.addControl(new window.BMapGL.ScaleControl()); // 添加比例尺控件
 
-        // 初始化 MapVGL
-        // await loadScript('https://unpkg.com/mapvgl/dist/mapvgl.min.js');
-        await loadScript('https://unpkg.com/mapvgl@1.0.0-beta.194/dist/mapvgl.min.js');
-        viewInstance.current = new window.mapvgl.View({ map: mapInstance.current });
-
-        console.log('测试mapvgl', window.mapvgl);
-        // 创建图层
-        iconClusterLayerInstance.current = new window.mapvgl.IconClusterLayer({
-          minSize: 25,
-          maxSize: 40,
-          clusterRadius: 200,
-          textOptions: {
-            fontSize: 12,
-            color: '#fff',
-            format: (count: number) =>
-              count >= 1e4 ? `${(count / 1e3).toFixed(0)}k` : count.toString()
-          },
-          iconOptions: { width: 100, height: 100 },
-          // iconExtent: { 0: MAP_CONFIG.ICON_CLUSTER },
-          iconExtent: { 0: iconClusterUrl },
-          enablePicked: true,
-          onClick: (e: ClusterClickEvent) => {
-            if (e.dataItem && mapInstance.current) {
-              // 可通过dataItem下面的children属性拿到被聚合的所有点
-              console.log('测试iconClusterLayer click', e.dataItem);
-              const [lng, lat] = e.dataItem.geometry.coordinates;
-              mapInstance.current.panTo(new window.BMapGL.Point(lng, lat));
-              mapInstance.current?.setZoom(mapInstance.current.getZoom() + 2);
-            }
+        // 初始化 MapVGL，添加错误处理
+        try {
+          // await loadScript('https://unpkg.com/mapvgl/dist/mapvgl.min.js');
+          await loadScript('https://unpkg.com/mapvgl@1.0.0-beta.194/dist/mapvgl.min.js');
+          if (window.mapvgl && mapInstance.current) {
+            viewInstance.current = new window.mapvgl.View({ map: mapInstance.current });
+            
+            console.log('测试mapvgl', window.mapvgl);
+            // 创建图层
+            iconClusterLayerInstance.current = new window.mapvgl.IconClusterLayer({
+              minSize: 25,
+              maxSize: 40,
+              clusterRadius: 200,
+              textOptions: {
+                fontSize: 12,
+                color: '#fff',
+                format: (count: number) =>
+                  count >= 1e4 ? `${(count / 1e3).toFixed(0)}k` : count.toString()
+              },
+              iconOptions: { width: 100, height: 100 },
+              // iconExtent: { 0: MAP_CONFIG.ICON_CLUSTER },
+              iconExtent: { 0: iconClusterUrl },
+              enablePicked: true,
+              onClick: (e: ClusterClickEvent) => {
+                if (e.dataItem && mapInstance.current) {
+                  // 可通过dataItem下面的children属性拿到被聚合的所有点
+                  console.log('测试iconClusterLayer click', e.dataItem);
+                  const [lng, lat] = e.dataItem.geometry.coordinates;
+                  mapInstance.current.panTo(new window.BMapGL.Point(lng, lat));
+                  mapInstance.current?.setZoom(mapInstance.current.getZoom() + 2);
+                }
+              }
+            });
+            viewInstance.current.addLayer(iconClusterLayerInstance.current);
           }
-        });
-        viewInstance.current.addLayer(iconClusterLayerInstance.current);
+        } catch (mapvglError) {
+          console.error('MapVGL 初始化失败:', mapvglError);
+          // 即使MapVGL初始化失败，也继续执行其他逻辑
+        }
 
         // 启动数据生成
         workerRef.current?.postMessage({
           type: 'generatePoints',
           count: MAP_CONFIG.POINT_COUNT,
           bounds: MAP_CONFIG.DATA_BOUNDS,
-          batchSize: 100000 // 减小批次大小，加快首批数据显示
+          batchSize: 30000 // 恢复到3万批次大小
         });
 
         // 添加视口变化监听，优先加载视口内数据
-        mapInstance.current.addEventListener('zoomend', handleViewportChange);
-        mapInstance.current.addEventListener('dragend', handleViewportChange);
+        if (mapInstance.current) {
+          mapInstance.current.addEventListener('zoomend', handleViewportChange);
+          mapInstance.current.addEventListener('dragend', handleViewportChange);
+        }
 
         // 初始加载时触发一次
         handleViewportChange();
@@ -246,16 +269,32 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       workerRef.current?.terminate();
       workerRef.current = null;
 
-      mapInstance.current?.destroy();
+      if (mapInstance.current) {
+        mapInstance.current.destroy();
+      }
       mapInstance.current = null;
 
-      viewInstance.current?.destroy();
+      if (viewInstance.current) {
+        viewInstance.current.destroy();
+      }
       viewInstance.current = null;
 
-      iconClusterLayerInstance.current?.destroy();
+      if (iconClusterLayerInstance.current) {
+        iconClusterLayerInstance.current.destroy();
+      }
       iconClusterLayerInstance.current = null;
     };
   }, [center, zoom, iconClusterUrl, iconImageUrl]);
 
-  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
+  // 传递地图实例给父组件
+  useEffect(() => {
+    if (mapInstance.current) {
+      // 如果父组件需要访问地图实例，可以通过回调函数传递
+      // 这里我们使用自定义事件来传递地图实例
+      const event = new CustomEvent('mapInstanceReady', { detail: mapInstance.current });
+      window.dispatchEvent(event);
+    }
+  }, [mapInstance.current]);
+
+  return <div ref={mapRef} style={{ width: '100%', height: '100%' }} data-testid="eggshell-map-container" />;
 };
