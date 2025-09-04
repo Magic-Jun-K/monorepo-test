@@ -25,17 +25,39 @@ async function loadWasm(wasmUrl?: string) {
         }
       }
     };
+    
+    // 使用从主线程传入的完整URL
     const url = wasmUrl || '/wasm/release.wasm';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('fetch failed');
+    console.log('尝试加载WASM文件:', url);
+    
+    // 首先尝试使用传入的完整URL
+    let response = await fetch(url);
+    
+    // 如果失败，尝试相对路径
+    if (!response.ok) {
+      console.log('尝试相对路径加载WASM文件');
+      response = await fetch('./wasm/release.wasm');
+    }
+    
+    // 如果还失败，尝试根路径
+    if (!response.ok) {
+      console.log('尝试根路径加载WASM文件');
+      response = await fetch('/release.wasm');
+    }
+    
+    if (!response.ok) {
+      throw new Error(`fetch failed with status ${response.status}: ${response.statusText}`);
+    }
+    
     const buffer = await response.arrayBuffer();
     const module = await WebAssembly.compile(buffer);
     const instance = await WebAssembly.instantiate(module, importObject);
     wasmModule = instance.exports;
     console.log(`WebAssembly模块加载成功: ${url}`);
   } catch (error) {
-    console.error('WebAssembly加载失败:', error);
+    console.warn('WebAssembly加载失败，将使用JavaScript实现:', error);
     // 如果WASM加载失败，使用备用的JS实现
+    wasmModule = null;
   }
 }
 
@@ -76,13 +98,13 @@ const generateRandomCoordinatesWasm = (
   }
 
   // 对于小数量，直接使用JS实现（更稳定）
-  if (count <= 1000) {
+  if (count <= 500) {  // 降低阈值到500
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
 
   try {
     // 参数验证和限制
-    const safeCount = Math.min(count, 100000); // 单次WASM调用限制
+    const safeCount = Math.min(count, 50000); // 降低单次WASM调用限制到5万
     const safeMinLng = Number.isFinite(minLng) ? minLng : 0;
     const safeMaxLng = Number.isFinite(maxLng) ? maxLng : 180;
     const safeMinLat = Number.isFinite(minLat) ? minLat : 0;
@@ -228,6 +250,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 
     // 异步处理每个批次
     (async () => {
+      const totalStart = performance.now();
       for (let batch = 0; batch < batchCount; batch++) {
         // 计算当前批次的起始索引和实际大小
         const startIdx = batch * batchSize;
@@ -236,6 +259,9 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
         // 防御：如果本批次需要生成的点数 <= 0，直接跳过
         if (currentBatchSize <= 0) continue;
 
+        // 记录批次生成开始时间
+        const batchStart = performance.now();
+        
         // 生成当前批次的点，考虑视口优先
         const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
           minLng,
@@ -245,6 +271,10 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
           currentBatchSize,
           currentViewport
         );
+
+        // 记录批次生成结束时间
+        const batchEnd = performance.now();
+        console.log(`批次 ${batch + 1} 数据生成耗时: ${batchEnd - batchStart}ms`);
 
         // 创建TypedArray用于传输
         const pointsBuffer = new Float64Array(currentBatchSize * 2);
@@ -259,18 +289,20 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
             type: 'pointsBatch',
             buffer: pointsBuffer.buffer,
             count: currentBatchSize,
-            batch,
-            totalBatches: batchCount,
             isLastBatch: batch === batchCount - 1
           },
           { transfer: [pointsBuffer.buffer] }
         );
 
-        // 如果不是最后一批，等待一小段时间让主线程有机会处理
+        // 使用更智能的等待策略
         if (batch < batchCount - 1) {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          // 前10个批次快速处理，之后适当等待
+          const delay = batch < 10 ? 0 : 1;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
+      const totalEnd = performance.now();
+      console.log(`所有批次数据生成完成，总耗时: ${totalEnd - totalStart}ms`);
     })();
   }
 
@@ -316,10 +348,10 @@ const generatePointsWithViewportPriority = (
   const totalArea = (maxLng - minLng) * (maxLat - minLat);
   const viewportArea =
     (effectiveViewMaxLng - effectiveViewMinLng) * (effectiveViewMaxLat - effectiveViewMinLat);
-  const viewportRatio = viewportArea / totalArea;
+  const viewportRatio = totalArea > 0 ? viewportArea / totalArea : 0;
 
   // 视口内点数，至少生成一些点在视口内
-  let viewportPointCount = Math.max(Math.round(count * viewportRatio * 2), Math.min(1000, count));
+  let viewportPointCount = Math.max(Math.round(count * viewportRatio * 3), Math.min(2000, count)); // 恢复原来的视口内点数比例
   viewportPointCount = Math.min(viewportPointCount, count); // 防止超出总数
   const outsidePointCount = count - viewportPointCount;
 
