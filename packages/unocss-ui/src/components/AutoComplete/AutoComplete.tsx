@@ -3,6 +3,7 @@
  * @description 自动补全组件
  */
 import { useState, useEffect, useRef, KeyboardEvent } from 'react';
+import { Input } from '../Input'; // 引入Input组件
 
 import type { AutoCompleteProps, SuggestionItem } from './types';
 
@@ -25,13 +26,14 @@ export const AutoComplete = ({
   style
 }: AutoCompleteProps) => {
   const [internalValue, setInternalValue] = useState(defaultValue);
-  const [suggestions, setSuggestions] = useState<SuggestionItem[]>(options || []);
-  const value = propValue ?? internalValue;
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [displayInput, setDisplayInput] = useState('');
+
+  // 使用单一的值源，避免循环依赖
+  const currentValue = propValue !== undefined ? propValue : internalValue;
 
   // 处理外部点击
   useEffect(() => {
@@ -45,64 +47,86 @@ export const AutoComplete = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 合并静态options和异步结果
+  // 简化搜索逻辑 - 直接在useEffect中处理，避免useCallback导致的依赖问题
   useEffect(() => {
-    if (options) {
-      setSuggestions(options);
-    }
-  }, [options]);
-
-  // 添加初始化显示值的useEffect
-  useEffect(() => {
-    if (value && options) {
-      const matchedOption = options.find(opt => opt[valueKey] === value);
-      if (matchedOption) {
-        setDisplayInput(matchedOption[labelKey] as string);
-      }
-    }
-  }, [value, options, valueKey, labelKey]);
-
-  // 修复过滤逻辑和下拉显示条件
-  useEffect(() => {
-    if (disabled || !value?.trim()) {
+    if (disabled) {
       setSuggestions([]);
       setIsOpen(false);
+      setLoading(false);
+      return;
+    }
+
+    if (!currentValue?.trim()) {
+      setSuggestions([]);
+      setIsOpen(false);
+      setLoading(false);
       return;
     }
 
     const handler = setTimeout(async () => {
       try {
         setLoading(true);
+        setIsOpen(true); // 在开始加载时就显示下拉菜单
         let results: SuggestionItem[] = [];
-        
-        if (options && filterOption) {
-          // 优化本地过滤逻辑
+
+        if (fetchSuggestions) {
+          // 优先使用异步数据源
+          results = (await fetchSuggestions(currentValue)) || [];
+        } else if (options && filterOption) {
+          // 本地过滤
           results = options.filter(option => {
             const label = String(option[labelKey]).toLowerCase();
-            return label.includes(value.toLowerCase());
+            return label.includes(currentValue.toLowerCase());
           });
-        } else if (fetchSuggestions) {
-          results = await fetchSuggestions(value) || [];
+        } else if (options) {
+          // 不过滤，显示所有options
+          results = options;
         }
 
         setSuggestions(results);
-        setIsOpen(results.length > 0); // 根据结果数量控制下拉显示
-        setHighlightIndex(defaultActiveFirstOption ? 0 : -1);
+        setIsOpen(true); // 总是显示下拉菜单，包括loading和空结果
+        setHighlightIndex(defaultActiveFirstOption && results.length > 0 ? 0 : -1);
+      } catch (error) {
+        console.error('搜索失败:', error);
+        setSuggestions([]);
+        setIsOpen(false);
       } finally {
         setLoading(false);
       }
     }, debounce);
 
     return () => clearTimeout(handler);
-  }, [value, debounce, disabled, fetchSuggestions, options, filterOption, labelKey, defaultActiveFirstOption]);
+  }, [
+    currentValue,
+    debounce,
+    disabled,
+    fetchSuggestions,
+    options,
+    filterOption,
+    labelKey,
+    defaultActiveFirstOption
+  ]);
 
   // 键盘导航
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // 当下拉菜单关闭时，某些按键可以打开菜单
+      if ((e.key === 'ArrowDown' || e.key === 'Enter') && currentValue) {
+        e.preventDefault();
+        // 立即触发搜索，不等待防抖
+        if (currentValue?.trim()) {
+          // 再次触发useEffect
+          setIsOpen(true);
+        }
+      }
+      return;
+    }
 
     switch (e.key) {
       case 'Tab':
+      case 'Escape':
         setIsOpen(false);
+        setHighlightIndex(-1);
         break;
       case 'Home':
         e.preventDefault();
@@ -114,109 +138,102 @@ export const AutoComplete = ({
         break;
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightIndex(prev => Math.min(prev + 1, suggestions.length - 1));
+        setHighlightIndex(prev => {
+          const nextIndex = prev + 1;
+          return nextIndex >= suggestions.length ? 0 : nextIndex;
+        });
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setHighlightIndex(prev => Math.max(prev - 1, -1));
+        setHighlightIndex(prev => {
+          const nextIndex = prev - 1;
+          return nextIndex < 0 ? suggestions.length - 1 : nextIndex;
+        });
         break;
       case 'Enter':
+        e.preventDefault();
         if (highlightIndex >= 0 && suggestions[highlightIndex]) {
           handleSelect(suggestions[highlightIndex]);
+        } else {
+          setIsOpen(false);
         }
-        break;
-      case 'Escape':
-        setIsOpen(false);
         break;
     }
   };
 
   const handleSelect = (item: SuggestionItem) => {
     const selectedValue = item[valueKey] as string;
-    const selectedLabel = item[labelKey] as string;
+
+    if (propValue === undefined) {
+      setInternalValue(selectedValue);
+    }
+
     onChange?.(selectedValue);
-    setDisplayInput(selectedLabel);
     onSelect?.(item);
     setIsOpen(false);
+    setHighlightIndex(-1);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setInternalValue(newValue);
-    setDisplayInput(newValue);
+
+    if (propValue === undefined) {
+      setInternalValue(newValue);
+    }
+
+    onChange?.(newValue);
   };
 
   const handleClear = () => {
-    setInternalValue('');
+    if (propValue === undefined) {
+      setInternalValue('');
+    }
+
+    onChange?.('');
     setSuggestions([]);
     setIsOpen(false);
-    setDisplayInput('');
-    onChange?.('');
+    setHighlightIndex(-1);
   };
 
-  // 添加onFocus处理逻辑
   const handleFocus = () => {
-    if (value) {
-      // 立即触发搜索
-      handleSearchImmediately(value);
-    }
+    // onFocus时不立即搜索，依赖useEffect的防抖机制
   };
 
-  // 立即搜索方法
-  const handleSearchImmediately = async (input: string) => {
-    if (disabled || !input.trim()) return;
-
-    try {
-      setLoading(true);
-      let results: SuggestionItem[] = [];
-      
-      if (options && filterOption) {
-        results = options.filter(option => {
-          const label = String(option[labelKey]).toLowerCase();
-          return label.includes(input.toLowerCase());
-        });
-      } else if (fetchSuggestions) {
-        results = await fetchSuggestions(input) || [];
-      }
-
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
-    } finally {
-      setLoading(false);
-    }
+  const handleBlur = () => {
+    // 延迟关闭，允许点击选项
+    setTimeout(() => {
+      setIsOpen(false);
+      setHighlightIndex(-1);
+    }, 200);
   };
+
+  // 下拉菜单箭头图标
+  const arrowIcon = (
+    <div className="flex items-center">
+      <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </div>
+  );
 
   return (
     <div ref={wrapperRef} className="relative" style={style}>
-      <div className="flex items-center gap-1 relative">
-        <input
-          value={displayInput || (options?.find(opt => opt[valueKey] === value)?.[labelKey] as string) || ''}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-          onFocus={handleFocus}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {allowClear && value && (
-          <button 
-            onClick={handleClear} 
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* 下拉菜单增加箭头图标 */}
-      {!value && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 z-0">
-          <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </div>
-      )}
+      <Input
+        value={currentValue}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        placeholder={placeholder}
+        disabled={disabled}
+        allowClear={allowClear}
+        onClear={handleClear}
+        suffix={!currentValue && !loading ? arrowIcon : null}
+      />
 
       {isOpen && (
         <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto">
@@ -228,7 +245,7 @@ export const AutoComplete = ({
                 const displayLabel = item[labelKey];
                 return (
                   <div
-                    key={String(item[valueKey])}
+                    key={`${String(item[valueKey])}-${index}`}
                     onClick={() => handleSelect(item)}
                     className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${
                       highlightIndex === index ? 'bg-blue-50' : ''
@@ -238,13 +255,11 @@ export const AutoComplete = ({
                   </div>
                 );
               })}
-              {!suggestions.length && (
-                <div className="p-2 text-gray-500">No matches found</div>
-              )}
+              {!suggestions.length && <div className="p-2 text-gray-500">No matches found</div>}
             </>
           )}
         </div>
       )}
     </div>
   );
-}; 
+};
