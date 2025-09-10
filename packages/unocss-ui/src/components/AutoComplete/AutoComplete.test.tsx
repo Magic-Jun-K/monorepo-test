@@ -177,31 +177,6 @@ describe('AutoComplete', () => {
       );
     });
 
-    it('应该支持异步数据获取', async () => {
-      const mockFetchSuggestions = vi.fn().mockResolvedValue([
-        { label: 'Async Result 1', value: 'async1' },
-        { label: 'Async Result 2', value: 'async2' }
-      ]);
-
-      render(<AutoComplete fetchSuggestions={mockFetchSuggestions} placeholder="异步搜索" />);
-
-      const input = screen.getByPlaceholderText('异步搜索');
-      await act(async () => {
-        await user.type(input, 'async');
-      });
-
-      await waitForDebounce();
-
-      await waitFor(
-        () => {
-          expect(mockFetchSuggestions).toHaveBeenCalledWith('async');
-          expect(screen.getByText('Async Result 1')).toBeInTheDocument();
-          expect(screen.getByText('Async Result 2')).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
-    });
-
     it('应该在没有匹配项时显示提示', async () => {
       // 使用空的options来确保没有匹配
       render(<AutoComplete options={[]} placeholder="请输入内容" />);
@@ -449,29 +424,6 @@ describe('AutoComplete', () => {
       expect(screen.queryByText('test')).not.toBeInTheDocument();
     });
 
-    it('应该处理异步获取失败', async () => {
-      // Mock console.error 来隐藏预期的错误日志
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      const mockFetchSuggestions = vi.fn().mockRejectedValue(new Error('网络错误'));
-
-      render(<AutoComplete fetchSuggestions={mockFetchSuggestions} placeholder="异步错误" />);
-
-      const input = screen.getByPlaceholderText('异步错误');
-      await act(async () => {
-        await user.type(input, 'test');
-      });
-
-      await waitForDebounce();
-
-      expect(mockFetchSuggestions).toHaveBeenCalledWith('test');
-      // 错误后应该显示空结果
-      expect(screen.queryByText('test')).not.toBeInTheDocument();
-
-      // 恢复console.error
-      consoleSpy.mockRestore();
-    });
-
     it('应该处理空白输入', async () => {
       render(<AutoComplete {...defaultProps} />);
 
@@ -487,11 +439,9 @@ describe('AutoComplete', () => {
     });
 
     it('应该处理快速连续输入', async () => {
-      const mockFetchSuggestions = vi.fn().mockResolvedValue(mockOptions);
-
       render(
         <AutoComplete
-          fetchSuggestions={mockFetchSuggestions}
+          options={mockOptions}
           debounce={300}
           placeholder="请输入内容"
         />
@@ -508,46 +458,61 @@ describe('AutoComplete', () => {
 
       await waitForDebounce();
 
-      // 由于防抖，应该只调用一次
-      expect(mockFetchSuggestions).toHaveBeenCalledTimes(1);
-      expect(mockFetchSuggestions).toHaveBeenCalledWith('app');
+      // 检查过滤后的结果
+      await waitFor(
+        () => {
+          expect(screen.getByText('Apple')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
   });
 
-  describe('加载状态', () => {
-    it('应该在异步搜索时显示加载状态', async () => {
-      let resolvePromise: (value: SuggestionItem[]) => void;
-      const mockFetchSuggestions = vi.fn(
-        () =>
-          new Promise<SuggestionItem[]>(resolve => {
-            resolvePromise = resolve;
-          })
-      );
-
-      render(<AutoComplete fetchSuggestions={mockFetchSuggestions} placeholder="请输入内容" />);
+  describe('onSearch回调', () => {
+    it('应该在输入时调用onSearch回调', async () => {
+      const mockOnSearch = vi.fn();
+      render(<AutoComplete {...defaultProps} onSearch={mockOnSearch} />);
 
       const input = screen.getByPlaceholderText('请输入内容');
       await act(async () => {
         await user.type(input, 'test');
       });
 
+      // 等待防抖延迟
       await waitForDebounce();
 
-      // 应该显示加载状态
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+      expect(mockOnSearch).toHaveBeenCalledWith('test');
+    });
 
-      // 解决Promise
+    it('应该在输入为空时也调用onSearch回调', async () => {
+      const mockOnSearch = vi.fn();
+      render(<AutoComplete {...defaultProps} onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText('请输入内容');
+      
+      // 使用change事件而不是type事件来模拟清空输入
       await act(async () => {
-        resolvePromise!(mockOptions);
+        // 先输入一些内容
+        await user.type(input, 'test');
+        // 等待第一次防抖
+        await waitForDebounce();
+        // 然后清空输入框
+        await user.clear(input);
       });
 
-      await waitFor(
-        () => {
-          expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-          expect(screen.getByText('Apple')).toBeInTheDocument();
-        },
-        { timeout: 3000 }
-      );
+      // 等待第二次防抖
+      await waitForDebounce();
+
+      // 验证onSearch被调用过至少两次：一次是输入'test'，一次是清空为''
+      expect(mockOnSearch).toHaveBeenCalledWith('test');
+      expect(mockOnSearch).toHaveBeenCalledWith('');
+    });
+
+    it('应该在组件初始化时调用onSearch回调', () => {
+      const mockOnSearch = vi.fn();
+      render(<AutoComplete {...defaultProps} onSearch={mockOnSearch} defaultValue="initial" />);
+
+      expect(mockOnSearch).toHaveBeenCalledWith('initial');
     });
   });
 });

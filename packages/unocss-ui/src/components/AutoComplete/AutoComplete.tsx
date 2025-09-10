@@ -11,9 +11,9 @@ export const AutoComplete = ({
   value: propValue,
   defaultValue = '',
   options,
-  fetchSuggestions,
   onChange,
   onSelect,
+  onSearch,
   debounce = 300,
   placeholder,
   disabled,
@@ -22,14 +22,27 @@ export const AutoComplete = ({
   defaultActiveFirstOption = true,
   labelKey = 'label',
   valueKey = 'value',
-  renderItem,
-  style
+  style,
+  open: propOpen
 }: AutoCompleteProps) => {
   const [internalValue, setInternalValue] = useState(defaultValue);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
-  const [isOpen, setIsOpen] = useState(false);
+  // 内部状态，用于控制下拉菜单是否显示
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  // 使用外部传入的open状态（如果提供），否则使用内部状态
+  const isOpen = propOpen !== undefined ? propOpen : internalIsOpen;
+  
+  // 调试日志
+  useEffect(() => {
+    console.log('AutoComplete组件状态:', {
+      propOpen,
+      internalIsOpen,
+      isOpen,
+      suggestionsLength: suggestions.length
+    });
+  }, [propOpen, internalIsOpen, isOpen, suggestions.length]);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 使用单一的值源，避免循环依赖
@@ -39,40 +52,48 @@ export const AutoComplete = ({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+        // 只有在没有外部控制open状态时才更新内部状态
+        if (propOpen === undefined) {
+          setInternalIsOpen(false);
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [propOpen]);
 
   // 简化搜索逻辑 - 直接在useEffect中处理，避免useCallback导致的依赖问题
   useEffect(() => {
     if (disabled) {
       setSuggestions([]);
-      setIsOpen(false);
+      setInternalIsOpen(false);
       setLoading(false);
       return;
+    }
+
+    // 调用onSearch回调
+    if (onSearch) {
+      onSearch(currentValue);
     }
 
     if (!currentValue?.trim()) {
       setSuggestions([]);
-      setIsOpen(false);
+      setInternalIsOpen(false);
       setLoading(false);
       return;
     }
 
-    const handler = setTimeout(async () => {
+    const handler = setTimeout(() => {
       try {
         setLoading(true);
-        setIsOpen(true); // 在开始加载时就显示下拉菜单
+        // 只有在没有外部控制open状态时才更新内部状态
+        if (propOpen === undefined) {
+          setInternalIsOpen(true); // 在开始加载时就显示下拉菜单
+        }
         let results: SuggestionItem[] = [];
 
-        if (fetchSuggestions) {
-          // 优先使用异步数据源
-          results = (await fetchSuggestions(currentValue)) || [];
-        } else if (options && filterOption) {
+        if (options && filterOption) {
           // 本地过滤
           results = options.filter(option => {
             const label = String(option[labelKey]).toLowerCase();
@@ -84,12 +105,18 @@ export const AutoComplete = ({
         }
 
         setSuggestions(results);
-        setIsOpen(true); // 总是显示下拉菜单，包括loading和空结果
+        // 只有在没有外部控制open状态时才更新内部状态
+        if (propOpen === undefined) {
+          setInternalIsOpen(true); // 总是显示下拉菜单，包括loading和空结果
+        }
         setHighlightIndex(defaultActiveFirstOption && results.length > 0 ? 0 : -1);
       } catch (error) {
         console.error('搜索失败:', error);
         setSuggestions([]);
-        setIsOpen(false);
+        // 只有在没有外部控制open状态时才更新内部状态
+        if (propOpen === undefined) {
+          setInternalIsOpen(false);
+        }
       } finally {
         setLoading(false);
       }
@@ -100,7 +127,7 @@ export const AutoComplete = ({
     currentValue,
     debounce,
     disabled,
-    fetchSuggestions,
+    onSearch,
     options,
     filterOption,
     labelKey,
@@ -116,7 +143,10 @@ export const AutoComplete = ({
         // 立即触发搜索，不等待防抖
         if (currentValue?.trim()) {
           // 再次触发useEffect
-          setIsOpen(true);
+          // 只有在没有外部控制open状态时才更新内部状态
+          if (propOpen === undefined) {
+            setInternalIsOpen(true);
+          }
         }
       }
       return;
@@ -125,7 +155,10 @@ export const AutoComplete = ({
     switch (e.key) {
       case 'Tab':
       case 'Escape':
-        setIsOpen(false);
+        // 只有在没有外部控制open状态时才更新内部状态
+        if (propOpen === undefined) {
+          setInternalIsOpen(false);
+        }
         setHighlightIndex(-1);
         break;
       case 'Home':
@@ -155,7 +188,10 @@ export const AutoComplete = ({
         if (highlightIndex >= 0 && suggestions[highlightIndex]) {
           handleSelect(suggestions[highlightIndex]);
         } else {
-          setIsOpen(false);
+          // 只有在没有外部控制open状态时才更新内部状态
+          if (propOpen === undefined) {
+            setInternalIsOpen(false);
+          }
         }
         break;
     }
@@ -170,7 +206,10 @@ export const AutoComplete = ({
 
     onChange?.(selectedValue);
     onSelect?.(item);
-    setIsOpen(false);
+    // 只有在没有外部控制open状态时才更新内部状态
+    if (propOpen === undefined) {
+      setInternalIsOpen(false);
+    }
     setHighlightIndex(-1);
   };
 
@@ -191,7 +230,10 @@ export const AutoComplete = ({
 
     onChange?.('');
     setSuggestions([]);
-    setIsOpen(false);
+    // 只有在没有外部控制open状态时才更新内部状态
+    if (propOpen === undefined) {
+      setInternalIsOpen(false);
+    }
     setHighlightIndex(-1);
   };
 
@@ -202,7 +244,10 @@ export const AutoComplete = ({
   const handleBlur = () => {
     // 延迟关闭，允许点击选项
     setTimeout(() => {
-      setIsOpen(false);
+      // 只有在没有外部控制open状态时才更新内部状态
+      if (propOpen === undefined) {
+        setInternalIsOpen(false);
+      }
       setHighlightIndex(-1);
     }, 200);
   };
@@ -249,13 +294,14 @@ export const AutoComplete = ({
                     onClick={() => handleSelect(item)}
                     className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${
                       highlightIndex === index ? 'bg-blue-50' : ''
-                    }`}
+                    } truncate`}
+                    title={String(displayLabel)}
                   >
-                    {renderItem ? renderItem(item) : String(displayLabel)}
+                    {String(displayLabel)}
                   </div>
                 );
               })}
-              {!suggestions.length && <div className="p-2 text-gray-500">No matches found</div>}
+              {suggestions.length === 0 && <div className="p-2 text-gray-500">No matches found</div>}
             </>
           )}
         </div>

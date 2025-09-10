@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 export interface SuggestionItem {
   /**
    * 值
@@ -29,10 +27,6 @@ export interface AutoCompleteProps {
    */
   options?: SuggestionItem[];
   /**
-   * 获取建议
-   */
-  fetchSuggestions?: (query: string) => Promise<SuggestionItem[]>;
-  /**
    * 值变化
    */
   onChange?: (value: string) => void;
@@ -40,6 +34,10 @@ export interface AutoCompleteProps {
    * 选择
    */
   onSelect?: (item: SuggestionItem) => void;
+  /**
+   * 搜索
+   */
+  onSearch?: (value: string) => void;
   /**
    * 防抖时间
    */
@@ -73,11 +71,11 @@ export interface AutoCompleteProps {
    */
   labelKey?: string;
   /**
-   * 渲染选项
-   */
-  renderItem?: (item: SuggestionItem) => ReactNode;
-  /**
    * 样式
    */
   style?: React.CSSProperties;
+  /**
+   * 是否显示下拉框（受控模式）
+   */
+  open?: boolean;
 }
