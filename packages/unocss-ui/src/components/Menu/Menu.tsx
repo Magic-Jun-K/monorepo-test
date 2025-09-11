@@ -10,8 +10,8 @@ function getItemKey(item: MenuType): string {
 const MenuItem: React.FC<{
   item: MenuType;
   mode: 'vertical' | 'horizontal';
-  selectedKey?: string;
-  onSelect?: (key: string) => void;
+  selectedKey?: string | undefined;
+  onSelect?: ((key: string) => void) | undefined;
   onClick?: MenuProps['onClick'];
   openSubmenus: Set<string>;
   onSubmenuToggle: (key: string, isOpen: boolean) => void;

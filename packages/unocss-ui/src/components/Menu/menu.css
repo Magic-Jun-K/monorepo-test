@@ -40,15 +40,26 @@
   /* 初始状态隐藏 */
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0s linear 0.2s, opacity 0.2s linear;
+  transition: visibility 0s linear, opacity 0.1s linear;
 }
+
+/* 确保所有层级的子菜单项文字颜色为黑色 */
+.submenu-popup *,
+.submenu-popup .menu-item-label,
+.submenu-popup .menu-item-label *,
+.submenu-popup .menu-item a,
+.submenu-popup .menu-item a:hover,
+.submenu-popup .menu-item a:visited {
+  @apply text-black !important;
+}
+
 .submenu-popup::before {
-  @apply content-empty block absolute top-0 left-[-8px] w-2 h-full bg-transparent pointer-events-auto;
+  @apply content-empty block absolute top-0 left-[-8px] w-2 h-full bg-transparent pointer-events-none;
   /* content: '';
   top: 0;
   left: -8px;
   background: transparent;
-  pointer-events: auto; */
+  pointer-events: none; */
 }
 
 .submenu:hover > .submenu-popup,
@@ -56,7 +67,6 @@
   /* 鼠标悬停时显示 */
   visibility: visible;
   opacity: 1;
-  transition-delay: 0s;
 }
 
 .submenu-title {
@@ -76,12 +86,17 @@
   transform: rotate(45deg);
   transform-origin: center;
 }
-/* .submenu-open .submenu-arrow {
-  transform: rotate(135deg);
-} */
+
+/* 第二层及更深层次子菜单的箭头方向改为向右 */
+.submenu-popup .submenu-arrow {
+  transform: rotate(-45deg);
+  border-top: 2px solid;
+  border-right: 2px solid;
+  border-bottom: none;
+  border-left: none;
+}
 
 /* 垂直模式 */
-/* .menu-vertical {} */
 .menu-vertical > .submenu > .submenu-popup {
   top: 0;
   left: calc(100% + 8px);
@@ -100,7 +115,7 @@
 }
 
 .menu-horizontal > .menu-item {
-  @apply relative flex items-center /* flex-justify-center */ text-white /* w-30 p-2 */ px-4 bg-transparent border-none rounded-md transition-colors duration-200;
+  @apply relative flex items-center /* flex-justify-center */ text-white px-4 bg-transparent border-none rounded-md transition-colors duration-200;
 }
 .menu-horizontal > .menu-item.menu-item-selected {
   @apply text-blue-600 /* font-semibold */ bg-transparent;
@@ -142,6 +157,15 @@
   border-right: 2px solid;
   transform: rotate(45deg);
   transition: transform 0.2s; */
+}
+
+/* 水平模式下第二层及更深层次子菜单的箭头方向也改为向右 */
+.menu-horizontal .submenu-popup .submenu-arrow {
+  transform: rotate(-45deg);
+  border-top: 2px solid;
+  border-right: 2px solid;
+  border-bottom: none;
+  border-left: none;
 }
 
 /* type：group 分组样式 */
