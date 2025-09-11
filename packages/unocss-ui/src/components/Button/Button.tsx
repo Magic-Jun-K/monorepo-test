@@ -32,7 +32,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={htmlType}
         className={clsx(buttonStyles, className, {
-          'opacity-70 cursor-not-allowed': loading
+          'opacity-70 cursor-not-allowed': loading,
+          'ant-btn-loading': loading
         })}
         disabled={loading || props.disabled}
         {...props}

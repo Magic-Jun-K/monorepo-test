@@ -9,7 +9,7 @@ export const getButtonStyles = ({
   variant
 }: Pick<ButtonProps, 'type' | 'size' | 'danger' | 'color' | 'variant'>) => {
   const baseClasses =
-    'inline-flex items-center justify-center rounded font-medium transition-colors';
+    'inline-flex items-center justify-center rounded font-medium transition-colors cursor-pointer';
 
   // 处理类型和危险状态
   const typeClasses = clsx({
