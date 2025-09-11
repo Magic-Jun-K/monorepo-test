@@ -5,9 +5,16 @@
 import { forwardRef, useState, useRef, useEffect, DragEvent } from 'react';
 import { clsx } from 'clsx';
 
-import { UploadProps, UploadFile } from './types';
+import { UploadProps, UploadFile, UploadComponentType } from './types';
 
-export const Upload = forwardRef<HTMLDivElement, UploadProps>(
+// Dragger 子组件
+export const Dragger = forwardRef<HTMLDivElement, UploadProps>((props, ref) => {
+  return <Upload {...props} ref={ref} className={clsx('upload-dragger', props.className)} />;
+});
+
+Dragger.displayName = 'Upload.Dragger';
+
+const UploadForwardRef = forwardRef<HTMLDivElement, UploadProps>(
   (
     {
       name = 'file',
@@ -25,6 +32,7 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
       onChange,
       onRemove,
       beforeUpload,
+      onDrop,
       customRequest,
       ...props
     },
@@ -63,21 +71,32 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
           name: file.name,
           size: file.size,
           type: file.type,
-          status: 'uploading',
-          percent: 0,
+          status: 'done', // 默认设置为done状态，不执行实际上传
+          percent: 100,
           originFileObj: file,
           // 为所有文件设置URL或图标
           thumbUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : ''
         };
 
         // 执行beforeUpload钩子
+        let shouldUpload = true;
         if (beforeUpload) {
           const result = await beforeUpload(file, fileArray);
-          // 如果返回false，则跳过此文件
-          if (result === false) continue;
+          // 如果返回false，则标记为不上传，但仍然添加到文件列表
+          if (result === false) {
+            shouldUpload = false;
+          }
         }
 
+        // 无论beforeUpload返回什么，都添加文件到列表
         newFiles.push(uploadFile);
+
+        // 只有在shouldUpload为true时才执行实际上传
+        if (shouldUpload && customRequest) {
+          // 设置为上传状态
+          uploadFile.status = 'uploading';
+          uploadFile.percent = 0;
+        }
       }
 
       if (newFiles.length === 0) return;
@@ -102,27 +121,30 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
         onChange?.({ file: newFiles[0], fileList: nextFileList });
       }
 
-      // 执行上传
+      // 执行上传（只对需要上传的文件）
       newFiles.forEach(file => {
-        if (customRequest) {
-          // 确保originFileObj存在
-          if (file.originFileObj) {
-            customRequest({
-              file: file.originFileObj,
-              onProgress: (percent: unknown) => {
-                updateFileStatus(file.uid, { percent: Number(percent), status: 'uploading' });
-              },
-              onSuccess: (response: unknown) => {
-                updateFileStatus(file.uid, { status: 'done', response });
-              },
-              onError: (error: unknown) => {
-                updateFileStatus(file.uid, { status: 'error', error });
-              }
-            });
+        // 只有status为uploading的文件才执行上传
+        if (file.status === 'uploading') {
+          if (customRequest) {
+            // 确保originFileObj存在
+            if (file.originFileObj) {
+              customRequest({
+                file: file.originFileObj,
+                onProgress: (percent: unknown) => {
+                  updateFileStatus(file.uid, { percent: Number(percent), status: 'uploading' });
+                },
+                onSuccess: (response: unknown) => {
+                  updateFileStatus(file.uid, { status: 'done', response });
+                },
+                onError: (error: unknown) => {
+                  updateFileStatus(file.uid, { status: 'error', error });
+                }
+              });
+            }
+          } else {
+            // 模拟上传进度
+            simulateUpload(file.uid);
           }
-        } else {
-          // 模拟上传进度
-          simulateUpload(file.uid);
         }
       });
     };
@@ -208,6 +230,9 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
       if (disabled) return;
       setIsDragging(false);
 
+      // 调用外部传入的 onDrop 处理器
+      onDrop?.(e);
+
       const files = e.dataTransfer.files;
       handleUpload(files);
     };
@@ -242,7 +267,23 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
     const renderUploadList = () => {
       // console.log('测试renderUploadList showUploadList', showUploadList);
       // console.log('测试renderUploadList internalFileList', internalFileList);
-      if (!showUploadList || internalFileList.length === 0) return null;
+
+      // 解析 showUploadList 配置
+      let shouldShowList = true;
+      let showRemoveIcon = true;
+      // 注意：showPreviewIcon 和 showDownloadIcon 暂时保留在类型定义中供未来扩展使用
+
+      if (typeof showUploadList === 'boolean') {
+        shouldShowList = showUploadList;
+      } else if (showUploadList && typeof showUploadList === 'object') {
+        shouldShowList = true;
+        showRemoveIcon = showUploadList.showRemoveIcon !== false;
+        // showPreviewIcon 和 showDownloadIcon 功能待实现
+        // showPreviewIcon = showUploadList.showPreviewIcon !== false;
+        // showDownloadIcon = showUploadList.showDownloadIcon !== false;
+      }
+
+      if (!shouldShowList || internalFileList.length === 0) return null;
 
       // 只过滤掉 status 为 removed 的文件，其他状态都显示
       const visibleFileList = internalFileList.filter(file => file.status !== 'removed');
@@ -401,7 +442,7 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
                 </div>
 
                 {/* 删除按钮 - 改进样式和位置 */}
-                {!disabled && (
+                {!disabled && showRemoveIcon && (
                   <button
                     type="button"
                     className="absolute top-1 right-1 text-gray-500 hover:text-red-500 bg-white rounded-full p-1.5 transition-all hover:bg-red-50 z-20 shadow-sm flex items-center justify-center"
@@ -515,7 +556,7 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
                 )}
 
                 {/* 删除按钮 - 改进样式和交互 */}
-                {!disabled && (
+                {!disabled && showRemoveIcon && (
                   <button
                     type="button"
                     className="ml-2 text-gray-500 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors z-20 flex items-center justify-center shadow-sm"
@@ -586,38 +627,45 @@ export const Upload = forwardRef<HTMLDivElement, UploadProps>(
     };
 
     return (
-      <div ref={ref} className={clsx('upload-component', className)} {...props}>
-        {children ? (
-          <div
-            className={clsx(
-              'upload-trigger cursor-pointer inline-flex',
-              disabled && 'opacity-50 cursor-not-allowed'
-            )}
-            onClick={handleClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            {children}
-          </div>
-        ) : (
-          renderDragArea()
-        )}
+      <>
+        <div ref={ref} className={clsx('upload-component', className)} {...props}>
+          {children ? (
+            <div
+              className={clsx(
+                'upload-trigger cursor-pointer inline-flex',
+                disabled && 'opacity-50 cursor-not-allowed'
+              )}
+              onClick={handleClick}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {children}
+            </div>
+          ) : (
+            renderDragArea()
+          )}
 
-        <input
-          ref={inputRef}
-          type="file"
-          name={name}
-          accept={accept}
-          multiple={multiple}
-          disabled={disabled}
-          className="hidden"
-          onChange={handleChange}
-          {...(directory ? { webkitdirectory: 'true' } : {})}
-        />
-
+          <input
+            ref={inputRef}
+            type="file"
+            name={name}
+            accept={accept}
+            multiple={multiple}
+            disabled={disabled}
+            className="hidden"
+            onChange={handleChange}
+            {...(directory ? { webkitdirectory: 'true' } : {})}
+          />
+        </div>
         {renderUploadList()}
-      </div>
+      </>
     );
   }
 );
+
+const Upload = UploadForwardRef as UploadComponentType;
+Upload.displayName = 'Upload';
+Upload.Dragger = Dragger;
+
+export { Upload };

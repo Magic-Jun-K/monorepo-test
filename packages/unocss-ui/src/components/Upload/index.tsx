@@ -3,6 +3,7 @@ export type {
   UploadFile,
   UploadFileStatus,
   UploadListType,
-  UploadChangeParam
+  UploadChangeParam,
+  UploadComponentType
 } from './types';
-export { Upload } from './Upload';
+export { Upload, Dragger } from './Upload';

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, ForwardRefExoticComponent, RefAttributes } from 'react';
 
 // 文件状态
 export type UploadFileStatus = 'uploading' | 'done' | 'error' | 'removed';
@@ -62,9 +62,13 @@ export interface UploadProps {
    */
   listType?: UploadListType;
   /**
-   * 是否展示文件列表
+   * 是否展示文件列表，或配置展示选项
    */
-  showUploadList?: boolean;
+  showUploadList?: boolean | {
+    showRemoveIcon?: boolean;
+    showPreviewIcon?: boolean;
+    showDownloadIcon?: boolean;
+  };
   /**
    * 默认已上传的文件列表
    */
@@ -90,6 +94,10 @@ export interface UploadProps {
    */
   beforeUpload?: (file: File, fileList: File[]) => boolean | Promise<boolean> | void;
   /**
+   * 拖拽文件时的回调
+   */
+  onDrop?: (event: React.DragEvent<HTMLElement>) => void;
+  /**
    * 自定义上传请求
    */
   customRequest?: (options: UploadRequestOption) => void;
@@ -101,4 +109,10 @@ export interface UploadProps {
    * 自定义类名
    */
   className?: string;
+}
+
+// Upload组件类型，包含Dragger静态属性
+export interface UploadComponentType
+  extends ForwardRefExoticComponent<UploadProps & RefAttributes<HTMLDivElement>> {
+  Dragger: ForwardRefExoticComponent<UploadProps & RefAttributes<HTMLDivElement>>;
 }
