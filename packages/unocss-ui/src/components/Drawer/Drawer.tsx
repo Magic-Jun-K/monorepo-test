@@ -1,4 +1,5 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Button } from '../Button';
 import type { DrawerProps } from './types';
@@ -26,12 +27,47 @@ export const Drawer: FC<DrawerProps> = ({
   onOk,
   onCancel
 }) => {
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const isHorizontal = placement === 'left' || placement === 'right';
   const sizeVar = isHorizontal
     ? { '--drawer-size': typeof width === 'number' ? `${width}px` : width }
     : { '--drawer-size': typeof height === 'number' ? `${height}px` : height };
 
-  return (
+  // 创建和管理portal容器
+  useEffect(() => {
+    // 创建专用的portal容器
+    const container = document.createElement('div');
+    container.setAttribute('data-drawer-container', 'true');
+    document.body.appendChild(container);
+    setPortalContainer(container);
+    
+    return () => {
+      // 清理时安全移除容器
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
+      setPortalContainer(null);
+    };
+  }, []);
+
+  // 管理body滚动
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+    return undefined;
+  }, [open]);
+
+  // 如果容器还没准备好，不渲染Portal
+  if (!portalContainer) {
+    return null;
+  }
+
+  const drawerContent = (
     <>
       {/* 遮罩层 */}
       <div
@@ -56,7 +92,7 @@ export const Drawer: FC<DrawerProps> = ({
             ? '-translate-y-full'
             : 'translate-y-full'
         } ${className}`}
-        style={{ ...sizeVar, display: 'flex', flexDirection: isHorizontal ? 'column' : 'row' }} // 使抽屉主体为flex布局
+        style={{ ...sizeVar, display: 'flex', flexDirection: isHorizontal ? 'column' : 'row' }}
         role="dialog"
         aria-modal="true"
       >
@@ -97,5 +133,7 @@ export const Drawer: FC<DrawerProps> = ({
       </div>
     </>
   );
+
+  return createPortal(drawerContent, portalContainer);
 };
 export default Drawer;

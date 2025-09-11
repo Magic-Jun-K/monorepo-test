@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { Button } from '../Button';
-import { Drawer } from '../Drawer';
+import { Drawer } from './Drawer';
 
 function Example() {
   const [drawerOpen, setDrawerOpen] = useState(false);
