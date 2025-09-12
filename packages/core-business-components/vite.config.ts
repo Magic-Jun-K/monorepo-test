@@ -15,7 +15,7 @@ export default defineConfig({
     dts({
       include: ['src'],
       exclude: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
-      outDir: 'dist/types',
+      outDir: 'lib/types',
       rollupTypes: true, // 自动生成类型声明
       insertTypesEntry: true, // 自动插入类型声明
       tsconfigPath: resolve(__dirname, 'tsconfig.app.json') // 明确指定 tsconfig 路径
@@ -32,11 +32,18 @@ export default defineConfig({
     plugins: () => [react()] // 为Worker添加插件支持
   },
   build: {
+    outDir: 'lib',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'CoreBusinessComponents',
-      formats: ['es', 'cjs'],
-      fileName: format => `index.${format}.js`
+      formats: ['es'], // 只生成 ES 模块格式
+      fileName: (format) => {
+        const formatMap: Record<string, string> = {
+          es: 'es/index.js'
+          // 移除了 cjs 相关配置
+        };
+        return formatMap[format] || `${format}/index.js`;
+      }
     },
     rollupOptions: {
       external: ['react', 'react-dom'],
