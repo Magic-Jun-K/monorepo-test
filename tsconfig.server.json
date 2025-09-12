@@ -1,19 +1,64 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "module": "commonjs", // 设置模块系统（例如：ES6模块、CommonJS）
-    "declaration": true, // 生成 .d.ts 类型声明文件
-    "removeComments": true, // 移除注释
-    "emitDecoratorMetadata": true, // 允许在装饰器中使用元数据
-    "experimentalDecorators": true, // 允许使用实验性的装饰器
-    "allowSyntheticDefaultImports": true, // 允许使用默认导入
-    "target": "ES2021", // 设置目标环境
-    "sourceMap": true, // 生成 .map 文件
-    "incremental": true, // 允许增量编译
-    "skipLibCheck": true, // 跳过库检查
-    "strictNullChecks": false, // 禁用严格的空检查
-    "noImplicitAny": false, // 禁用隐式的 any 类型
-    "strictBindCallApply": false, // 禁用严格的 bind, call, and apply 方法
-    "forceConsistentCasingInFileNames": false, // 禁用强制一致的文件名大小写
-    "noFallthroughCasesInSwitch": false // 禁用 switch 语句中的 fallthrough
-  }
+    /* 基本选项 */
+    "target": "ES2021", // 指定 ECMAScript 目标版本
+    "module": "commonjs", // 指定生成的模块格式
+    "lib": ["ES2021"], // 指定要包含在编译中的库文件
+    "noEmit": true, // 不生成输出文件（由构建工具处理）
+    "allowJs": false, // 不允许编译 JavaScript 文件
+    "removeComments": true, // 删除注释信息
+    "incremental": true, // 启用增量编译
+    "tsBuildInfoFile": ".tsbuildinfo", // 指定增量编译信息文件
+
+    /* 实验性选项 */
+    "experimentalDecorators": true, // 启用对装饰器的实验性支持
+    "emitDecoratorMetadata": true, // 启用对装饰器元数据的实验性支持
+
+    /* 模块解析选项 */
+    "moduleResolution": "node", // 指定模块解析策略
+    "baseUrl": ".", // 指定基础目录以解析非相对模块名
+    "paths": {
+      "@/*": ["./src/*"],
+      "@backend/*": ["./apps/backend/*/src"]
+    }, // 指定模块名到基于 baseUrl 的路径映射
+    "resolveJsonModule": true, // 允许导入 .json 文件
+    "allowSyntheticDefaultImports": true, // 允许从没有默认导出的模块中进行默认导入
+    "esModuleInterop": true, // 启用 esModuleInterop 以提供与 CommonJS 模块的互操作性
+    "forceConsistentCasingInFileNames": true, // 确保文件名大小写一致
+
+    /* 严格检查选项 */
+    "strict": false, // 不启用所有严格的类型检查选项
+    "strictNullChecks": false, // 不启用严格的空值检查
+    "strictPropertyInitialization": false, // 不启用类属性初始化的严格检查
+    "noImplicitAny": false, // 不对隐含的 any 类型的表达式和声明报错
+    "strictBindCallApply": false, // 不对 bind、call 和 apply 方法进行严格检查
+    "noFallthroughCasesInSwitch": false, // 不报告 switch 语句中 fallthrough 的错误
+    "noImplicitReturns": false, // 不对函数中所有可能的代码路径都要求有返回值
+    "noUnusedLocals": false, // 不报告未使用的局部变量错误
+    "noUnusedParameters": false, // 不报告未使用的函数参数错误
+
+    /* 其他选项 */
+    "skipLibCheck": true, // 跳过对声明文件的类型检查
+    "types": ["node"] // 添加类型声明文件
+  },
+  // 指定需要编译的文件
+  "include": ["apps/backend/**/*", "**/*.d.ts"],
+  // 指定需要排除的文件
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "apps/frontend/**/*",
+    "apps/web/**/*",
+    "packages/ui/**/*",
+    "packages/antd-ui/**/*",
+    "packages/unocss-ui/**/*",
+    "packages/unocss-ui-ie/**/*",
+    "packages/core-business-components/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.e2e-spec.ts"
+  ]
 }
