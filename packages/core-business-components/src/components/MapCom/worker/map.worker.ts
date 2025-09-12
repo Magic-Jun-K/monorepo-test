@@ -1,4 +1,3 @@
-console.log('Worker started!');
 // 消息类型
 type WorkerMessage =
   | {
@@ -11,8 +10,9 @@ type WorkerMessage =
   | { type: 'destroy' }
   | { type: 'initWasm'; wasmUrl: string };
 
+console.log('Worker started!');
+
 // 导入WebAssembly模块
-// 注意：这里使用相对路径，Worker的基础路径是项目根目录
 let wasmModule: any = null;
 
 // 加载WebAssembly模块
@@ -25,35 +25,48 @@ async function loadWasm(wasmUrl?: string) {
         }
       }
     };
-    
-    // 使用从主线程传入的完整URL
-    const url = wasmUrl || '/wasm/release.wasm';
-    console.log('尝试加载WASM文件:', url);
-    
-    // 首先尝试使用传入的完整URL
-    let response = await fetch(url);
-    
-    // 如果失败，尝试相对路径
-    if (!response.ok) {
-      console.log('尝试相对路径加载WASM文件');
-      response = await fetch('./wasm/release.wasm');
+
+    // 如果提供了URL，直接使用
+    if (wasmUrl) {
+      console.log('尝试加载WASM文件:', wasmUrl);
+      const response = await fetch(wasmUrl);
+      if (!response.ok) {
+        throw new Error(`fetch failed with status ${response.status}: ${response.statusText}`);
+      }
+
+      const buffer = await response.arrayBuffer();
+      const module = await WebAssembly.compile(buffer);
+      const instance = await WebAssembly.instantiate(module, importObject);
+      wasmModule = instance.exports;
+      console.log(`WebAssembly模块加载成功: ${wasmUrl}`);
+      return;
     }
-    
-    // 如果还失败，尝试根路径
-    if (!response.ok) {
-      console.log('尝试根路径加载WASM文件');
-      response = await fetch('/release.wasm');
+
+    // 如果没有提供URL，尝试多种加载方式
+    const wasmPaths = [
+      '/wasm/release.wasm', // 默认路径
+      './wasm/release.wasm', // 相对路径
+      '/release.wasm' // 根路径
+    ];
+
+    for (const path of wasmPaths) {
+      try {
+        console.log('尝试加载WASM文件:', path);
+        const response = await fetch(path);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          const module = await WebAssembly.compile(buffer);
+          const instance = await WebAssembly.instantiate(module, importObject);
+          wasmModule = instance.exports;
+          console.log(`WebAssembly模块加载成功: ${path}`);
+          return;
+        }
+      } catch (error) {
+        console.warn(`路径 ${path} 加载失败:`, error);
+      }
     }
-    
-    if (!response.ok) {
-      throw new Error(`fetch failed with status ${response.status}: ${response.statusText}`);
-    }
-    
-    const buffer = await response.arrayBuffer();
-    const module = await WebAssembly.compile(buffer);
-    const instance = await WebAssembly.instantiate(module, importObject);
-    wasmModule = instance.exports;
-    console.log(`WebAssembly模块加载成功: ${url}`);
+
+    throw new Error('所有WebAssembly加载路径都失败');
   } catch (error) {
     console.warn('WebAssembly加载失败，将使用JavaScript实现:', error);
     // 如果WASM加载失败，使用备用的JS实现
@@ -87,8 +100,6 @@ const generateRandomCoordinatesWasm = (
   maxLat: number,
   count: number
 ) => {
-  // console.log('测试generateRandomCoordinatesWasm count', count);
-
   if (count <= 0) return []; // ← 就加在这里
 
   // 检查WASM是否可用且稳定
@@ -98,7 +109,8 @@ const generateRandomCoordinatesWasm = (
   }
 
   // 对于小数量，直接使用JS实现（更稳定）
-  if (count <= 500) {  // 降低阈值到500
+  if (count <= 500) {
+    // 降低阈值到500
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
 
@@ -110,15 +122,6 @@ const generateRandomCoordinatesWasm = (
     const safeMinLat = Number.isFinite(minLat) ? minLat : 0;
     const safeMaxLat = Number.isFinite(maxLat) ? maxLat : 90;
 
-    // 调用WASM函数生成点
-    // console.log('调用WASM函数，参数:', {
-    //   safeCount,
-    //   safeMinLng,
-    //   safeMaxLng,
-    //   safeMinLat,
-    //   safeMaxLat
-    // });
-
     // 调用WASM函数，返回内存指针
     const ptr = wasmModule.generateRandomPoints(
       safeCount,
@@ -127,8 +130,6 @@ const generateRandomCoordinatesWasm = (
       safeMinLat,
       safeMaxLat
     );
-
-    // console.log('WASM函数返回指针:', ptr);
 
     if (typeof ptr !== 'number' || ptr === 0) {
       console.error('WASM函数返回无效指针');
@@ -261,7 +262,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 
         // 记录批次生成开始时间
         const batchStart = performance.now();
-        
+
         // 生成当前批次的点，考虑视口优先
         const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
           minLng,
