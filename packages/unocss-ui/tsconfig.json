@@ -2,16 +2,18 @@
   "extends": "../../tsconfig.client.json",
   "compilerOptions": {
     "noEmit": false, // 不需要禁用编译，因为 dts 插件会生成类型声明
+    "declaration": true, // 启用类型声明生成
     "emitDeclarationOnly": true, // 只生成类型声明
     "outDir": "build/es/types", // 生成的 .d.ts 文件输出目录
-    "jsx": "react-jsx",
-    "rootDir": "src",
-    "baseUrl": ".",
+    "jsx": "react-jsx", // 启用 JSX
+    "rootDir": ".", // 源代码目录
+    "baseUrl": ".", // 源代码目录
+    // 路径别名
     "paths": {
       "@/*": ["src/*"]
     },
     "noUncheckedSideEffectImports": true // 禁止导入没有声明的模块
   },
-  "include": ["src"],
+  "include": ["src", "vitest.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "build", "public"]
 }
