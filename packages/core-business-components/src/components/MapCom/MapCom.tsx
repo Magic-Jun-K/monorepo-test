@@ -155,7 +155,15 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       try {
         // 加载百度地图资源
         await loadBMapScript();
-        await loadBMapGLLib();
+        requestIdleCallback(() =>
+          loadBMapGLLib()
+            .then(() => {
+              console.log('BMapGLLib 加载完成');
+            })
+            .catch(error => {
+              console.error('BMapGLLib 加载失败:', error);
+            })
+        );
 
         // Ensure container is properly initialized
         if (!mapRef.current || !mapRef.current.clientWidth || !mapRef.current.clientHeight) {
@@ -208,7 +216,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
               }
             });
             viewInstance.current.addLayer(iconClusterLayerInstance.current);
-            
+
             // 启动数据生成
             workerRef.current?.postMessage({
               type: 'generatePoints',
@@ -216,7 +224,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
               bounds: MAP_CONFIG.DATA_BOUNDS
             });
           }
-          
+
           // 发送地图实例就绪事件，供其他组件使用
           const event = new CustomEvent('mapInstanceReady', { detail: mapInstance.current });
           window.dispatchEvent(event);
