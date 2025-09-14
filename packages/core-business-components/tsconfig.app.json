@@ -13,7 +13,8 @@
     "src/**/*.spec.ts",
     "src/types/**/*.d.ts",
     "vitest.config.ts",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    "plugins/**/*"
   ],
   "exclude": ["node_modules", "build", "public", "assembly"]
 }
