@@ -6,7 +6,6 @@
     "outDir": "src/components/MapCom/worker",
     "declaration": false,
     "module": "ESNext",
-    "target": "ES2018",
     "lib": ["ESNext", "WebWorker"], // 关键：只包含 WebWorker 类型
     "types": []
   }
