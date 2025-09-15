@@ -2,20 +2,23 @@
   "name": "@eggshell/unocss-ui-ie",
   "private": true,
   "version": "0.0.0",
-  "main": "./build/es/index.cjs",
-  "module": "./build/es/index.js",
-  "types": "./build/es/types/index.d.ts",
+  "main": "./lib/es/index.cjs",
+  "module": "./lib/es/index.js",
+  "types": "./lib/es/types/index.d.ts",
   "type": "module",
   "files": [
-    "build/es",
-    "build/es/types",
-    "build/es/index.css"
+    "lib/es",
+    "lib/es/types",
+    "lib/es/index.css"
   ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
     "react": "17.0.2",
