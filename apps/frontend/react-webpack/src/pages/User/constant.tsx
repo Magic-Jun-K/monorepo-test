@@ -1,4 +1,5 @@
 import { SearchItem, Tag } from '@eggshell/antd-ui';
+import { Button } from '@eggshell/unocss-ui';
 
 // 搜索配置
 export const searchItems: SearchItem[] = [
@@ -32,6 +33,31 @@ export const searchItems: SearchItem[] = [
       { value: 'LOCKED', label: '锁定' },
       { value: 'DELETED', label: '已删除' }
     ]
+  },
+  {
+    label: '角色',
+    name: 'role',
+    type: 'select',
+    placeholder: '请选择角色',
+    options: [
+      { value: 'super_admin', label: '超级管理员' },
+      { value: 'admin', label: '管理员' },
+      { value: 'user', label: '普通用户' }
+    ]
+  },
+  {
+    label: '创建时间',
+    name: 'createdAtRange',
+    type: 'rangePicker',
+    // format: 'YYYY-MM-DD',
+    placeholder: ['创建开始日期', '创建结束日期']
+  },
+  {
+    label: '更新时间',
+    name: 'updatedAtRange',
+    type: 'rangePicker',
+    // format: 'YYYY-MM-DD',
+    placeholder: ['更新开始日期', '更新结束日期']
   }
 ];
 
@@ -45,7 +71,7 @@ export const statusMap: { [key: string]: { text: string; color: string } } = {
 };
 
 // 表格列配置基础数据
-export const baseColumns = [
+export const baseColumns: any[] = [
   {
     title: 'ID',
     dataIndex: 'id',
@@ -108,12 +134,31 @@ export const renderFunctions = {
   renderRoles: (roles: any[]) => roles?.map(role => role.name).join(', ') || '',
 
   // 时间渲染
-  renderTime: (text: string) => new Date(text).toLocaleString()
+  renderTime: (text: string) => {
+    if (!text) return '-';
+    const date = new Date(text);
+    if (isNaN(date.getTime())) return '-';
+
+    // 使用 toLocaleString 方法正确处理时区转换
+    // Date 对象会自动根据本地时区转换 UTC 时间
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).replace(/\//g, '-');
+  }
 };
 
 // 完整的表格列配置（组合基础配置和渲染函数）
-export const getTableColumns = () => {
-  return baseColumns.map(col => {
+export const getTableColumns = (
+  handleEdit?: (record: any) => void,
+  handleDelete?: (record: any) => void
+): any[] => {
+  const columns = baseColumns.map(col => {
     switch (col.dataIndex) {
       case 'status':
         return {
@@ -135,4 +180,33 @@ export const getTableColumns = () => {
         return col;
     }
   });
+
+  // 添加操作列
+  columns.push({
+    title: '操作',
+    dataIndex: 'action',
+    key: 'action',
+    fixed: 'right' as const,
+    width: 148,
+    render: (_text: any, record: any): React.ReactNode => {
+      return (
+        <>
+          <Button type="primary" size="sm" onClick={() => handleEdit?.(record)}>
+            编辑
+          </Button>
+          <Button
+            type="primary"
+            danger
+            size="sm"
+            style={{ marginLeft: '10px' }}
+            onClick={() => handleDelete?.(record)}
+          >
+            删除
+          </Button>
+        </>
+      );
+    }
+  });
+
+  return columns;
 };

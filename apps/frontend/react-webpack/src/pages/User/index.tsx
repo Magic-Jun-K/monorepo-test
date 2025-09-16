@@ -1,15 +1,43 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SearchCom, /* TableCom, */ Table, Space } from '@eggshell/antd-ui';
-import { Button, message } from '@eggshell/unocss-ui';
+import { SearchCom, TableCom, Space } from '@eggshell/antd-ui';
+import { Button, message, Modal } from '@eggshell/unocss-ui';
 import { PlusOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 import ContainerBody from '@/layout/ContainerBody';
 import AddUserModal from './components/AddUserModal';
 import ImportUserModal from './components/ImportUserModal';
+import EditUserModal from './components/EditUserModal';
 import { searchItems, getTableColumns } from './constant';
-import { fetchUsers, exportUsers, batchExportUsers } from '@/services/user';
+import { fetchUsers, exportUsers, batchExportUsers, deleteUser } from '@/services/user';
 import { currentUser } from '@/services/auth';
+
+// 处理搜索参数中的日期范围
+const processDateRange = (params: any) => {
+  console.log('processDateRange params:', params);
+  const processedParams = { ...params };
+
+  // 格式化创建时间范围
+  if (processedParams.createdAtRange && Array.isArray(processedParams.createdAtRange)) {
+    const [start, end] = processedParams.createdAtRange;
+    processedParams.createdAtRange = [
+      start ? dayjs(start).format('YYYY-MM-DD 00:00:00') : '',
+      end ? dayjs(end).format('YYYY-MM-DD 23:59:59') : ''
+    ];
+  }
+
+  // 格式化更新时间范围
+  if (processedParams.updatedAtRange && Array.isArray(processedParams.updatedAtRange)) {
+    const [start, end] = processedParams.updatedAtRange;
+    processedParams.updatedAtRange = [
+      start ? dayjs(start).format('YYYY-MM-DD 00:00:00') : '',
+      end ? dayjs(end).format('YYYY-MM-DD 23:59:59') : ''
+    ];
+  }
+
+  return processedParams;
+};
 
 import styles from './index.module.scss';
 
@@ -30,6 +58,9 @@ interface SearchParams {
   email?: string;
   phone?: string;
   status?: string;
+  role?: string;
+  createdAtRange?: [string, string];
+  updatedAtRange?: [string, string];
   page?: number;
   pageSize?: number;
 }
@@ -52,6 +83,9 @@ export default function UserManagement() {
   const [addModalVisible, setAddModalVisible] = useState(false);
   // 导入用户弹框
   const [importModalVisible, setImportModalVisible] = useState(false);
+  // 编辑用户弹框
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -59,7 +93,10 @@ export default function UserManagement() {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetchUsers(searchParams);
+      // 处理搜索参数，特别是日期范围参数
+      const processedParams = processDateRange(searchParams);
+
+      const response = await fetchUsers(processedParams);
       if (response.success) {
         setUsers(response.data.list || []);
         setTotal(response.data.total || 0);
@@ -120,7 +157,7 @@ export default function UserManagement() {
   const handleExportUsers = async () => {
     try {
       const response = await exportUsers(searchParams);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(response);
       const link = document.createElement('a');
       link.href = url;
       link.download = '用户列表.xlsx';
@@ -145,7 +182,7 @@ export default function UserManagement() {
     try {
       const ids = selectedRows.map(row => row.id);
       const response = await batchExportUsers(ids);
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(response);
       const link = document.createElement('a');
       link.href = url;
       link.download = '选中用户.xlsx';
@@ -160,8 +197,43 @@ export default function UserManagement() {
     }
   };
 
+  // 编辑用户
+  const handleEditUser = (user: any) => {
+    console.log('handleEditUser called with user:', user);
+    setEditingUser(user);
+    setEditModalVisible(true);
+  };
+
+  // 删除用户
+  const handleDeleteUser = (user: any) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: `确定要删除用户 "${user.username}" 吗？此操作不可恢复。`,
+      okText: '确认删除',
+      cancelText: '取消',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const response = await deleteUser(user.id);
+          if (response.success) {
+            messageApi.success('删除用户成功');
+            loadUsers(); // 重新加载用户列表
+          } else {
+            messageApi.error(response.message || '删除用户失败');
+          }
+        } catch (error) {
+          console.error('删除用户失败:', error);
+          messageApi.error('删除用户失败');
+        }
+      }
+      // onCancel: () => {
+      //   console.log('用户取消删除操作');
+      // }
+    });
+  };
+
   // 表格列定义
-  const columns = getTableColumns();
+  const columns = getTableColumns(handleEditUser, handleDeleteUser);
 
   // 选择配置
   const rowSelection = {
@@ -189,9 +261,11 @@ export default function UserManagement() {
       {/* 搜索区域 */}
       <SearchCom
         items={searchItems}
-        initialValues={searchParams}
+        // 不直接使用 searchParams 作为 initialValues，避免将格式化后的字符串传回给组件
         onSearch={values => {
-          setSearchParams(prev => ({ ...prev, ...values, page: 1 }));
+          // 处理时间范围参数，确保它们以字符串格式传递
+          const processedValues = processDateRange(values);
+          setSearchParams(prev => ({ ...prev, ...processedValues, page: 1 }));
         }}
         onReset={() => {
           setSearchParams({
@@ -224,15 +298,15 @@ export default function UserManagement() {
       </div>
 
       {/* 表格区域 */}
-      <Table
+      <TableCom
         columns={columns}
         dataSource={users}
         rowKey="id"
         loading={loading}
         rowSelection={rowSelection}
         pagination={{
-          current: searchParams.page,
-          pageSize: searchParams.pageSize,
+          current: searchParams.page || 1,
+          pageSize: searchParams.pageSize || 10,
           total,
           showSizeChanger: true,
           showQuickJumper: true,
@@ -256,7 +330,16 @@ export default function UserManagement() {
         visible={importModalVisible}
         onOk={() => setImportModalVisible(false)}
         onCancel={() => setImportModalVisible(false)}
-        onSuccess={() => loadUsers()}
+        onSuccess={loadUsers}
+      />
+
+      {/* 编辑用户弹框 */}
+      <EditUserModal
+        visible={editModalVisible}
+        user={editingUser}
+        onOk={() => setEditModalVisible(false)}
+        onCancel={() => setEditModalVisible(false)}
+        onSuccess={loadUsers}
       />
     </ContainerBody>
   );

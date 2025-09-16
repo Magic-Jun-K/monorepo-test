@@ -1,5 +1,7 @@
 .actionCard {
   padding-bottom: 20px;
+  min-height: 40px;
+  flex-shrink: 0;
 }
 
 // 按钮样式
@@ -35,29 +37,6 @@
     &:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
-    }
-  }
-}
-
-// 单选框组样式
-.ant-radio-group {
-  .ant-radio-wrapper {
-    margin-right: 24px;
-
-    .ant-radio {
-      .ant-radio-inner {
-        border-color: #d9d9d9;
-
-        &::after {
-          background-color: #667eea;
-        }
-      }
-
-      &.ant-radio-checked {
-        .ant-radio-inner {
-          border-color: #667eea;
-        }
-      }
     }
   }
 }
