@@ -1,0 +1,18 @@
+{
+  "extends": ["../../../.oxlintrc.json"],
+  "rules": {
+    "no-console": "warn",
+    "no-debugger": "warn",
+    "typescript/no-unused-vars": "error",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-uses-react": "off"
+  },
+  "ignore": [
+    "dist/**/*",
+    "build/**/*",
+    "node_modules/**/*",
+    "public/**/*",
+    "scripts/**/*"
+  ]
+}
