@@ -7,7 +7,7 @@ import LoginTabs from './components/LoginTabs';
 import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
-import { encrypt } from '@/utils/hashWasm';
+import { encrypt } from '@/utils/rsaEncrypt';
 import { emailLogin, login, register, sendCode } from '@/services';
 import {
   AuthType,
@@ -46,7 +46,7 @@ const LoginContent = () => {
   } = form;
 
   // 获取表单字段错误信息
-  const getFieldError = (fieldName: string) => {
+  const getFieldError = (fieldName: string): FieldError | undefined => {
     if (loginType === 'account' || authType === 'register') {
       return errors[fieldName as keyof typeof errors] as FieldError | undefined;
     } else if (loginType === 'email') {
@@ -82,12 +82,18 @@ const LoginContent = () => {
 
       // Handle successful response(处理成功响应)
       if (response.success) {
-        // Add type guard for response.data(为response.data添加类型保护)
-        if (!response.data) {
-          throw new Error('Authentication data is missing');
+        // 注册成功后切换到登录模式并显示成功消息
+        if (authType === 'register') {
+          addToast({ message: response.message || '注册成功，请登录', type: 'success' });
+          setAuthType('login');
+        } else {
+          // 登录成功需要data字段作为token
+          if (!response.data) {
+            throw new Error('Authentication data is missing');
+          }
+          authStore.setToken(response.data);
+          navigate('/');
         }
-        authStore.setToken(response.data);
-        navigate('/');
       } else {
         addToast({ message: response.message || 'Login fail', type: 'error' });
       }
@@ -114,6 +120,7 @@ const LoginContent = () => {
   };
 
   // 公共密码处理
+  // 使用RSA加密替代之前的argon2哈希
   const handleAccountOrRegister = async (
     data: LoginFormData | RegisterFormData
   ): Promise<AuthResponse> => {
