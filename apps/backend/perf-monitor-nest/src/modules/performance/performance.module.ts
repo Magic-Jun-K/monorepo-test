@@ -8,9 +8,7 @@ import { Performance, PerformanceSchema } from './performance.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Performance.name, schema: PerformanceSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Performance.name, schema: PerformanceSchema }]),
     BullModule.registerQueue({ name: 'performance' }),
   ],
   controllers: [PerformanceController],

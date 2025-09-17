@@ -1,14 +1,7 @@
 /**
  * @description 数据接收层（高并发处理）
  */
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Query,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { FilterQuery } from 'mongoose';
 
@@ -34,7 +27,14 @@ export class PerformanceController {
   async report(@Body() body: any) {
     const result = ReportPerformanceSchema.safeParse(body);
     if (!result.success) {
-      throw new BadRequestException(result.error.errors);
+      const errorMessages = result.error.issues.map((err) => {
+        return `${err.path.join('.')}: ${err.message}`;
+      });
+      throw new BadRequestException({
+        message: '数据验证失败',
+        errors: errorMessages,
+        success: false,
+      });
     }
     // result.data 就是校验后的数据
     await this.performanceService.handleReport(result.data);
