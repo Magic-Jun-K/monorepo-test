@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { FC, useEffect, MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ModalProps } from './types';
@@ -11,13 +12,6 @@ import {
   CancelButton,
   ConfirmButton,
 } from './styles';
-
-// 定义浏览器全局变量
-declare global {
-  interface Document {
-    body: HTMLElement;
-  }
-}
 
 const DefaultFooter: FC<{ onClose: () => void }> = ({ onClose }) => (
   <>

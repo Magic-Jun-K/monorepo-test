@@ -1,13 +1,7 @@
+/// <reference types="vitest/globals" />
 import '@testing-library/jest-dom/vitest'
 import { beforeAll, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
-
-// 定义全局变量类型
-declare global {
-  interface Window {
-    matchMedia: (query: string) => MediaQueryList
-  }
-}
 
 // 每个测试后清理
 afterEach(() => {
