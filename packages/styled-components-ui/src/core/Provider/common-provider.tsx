@@ -2,8 +2,7 @@ import { ReactNode, FC } from 'react';
 
 import { CommonThemeProvider } from '../ThemeProvider/CommonThemeProvider';
 import { CommonThemeOverrides } from '../types/theme.types';
-
-import { CommonContext } from './Common.context';
+import { CommonContext } from './common.context';
 
 import '../ThemeProvider/global.css';
 
@@ -21,7 +20,7 @@ export interface CommonProviderProps {
 export const CommonProvider: FC<CommonProviderProps> = ({ theme, children }) => {
   return (
     <CommonContext.Provider value={{}}>
-      <CommonThemeProvider theme={theme}>{children}</CommonThemeProvider>
+      <CommonThemeProvider {...(theme && { theme })}>{children}</CommonThemeProvider>
     </CommonContext.Provider>
   );
 };

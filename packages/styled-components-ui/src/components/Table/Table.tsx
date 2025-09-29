@@ -106,7 +106,7 @@ export const Table = <T extends object>({
               return (
                 <TableHeaderCell 
                   key={column.key} 
-                  width={column.width} 
+                  {...(column.width && { width: column.width })}
                   style={{ textAlign: column.align }}
                   onClick={() => {
                     if (!column.sorter) return;

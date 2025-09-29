@@ -5,14 +5,14 @@ export interface ColumnType<T> {
   dataIndex?: string;
   key: string;
   width?: number | string;
-  render?: (text: any, record: T, index: number) => React.ReactNode;
+  render?: (text: unknown, record: T, index: number) => React.ReactNode;
   sorter?: (a: T, b: T) => number;
   sortOrder?: 'ascend' | 'descend' | null;
   fixed?: 'left' | 'right';
   align?: 'left' | 'center' | 'right';
 }
 
-export interface TableProps<T = any> {
+export interface TableProps<T = unknown> {
   dataSource: T[];
   columns: ColumnType<T>[];
   rowKey?: string | ((record: T) => string);
