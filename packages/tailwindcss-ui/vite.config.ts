@@ -6,7 +6,26 @@ import { resolve } from 'node:path';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), dts()],
+  plugins: [
+    react(), 
+    tailwindcss(), 
+    dts({
+      // 更明确地指定入口点，避免处理配置文件
+      entryRoot: resolve(__dirname, 'src'),
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.*', 
+        'src/**/*.spec.*', 
+        'src/**/*.example.*',
+        'vite.config.ts'
+      ],
+      outDir: 'lib/types',
+      insertTypesEntry: true,
+      rollupTypes: true,
+      // 明确指定要处理的文件，避免处理配置文件
+      tsconfigPath: resolve(__dirname, 'tsconfig.app.json')
+    })
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src')
