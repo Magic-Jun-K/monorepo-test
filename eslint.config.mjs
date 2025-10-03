@@ -6,46 +6,73 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default tseslint.config({
-  // 继承自什么配置
-  extends: [js.configs.recommended, ...tseslint.configs.recommended],
-  // 那些文件需要用这个配置
-  files: ['**/*.{ts,tsx,js}'],
-  // 那些文件不用这个配置
-  ignores: [
-    'apps/**/*/{tmp,.dumi}/**/*',
-    '*.js',
-    '**/*/build/**/*',
-    '**/*/es/**/*',
-    '**/*/dist/**/*',
-    'apps/**/*/public/**/*',
-    'packages/**/*/*.d.ts',
-    'packages/**/*/*.config.*',
-    'packages/**/*/uno.config.*'
-  ],
-  // 自定义规则配置
-  rules: {
-    'no-console': 'off',
-    '@typescript-eslint/no-require-imports': 'off',
-    '@typescript-eslint/no-explicit-any': 'off'
+export default tseslint.config(
+  {
+    // 那些文件需要用这个配置
+    files: ['**/*.{ts,tsx}'],
+    // 继承自什么配置
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    // 那些文件不用这个配置
+    ignores: [
+      'apps/**/*/{tmp,.dumi}/**/*',
+      '**/*/build/**/*',
+      '**/*/es/**/*',
+      '**/*/dist/**/*',
+      '**/*/lib/**/*',
+      'apps/**/*/public/**/*',
+      'packages/**/*/*.d.ts',
+      'packages/**/*/*.config.*',
+      'packages/**/*/uno.config.*'
+    ],
+    // 自定义规则配置
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-explicit-any': 'off'
+    },
+    // 语言选项
+    languageOptions: {
+      // 转换器
+      parser: tseslint.parser,
+      // 转换选项
+      parserOptions: {
+        // ts 项目的 tsconfig 文件位置
+        project: [
+          './tsconfig.json',
+          './apps/frontend/react-webpack/tsconfig.json',
+          './apps/frontend/react-vite/tsconfig.json',
+          './apps/frontend/react-vite-tw/tsconfig.json',
+          './apps/backend/bmap-nest/tsconfig.json',
+          './packages/unocss-ui/tsconfig.json',
+          './packages/antd-ui/tsconfig.json',
+          './packages/styled-components-ui/tsconfig.json',
+          './packages/core-business-components/tsconfig.app.json',
+          './packages/tailwindcss-ui/tsconfig.app.json'
+        ],
+        // ts 配置更目录
+        tsconfigRootDir: __dirname
+      }
+    }
   },
-  // 语言选项
-  languageOptions: {
-    // 转换器
-    parser: tseslint.parser,
-    // 转换选项
-    parserOptions: {
-      // ts 项目的 tsconfig 文件位置
-      project: [
-        './tsconfig.json',
-        './apps/frontend/react-webpack/tsconfig.json',
-        './apps/frontend/react-vite/tsconfig.json',
-        './apps/frontend/react-vite-tw/tsconfig.json',
-        './apps/backend/bmap-nest/tsconfig.json',
-        './packages/unocss-ui/tsconfig.json'
-      ],
-      // ts 配置更目录
-      tsconfigRootDir: __dirname
+  {
+    // 对JavaScript文件使用基本的ESLint规则，不进行TypeScript类型检查
+    files: ['**/*.js'],
+    extends: [js.configs.recommended],
+    ignores: [
+      'apps/**/*/{tmp,.dumi}/**/*',
+      '**/*/build/**/*',
+      '**/*/es/**/*',
+      '**/*/dist/**/*',
+      '**/*/lib/**/*',
+      'apps/**/*/public/**/*'
+    ],
+    rules: {
+      'no-console': "off"
+    },
+    languageOptions: {
+      env: {
+        node: true
+      }
     }
   }
-});
+);
