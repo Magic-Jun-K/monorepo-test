@@ -1,12 +1,7 @@
 {
   "extends": ["../../../.oxlintrc.json"],
-  "rules": {
-    "no-console": "warn",
-    "no-debugger": "warn",
-    "typescript/no-unused-vars": "error",
-    "react/prop-types": "off",
-    "react/react-in-jsx-scope": "off",
-    "react/jsx-uses-react": "off"
+  "env": {
+    "browser": true
   },
   "ignore": [
     "dist/**/*",
@@ -14,5 +9,13 @@
     "node_modules/**/*",
     "public/**/*",
     "scripts/**/*"
-  ]
+  ],
+  "rules": {
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-debugger": "warn",
+    "typescript/no-unused-vars": "error",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-uses-react": "off"
+  }
 }
