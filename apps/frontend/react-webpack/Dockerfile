@@ -1,7 +1,6 @@
 # 阶段1：基础环境
 FROM node:22-slim AS base
 RUN npm i -g pnpm
-# RUN pnpm config set registry https://registry.npmmirror.com
 # 设置pnpm环境变量
 ENV PNPM_HOME="/pnpm"
 # 设置pnpm路径
@@ -34,12 +33,6 @@ RUN pnpm --filter @eggshell/antd-ui build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack
 RUN pnpm build --stats=detailed
-# 1. 检查 webpack 是否存在
-# RUN ls -l ./node_modules/.bin/webpack
-# 2. 执行构建并保留详细日志
-# RUN ./node_modules/.bin/webpack --config webpack.config.mjs --env production --stats=detailed
-# 3. 确认构建产物路径
-# RUN ls -l ./build
 
 # 阶段4：运行环境
 FROM nginx:latest
