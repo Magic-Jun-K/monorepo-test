@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchCom, TableCom, Space } from '@eggshell/antd-ui';
-import { Button, message, Modal } from '@eggshell/unocss-ui';
+import { message, Modal } from '@eggshell/unocss-ui';
+import { Button } from '@eggshell/tailwindcss-ui';
 import { PlusOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -14,8 +15,7 @@ import { fetchUsers, exportUsers, batchExportUsers, deleteUser } from '@/service
 import { currentUser } from '@/services/auth';
 
 // 处理搜索参数中的日期范围
-const processDateRange = (params: any) => {
-  console.log('processDateRange params:', params);
+const processDateRange = (params: SearchParams) => {
   const processedParams = { ...params };
 
   // 格式化创建时间范围
@@ -48,9 +48,19 @@ interface User {
   phone?: string;
   status: string;
   isSuperAdmin: boolean;
-  roles?: any[];
+  roles?: Role[];
   createdAt: string;
   updatedAt: string;
+}
+
+interface Role {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  level: number;
+  isSuperAdmin: boolean;
+  description?: string;
 }
 
 interface SearchParams {
@@ -85,7 +95,7 @@ export default function UserManagement() {
   const [importModalVisible, setImportModalVisible] = useState(false);
   // 编辑用户弹框
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -107,7 +117,7 @@ export default function UserManagement() {
     } finally {
       setLoading(false);
     }
-  }, [searchParams]);
+  }, [searchParams, messageApi]);
 
   // 权限检查
   useEffect(() => {
@@ -135,7 +145,7 @@ export default function UserManagement() {
     };
 
     checkPermission();
-  }, []); // 只在组件挂载时执行一次
+  }, [navigate, loadUsers, messageApi]); // 添加依赖项
 
   // 初始化加载（在权限检查通过后调用）
   useEffect(() => {
@@ -198,14 +208,13 @@ export default function UserManagement() {
   };
 
   // 编辑用户
-  const handleEditUser = (user: any) => {
-    console.log('handleEditUser called with user:', user);
+  const handleEditUser = (user: User) => {
     setEditingUser(user);
     setEditModalVisible(true);
   };
 
   // 删除用户
-  const handleDeleteUser = (user: any) => {
+  const handleDeleteUser = (user: User) => {
     Modal.confirm({
       title: '确认删除',
       content: `确定要删除用户 "${user.username}" 吗？此操作不可恢复。`,

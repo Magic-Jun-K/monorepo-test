@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Modal, Upload, message, Button } from '@eggshell/unocss-ui';
+import { Modal, Upload, message } from '@eggshell/unocss-ui';
+import { Button } from '@eggshell/tailwindcss-ui';
 import { ImportOutlined, DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import type { UploadFile } from '@eggshell/unocss-ui/src/components/Upload/types';
 
 import { importUsers } from '@/services/user';
 
@@ -21,7 +23,7 @@ export default function ImportUserModal({
   onCancel,
   onSuccess
 }: ImportUserModalProps) {
-  const [fileList, setFileList] = useState<any[]>([]);
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -83,7 +85,7 @@ export default function ImportUserModal({
       return;
     }
 
-    const file = fileList[0].originFileObj;
+    const file = fileList[0]?.originFileObj;
     console.log('📄 获取到的文件对象:', file);
     console.log('📄 完整的fileList[0]:', fileList[0]);
 
@@ -241,7 +243,7 @@ export default function ImportUserModal({
               </h4>
               {fileList.map((file, index) => (
                 <div
-                  key={index}
+                  key={file.uid || file.name || index}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

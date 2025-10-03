@@ -1,5 +1,5 @@
 import { SearchItem, Tag } from '@eggshell/antd-ui';
-import { Button } from '@eggshell/unocss-ui';
+import { Button } from '@eggshell/tailwindcss-ui';
 
 // 搜索配置
 export const searchItems: SearchItem[] = [
@@ -70,8 +70,39 @@ export const statusMap: { [key: string]: { text: string; color: string } } = {
   DELETED: { text: '已删除', color: 'gray' }
 };
 
+interface Role {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  level: number;
+  isSuperAdmin: boolean;
+  description?: string;
+}
+
+interface User {
+  id: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  status: string;
+  isSuperAdmin: boolean;
+  roles?: Role[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ColumnConfig {
+  title: string;
+  dataIndex: string;
+  key: string;
+  width: number;
+  fixed?: 'left' | 'right';
+  render?: (text: unknown, record?: unknown, index?: number) => React.ReactNode;
+}
+
 // 表格列配置基础数据
-export const baseColumns: any[] = [
+export const baseColumns: ColumnConfig[] = [
   {
     title: 'ID',
     dataIndex: 'id',
@@ -125,19 +156,19 @@ export const baseColumns: any[] = [
 // 渲染函数工具
 export const renderFunctions = {
   // 状态渲染
-  renderStatus: (status: string) => {
+  renderStatus(status: string) {
     const statusInfo = statusMap[status] || { text: status, color: 'default' };
     return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
   },
 
   // 角色渲染
-  renderRoles: (roles: any[]) => roles?.map(role => role.name).join(', ') || '',
+  renderRoles(roles: Role[] | undefined) { return roles?.map(role => role.name).join(', ') || ''; },
 
   // 时间渲染
-  renderTime: (text: string) => {
+  renderTime(text: string): string {
     if (!text) return '-';
     const date = new Date(text);
-    if (isNaN(date.getTime())) return '-';
+    if (Number.isNaN(date.getTime())) return '-';
 
     // 使用 toLocaleString 方法正确处理时区转换
     // Date 对象会自动根据本地时区转换 UTC 时间
@@ -155,9 +186,9 @@ export const renderFunctions = {
 
 // 完整的表格列配置（组合基础配置和渲染函数）
 export const getTableColumns = (
-  handleEdit?: (record: any) => void,
-  handleDelete?: (record: any) => void
-): any[] => {
+  handleEdit?: (record: User) => void,
+  handleDelete?: (record: User) => void
+): ColumnConfig[] => {
   const columns = baseColumns.map(col => {
     switch (col.dataIndex) {
       case 'status':
@@ -188,10 +219,10 @@ export const getTableColumns = (
     key: 'action',
     fixed: 'right' as const,
     width: 148,
-    render: (_text: any, record: any): React.ReactNode => {
+    render: (_text: unknown, record?: unknown): React.ReactNode => {
       return (
         <>
-          <Button type="primary" size="sm" onClick={() => handleEdit?.(record)}>
+          <Button type="primary" size="sm" onClick={() => handleEdit?.(record as User)}>
             编辑
           </Button>
           <Button
@@ -199,7 +230,7 @@ export const getTableColumns = (
             danger
             size="sm"
             style={{ marginLeft: '10px' }}
-            onClick={() => handleDelete?.(record)}
+            onClick={() => handleDelete?.(record as User)}
           >
             删除
           </Button>

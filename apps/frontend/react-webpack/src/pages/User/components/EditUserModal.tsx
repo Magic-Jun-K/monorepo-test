@@ -3,9 +3,31 @@ import { Modal, message, Input, Select } from '@eggshell/unocss-ui';
 import { useEffect } from 'react';
 import { updateUser } from '@/services/user';
 
+interface Role {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  level: number;
+  isSuperAdmin: boolean;
+  description?: string;
+}
+
+interface User {
+  id: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  status: string;
+  isSuperAdmin: boolean;
+  roles?: Role[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface EditUserModalProps {
   visible: boolean;
-  user: any;
+  user: User | null;
   onOk: () => void;
   onCancel: () => void;
   onSuccess?: () => void;
@@ -23,7 +45,6 @@ export default function EditUserModal({
 
   // 当用户数据变化时，填充表单
   useEffect(() => {
-    console.log('EditUserModal useEffect:', { visible, user });
     if (visible && user) {
       // 先重置表单，确保表单处于干净状态
       form.resetFields();
@@ -34,8 +55,6 @@ export default function EditUserModal({
         phone: user.phone ?? '',
         status: user.status
       };
-      console.log('setting form values:', formData);
-
       form.setFieldsValue(formData);
     }
   }, [visible, user, form]);
@@ -50,8 +69,9 @@ export default function EditUserModal({
         phone: values.phone === '' ? null : values.phone,
         email: values.email === '' ? null : values.email
       };
-      
-      console.log('提交的数据:', processedValues);
+
+      if (!user) return;
+
       const response = await updateUser(user.id, processedValues);
       if (response.success) {
         messageApi.success('更新用户成功');
