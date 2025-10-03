@@ -1,4 +1,4 @@
-import { FC /* useEffect */ } from 'react';
+import { FC } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
@@ -8,9 +8,9 @@ import { router } from './router/index';
 // import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 import { setupErrorHandlers } from './utils/errorHandler';
 
-import '@/assets/css/index.scss';
-import '@/assets/css/font.scss';
-import '@eggshell/unocss-ui/build/es/index.css'; // 直接引入样式
+import '@/styles/index.scss';
+import '@/styles/font.scss';
+// import '@eggshell/unocss-ui/lib/es/index.css'; // 直接引入样式
 import '@eggshell/antd-ui/es/index.css';
 
 setupErrorHandlers(); // 设置错误处理器
