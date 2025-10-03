@@ -1,11 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Dropdown, Menu, MenuItemType } from '@eggshell/unocss-ui';
 
-import { authStore } from '../../../store/auth.store';
+import { authStore } from '../../store/auth.store';
 import { logout } from '@/services';
-
-import styles from './index.module.scss';
-import './index.scss';
 
 // 在检查前定义 menuConfig
 const userConfig: MenuItemType[] = [
@@ -41,7 +38,7 @@ export default () => {
 
   return (
     <Dropdown overlay={<Menu mode="vertical" items={userConfig} onSelect={handleLogout} />}>
-      <div className={styles['logo']}></div>
+      <div className="w-9 h-9 rounded-full bg-black shadow-sm"></div>
     </Dropdown>
   );
 };

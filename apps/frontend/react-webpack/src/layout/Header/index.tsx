@@ -1,22 +1,17 @@
 import MenuCom from '../Menu';
 import Logout from './Logout';
 
-import styles from './index.module.scss';
-
-const menuItems = [
-  { path: '/', name: '首页' },
-  { path: '/form-test', name: '表单测试' },
-  { path: '/table-test', name: '表格测试' },
-  { path: '/virtual-list-test', name: '虚拟列表测试' },
-  { path: '/baidu-map', name: '百度地图' }
-];
-
 export default () => {
   return (
-    <header className={styles['Header']}>
-      <h1>Eggshell</h1>
-      <div className={styles['Header-body']}>
-        <MenuCom items={menuItems} />
+    <header
+      className="h-[68px] flex items-center border-b border-gray-200"
+      style={{ padding: '0px 4rem' }}
+    >
+      <h1 className="text-3xl font-bold" style={{ paddingRight: '1rem' }}>
+        Eggshell
+      </h1>
+      <div className="flex-1 flex justify-between items-center">
+        <MenuCom />
       </div>
       <Logout />
     </header>
