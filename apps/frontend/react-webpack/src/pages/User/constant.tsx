@@ -156,16 +156,18 @@ export const baseColumns: ColumnConfig[] = [
 // 渲染函数工具
 export const renderFunctions = {
   // 状态渲染
-  renderStatus(status: string) {
+  renderStatus: (status: string) => {
     const statusInfo = statusMap[status] || { text: status, color: 'default' };
     return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
   },
 
   // 角色渲染
-  renderRoles(roles: Role[] | undefined) { return roles?.map(role => role.name).join(', ') || ''; },
+  renderRoles: (roles: Role[] | undefined) => { 
+    return roles?.map(role => role.name).join(', ') || ''; 
+  },
 
   // 时间渲染
-  renderTime(text: string): string {
+  renderTime: (text: string): string => {
     if (!text) return '-';
     const date = new Date(text);
     if (Number.isNaN(date.getTime())) return '-';
@@ -180,7 +182,7 @@ export const renderFunctions = {
       minute: '2-digit',
       second: '2-digit',
       hour12: false
-    }).replace(/\//g, '-');
+    }).replaceAll('/', '-');
   }
 };
 
@@ -189,23 +191,23 @@ export const getTableColumns = (
   handleEdit?: (record: User) => void,
   handleDelete?: (record: User) => void
 ): ColumnConfig[] => {
-  const columns = baseColumns.map(col => {
+  const columns: ColumnConfig[] = baseColumns.map(col => {
     switch (col.dataIndex) {
       case 'status':
         return {
           ...col,
-          render: renderFunctions.renderStatus
+          render: (status: unknown) => renderFunctions.renderStatus(status as string)
         };
       case 'roles':
         return {
           ...col,
-          render: renderFunctions.renderRoles
+          render: (roles: unknown) => renderFunctions.renderRoles(roles as Role[] | undefined)
         };
       case 'createdAt':
       case 'updatedAt':
         return {
           ...col,
-          render: renderFunctions.renderTime
+          render: (text: unknown) => renderFunctions.renderTime(text as string)
         };
       default:
         return col;
