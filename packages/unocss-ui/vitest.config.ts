@@ -2,6 +2,9 @@
 import { defineConfig } from 'vitest/config';
 import type { ViteUserConfig } from 'vitest/config';
 import { resolve } from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   test: {
@@ -14,7 +17,7 @@ export default defineConfig({
     // 测试文件匹配模式
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     // 排除文件
-    exclude: ['node_modules', 'dist', 'build', 'coverage'],
+    exclude: ['node_modules', 'dist', 'lib', 'coverage'],
     // 覆盖率配置
     coverage: {
       provider: 'v8',

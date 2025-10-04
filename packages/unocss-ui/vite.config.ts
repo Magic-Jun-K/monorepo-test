@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import UnoCSS from '@unocss/vite';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'node:path';
+import { fileURLToPath, URL } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   plugins: [
@@ -11,13 +14,13 @@ export default defineConfig({
     dts({
       include: ['src'],
       exclude: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
-      outDir: 'lib/es/types',
+      outDir: 'lib/types',
       rollupTypes: true, // 自动生成类型声明
       insertTypesEntry: true // 自动插入类型声明
     })
   ],
   build: {
-    outDir: 'lib/es',
+    outDir: 'lib',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
