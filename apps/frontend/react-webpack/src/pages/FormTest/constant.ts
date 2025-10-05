@@ -1,154 +1,126 @@
 import { SearchItem } from '@eggshell/antd-ui';
 
-// 搜索项配置 - 与表格列一一对应
+// 搜索项配置 - 性能指标字段
 export const SEARCH_ITEMS: SearchItem[] = [
   {
-    label: '用户名',
-    name: 'username',
+    label: '项目标识',
+    name: 'project',
     type: 'input',
-    placeholder: '请输入用户名'
+    placeholder: '请输入项目标识'
   },
   {
-    label: '邮箱',
-    name: 'email',
+    label: '页面URL',
+    name: 'url',
     type: 'input',
-    placeholder: '请输入邮箱'
+    placeholder: '请输入页面URL'
   },
   {
-    label: '手机号码',
-    name: 'phoneNumber',
-    type: 'input',
-    placeholder: '请输入手机号码'
+    label: '浏览器类型',
+    name: 'browser',
+    type: 'select',
+    options: [
+      { label: 'Chrome', value: 'Chrome' },
+      { label: 'Firefox', value: 'Firefox' },
+      { label: 'Safari', value: 'Safari' },
+      { label: 'Edge', value: 'Edge' }
+    ],
+    placeholder: '请选择浏览器类型'
   },
   {
-    label: '注册时间范围',
-    name: 'registerTime',
+    label: '时间范围',
+    name: 'timeRange',
     type: 'rangePicker',
-    placeholder: ['开始注册时间', '结束注册时间']
+    placeholder: ['开始时间', '结束时间']
   },
   {
-    label: '状态',
+    label: '指标类型',
+    name: 'metricType',
+    type: 'select',
+    options: [
+      { label: 'FCP', value: 'fcp' },
+      { label: 'LCP', value: 'lcp' },
+      { label: 'CLS', value: 'cls' },
+      { label: 'INP', value: 'inp' }
+    ],
+    placeholder: '请选择指标类型'
+  },
+  {
+    label: '状态码',
     name: 'status',
     type: 'select',
     options: [
-      { label: '启用', value: '启用' },
-      { label: '禁用', value: '禁用' }
+      { label: '200', value: '200' },
+      { label: '404', value: '404' },
+      { label: '500', value: '500' }
     ],
-    placeholder: '请选择状态'
-  },
-  {
-    label: '角色',
-    name: 'role',
-    type: 'select',
-    options: [
-      { label: '管理员', value: '管理员' },
-      { label: '普通用户', value: '普通用户' }
-    ],
-    placeholder: '请选择角色'
+    placeholder: '请选择状态码'
   }
 ];
 
-interface DataType {
-  key: string;
-  name: string;
-  userId: number;
-  address: string;
-  tags: string[];
-  createTime: string;
+export interface PerformanceDataType {
+  id: number;
+  project: string;
+  url: string;
+  browser: string;
+  fcp: number;
+  lcp: number;
+  cls: number;
+  inp: number;
+  status: number;
+  timestamp: string;
 }
 
 export const COLUMNS = [
   {
-    // 类型：Text
-    // 说明：唯一标识
-    title: '用户ID',
-    dataIndex: 'userId',
-    key: 'userId',
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
     width: 140,
-    sorter: (a: DataType, b: DataType) => a.userId - b.userId
+    sorter: (a: PerformanceDataType, b: PerformanceDataType) => a.id - b.id
   },
   {
-    // 类型：Text
-    // 说明：用户名称
-    title: '用户名',
-    dataIndex: 'username',
-    key: 'username'
+    title: '项目标识',
+    dataIndex: 'project',
+    key: 'project'
   },
   {
-    // 类型：Avatar
-    // 说明：图片展示（点击可预览）
-    title: '头像',
-    dataIndex: 'profilePicture',
-    key: 'profilePicture'
+    title: '页面URL',
+    dataIndex: 'url',
+    key: 'url'
   },
   {
-    // 类型：Text
-    // 说明：邮箱地址
-    title: '邮箱',
-    dataIndex: 'email',
-    key: 'email'
+    title: '浏览器',
+    dataIndex: 'browser',
+    key: 'browser'
   },
   {
-    // 类型：Text
-    // 说明：手机号码
-    title: '手机号码',
-    dataIndex: 'phoneNumber',
-    key: 'phoneNumber'
+    title: 'FCP(ms)',
+    dataIndex: 'fcp',
+    key: 'fcp'
   },
   {
-    // 类型：Tag
-    // 说明：男/女/保密
-    title: '性别',
-    dataIndex: 'gender',
-    key: 'gender'
+    title: 'LCP(ms)',
+    dataIndex: 'lcp',
+    key: 'lcp'
   },
   {
-    // 类型：Text
-    // 说明：格式化日期
-    title: '注册时间',
-    dataIndex: 'registerTime',
-    key: 'registerTime'
+    title: 'CLS',
+    dataIndex: 'cls',
+    key: 'cls'
   },
   {
-    // 类型：Text
-    // 说明：格式化日期
-    title: '最近登录时间',
-    dataIndex: 'recentLoginTime',
-    key: 'recentLoginTime'
+    title: 'INP(ms)',
+    dataIndex: 'inp',
+    key: 'inp'
   },
   {
-    // 类型：Switch
-    // 说明：启用/禁用（可切换）
-    title: '状态',
+    title: '状态码',
     dataIndex: 'status',
     key: 'status'
   },
   {
-    // 类型：Text
-    // 说明：用户角色
-    title: '角色',
-    dataIndex: 'role',
-    key: 'role'
-  },
-  {
-    // 类型：Tooltip
-    // 说明：长文本显示为省略号
-    title: '备注',
-    dataIndex: 'remarks',
-    key: 'remarks'
-  },
-  {
-    // 类型：AttachmentList
-    // 说明：显示附件链接（点击下载）
-    title: '附件',
-    dataIndex: 'attachment',
-    key: 'attachment'
-  },
-  {
-    // 类型：Action
-    // 说明：编辑/删除按钮
-    title: '操作',
-    dataIndex: 'operate',
-    key: 'operate'
+    title: '时间戳',
+    dataIndex: 'timestamp',
+    key: 'timestamp'
   }
 ];
