@@ -1,3 +1,7 @@
+/**
+ * 认证状态管理
+ * 负责token认证相关功能
+ */
 class AuthStore {
   private accessToken: string | null = null;
 
