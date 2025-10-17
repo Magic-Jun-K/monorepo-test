@@ -6,8 +6,17 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 // import { Request } from 'express';
 
-import { UserEntity } from '../../entities/user.entity';
-import { RedisService } from '../redis/redis.service';
+import { UserEntity, UserStatus } from '../../../entities/user.entity';
+import { RedisService } from '../../redis/redis.service';
+
+// 定义 JWT payload 的类型
+interface JwtPayload {
+  sub: number;
+  roles?: string[];
+  isSuperAdmin?: boolean;
+  username?: string;
+  // 可以根据实际需要添加更多字段
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -32,7 +41,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // 从 Authorization 头获取 token
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false, // 忽略过期时间
-      secretOrKey: process.env.JWT_SECRET, // 密钥
+      secretOrKey: process.env.JWT_SECRET || configService.get('JWT_SECRET'), // 密钥
       passReqToCallback: false, // 忽略请求对象
     });
   }
@@ -43,7 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * @param payload
    * @returns
    */
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     // 如果没有 payload 直接返回
     if (!payload || !payload.sub) return null;
 
@@ -58,23 +67,33 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const user = await this.userRepository.findOne({
       where: { id: payload.sub },
-      relations: ['roles'],
     });
 
     if (!user) {
       throw new UnauthorizedException('用户不存在');
     }
 
-    if (!user.isActive) {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('账户已被禁用');
     }
 
-    console.log('测试jwt validate payload', payload);
-    console.log('测试jwt validate user', user);
+    // console.log('测试jwt validate payload', payload);
+    // console.log('测试jwt validate user', user);
 
     // 返回包含用户类型和角色的完整用户信息
-    const { password, ...userWithoutPassword } = user;
-    console.log('测试jwt validate password', password);
-    return userWithoutPassword;
+    const { password: _password, ...userWithoutPassword } = user;
+    // console.log('测试jwt validate password', _password);
+    // console.log('测试jwt validate payload.isSuperAdmin', payload.isSuperAdmin);
+    // console.log('测试jwt validate user.isSuperAdmin', user.isSuperAdmin);
+    
+    // 将JWT payload中的角色信息合并到用户对象中
+    const completeUser = {
+      ...userWithoutPassword,
+      roles: payload.roles || [], // 从JWT payload中获取角色信息
+      isSuperAdmin: payload.isSuperAdmin !== undefined ? payload.isSuperAdmin : user.isSuperAdmin, // 优先使用JWT payload中的值，如果没有则使用数据库中的值
+    };
+    
+    // console.log('测试jwt validate completeUser', completeUser);
+    return completeUser;
   }
 }

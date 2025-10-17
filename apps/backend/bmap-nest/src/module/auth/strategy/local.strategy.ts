@@ -8,8 +8,9 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Request } from 'express';
 
-import { AuthService } from './auth.service';
-import { LoginAttemptsService } from './login-attempts.service';
+import { AuthService } from '../auth.service';
+import { LoginAttemptsService } from '../login-attempts.service';
+import { UserEntity } from '../../../entities/user.entity';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -32,18 +33,18 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     request: Request, // 使用 @Req() 装饰器获取请求对象
     username: string,
     password: string,
-  ): Promise<any> {
+  ): Promise<Omit<UserEntity, 'password'> | null> {
     // 获取客户端IP地址
     const clientIp = this.getClientIp(request);
 
     // 日志输出
-    const displayIp =
-      clientIp === '::1'
-        ? 'localhost (IPv6)'
-        : clientIp === '127.0.0.1'
-          ? 'localhost (IPv4)'
-          : clientIp;
-    console.log('客户端IP地址:', displayIp);
+    // const displayIp =
+    //   clientIp === '::1'
+    //     ? 'localhost (IPv6)'
+    //     : clientIp === '127.0.0.1'
+    //       ? 'localhost (IPv4)'
+    //       : clientIp;
+    // console.log('客户端IP地址:', displayIp);
 
     // 检查是否被锁定（基于用户名）
     if (await this.loginAttemptsService.isBlocked(username)) {
@@ -72,8 +73,24 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    const user = await this.authService.validateUser(username);
-    console.log('测试local.strategy.ts validate user', user);
+    let user: UserEntity | null;
+    try {
+      user = await this.authService.validateUser(username);
+      // console.log('测试local.strategy.ts validate user', user);
+    } catch (error) {
+      // 处理邮箱注册用户尝试账号密码登录的情况
+      if (
+        error instanceof UnauthorizedException &&
+        error.message.includes('只能通过邮箱验证码登录')
+      ) {
+        throw new UnauthorizedException({
+          message: '该账户只能通过邮箱验证码登录，请使用邮箱登录方式',
+          error: 'LOGIN_METHOD_NOT_ALLOWED',
+          remainingAttempts: 0,
+        });
+      }
+      throw error;
+    }
 
     if (!user) {
       // 记录失败尝试
@@ -122,7 +139,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
     // 只返回需要的用户信息，不包含密码
     const { password: _password, ...userWithoutPassword } = user;
-    console.log('测试local.strategy.ts validate _password', _password);
+    // console.log('测试local.strategy.ts validate _password', _password);
     return userWithoutPassword;
   }
 
