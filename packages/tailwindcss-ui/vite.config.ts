@@ -50,10 +50,13 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime'
-        }
+        },
+        assetFileNames: '[name][extname]'
       }
     },
-    // 使用现代ES语法
-    target: 'es2022'
+    // 浏览器兼容性
+    target: 'es2022',
+    // 确保CSS被正确处理
+    cssCodeSplit: false
   }
 });
