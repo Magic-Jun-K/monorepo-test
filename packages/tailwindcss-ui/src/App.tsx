@@ -1,4 +1,5 @@
-import { ButtonExample, CommonButtonExample } from './components/example';
+import { ButtonExample, NavigationMenuExample, DialogExample } from './components/example/ui';
+import { EnhancedButtonExample, EnhancedInputExample, EnhancedDialogExample, EnhancedSwiperExample } from './components/example/enhanced';
 
 function App() {
   return (
@@ -9,8 +10,18 @@ function App() {
         </h1>
         
         <div className="space-y-8">
+          {/* Button 按钮示例 */}
           <ButtonExample />
-          <CommonButtonExample />
+          <EnhancedButtonExample />
+          {/* NavigationMenu 导航菜单示例 */}
+          <NavigationMenuExample />
+          {/* Input 输入框示例 */}
+          <EnhancedInputExample />
+          {/* Dialog 弹窗示例 */}
+          <DialogExample />
+          <EnhancedDialogExample />
+          {/* Swiper 轮播图示例 */}
+          <EnhancedSwiperExample />
         </div>
       </div>
     </div>

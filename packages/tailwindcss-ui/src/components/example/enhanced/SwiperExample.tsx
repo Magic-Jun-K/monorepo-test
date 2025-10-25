@@ -3,9 +3,9 @@
  * @description Swiper 组件使用示例
  */
 import { FC } from 'react';
-import { Swiper } from '../../common/Swiper';
+import { Swiper } from '../../enhanced/Swiper';
 
-export const CommonSwiperExample: FC = () => {
+export const EnhancedSwiperExample: FC = () => {
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Swiper 轮播图组件示例</h2>

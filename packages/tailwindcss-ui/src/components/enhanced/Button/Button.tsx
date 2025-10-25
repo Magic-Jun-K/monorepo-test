@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 
-import { Button as BaseButton } from '../../ui/button';
+import { Button as BaseButton } from '@/components/ui/button';
 import type { ButtonProps, ButtonColorType, ButtonVariantType } from './types';
 import { colorMap, typeMap, sizeMap, variantMap } from './constants';
 

@@ -43,10 +43,6 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
    * 子元素
    */
   children?: ReactNode;
-  /**
-   * 自定义样式
-   */
-  style?: React.CSSProperties;
 }
 
 export type ButtonColorType = 'primary' | 'success' | 'warning' | 'danger' | 'default';
