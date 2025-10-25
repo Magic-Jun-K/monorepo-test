@@ -1,4 +1,4 @@
-import { Modal } from '@eggshell/unocss-ui';
+import { Modal } from '@eggshell/antd-ui';
 
 import treeIcon from '@/assets/images/test/car_jf.svg';
 // import TreeIcon from '@/assets/images/test/car_jf.svg?react';

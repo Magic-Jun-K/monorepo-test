@@ -1,4 +1,5 @@
-import { Modal, Select, Upload } from '@eggshell/unocss-ui';
+import { Upload } from '@eggshell/antd-ui';
+import { Modal, Select } from '@eggshell/antd-ui';
 import { Input } from '@eggshell/tailwindcss-ui';
 
 interface Props {

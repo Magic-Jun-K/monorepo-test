@@ -1,4 +1,4 @@
-import { Modal } from '@eggshell/unocss-ui';
+import { Modal } from '@eggshell/antd-ui';
 
 import EChartsCom from '@/components/ECharts';
 import { PieOptions } from './constant';

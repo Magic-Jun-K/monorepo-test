@@ -93,13 +93,13 @@ export default () => {
   return (
     <ContainerBody className="flex flex-col">
       <SearchCom items={SEARCH_ITEMS} onSearch={handleSearch} onReset={handleReset} />
-      <div style={{ paddingBottom: '20px' }}>
-        <Button type="primary" style={{ marginRight: '12px' }} onClick={() => setIsOpenImage(true)}>
+      <div className="flex pb-5">
+        <Button type="primary" className="mr-3" onClick={() => setIsOpenImage(true)}>
           图片测试按钮
         </Button>
         <Button
           type="primary"
-          style={{ marginRight: '12px' }}
+          className="mr-3"
           onClick={() => setIsOpenECharts(true)}
         >
           ECharts测试按钮

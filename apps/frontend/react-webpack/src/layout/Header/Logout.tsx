@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { Dropdown, Menu, MenuItemType } from '@eggshell/unocss-ui';
+import { Dropdown } from '@eggshell/antd-ui';
+import type { MenuProps } from '@eggshell/antd-ui';
 
 import { authStore } from '../../store/auth.store';
 import { logout } from '@/services';
 
 // 在检查前定义 menuConfig
-const userConfig: MenuItemType[] = [
+const userConfig: MenuProps['items'] = [
   {
     key: 'logout',
     label: '退出登录'
@@ -35,9 +36,9 @@ export default () => {
       navigate(`/account/login?redirect=${window.location.pathname}`);
     }
   };
-
+  
   return (
-    <Dropdown overlay={<Menu mode="vertical" items={userConfig} onSelect={handleLogout} />}>
+    <Dropdown menu={{ items: userConfig, onClick: handleLogout }} placement='bottom'>
       <div className="w-9 h-9 rounded-full bg-black shadow-sm"></div>
     </Dropdown>
   );
