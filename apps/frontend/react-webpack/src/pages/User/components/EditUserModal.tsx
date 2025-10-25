@@ -1,6 +1,7 @@
-import { Form } from '@eggshell/antd-ui';
-import { Modal, message, Input, Select } from '@eggshell/unocss-ui';
 import { useEffect } from 'react';
+import { Modal, Form, Select, message } from '@eggshell/antd-ui';
+import { Input } from '@eggshell/tailwindcss-ui';
+
 import { updateUser } from '@/services/user';
 
 interface Role {
@@ -62,7 +63,7 @@ export default function EditUserModal({
   const handleUpdateUser = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // 处理空字符串字段，将空字符串转换为null以符合数据库唯一约束
       const processedValues = {
         ...values,

@@ -1,5 +1,5 @@
-import { Form } from '@eggshell/antd-ui';
-import { Modal, message, Input } from '@eggshell/unocss-ui';
+import { Modal, Form, message } from '@eggshell/antd-ui';
+import { Input } from '@eggshell/tailwindcss-ui';
 
 import { createUser } from '@/services/user';
 

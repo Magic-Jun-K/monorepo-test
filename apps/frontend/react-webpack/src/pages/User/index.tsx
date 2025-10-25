@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SearchCom, TableCom, Space } from '@eggshell/antd-ui';
-import { message, Modal } from '@eggshell/unocss-ui';
+import { SearchCom, TableCom, Space, message, Modal } from '@eggshell/antd-ui';
 import { Button } from '@eggshell/tailwindcss-ui';
-import { PlusOutlined, ImportOutlined, ExportOutlined } from '@ant-design/icons';
+import { Plus, Import, Download } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import ContainerBody from '@/layout/ContainerBody';
@@ -287,17 +286,17 @@ export default function UserManagement() {
       {/* 操作按钮区域 */}
       <div className={styles.actionCard}>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalVisible(true)}>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => setAddModalVisible(true)}>
             新增用户
           </Button>
-          <Button icon={<ImportOutlined />} onClick={() => setImportModalVisible(true)}>
+          <Button icon={<Import size={16} />} onClick={() => setImportModalVisible(true)}>
             导入用户
           </Button>
-          <Button icon={<ExportOutlined />} onClick={handleExportUsers}>
+          <Button icon={<Download size={16} />} onClick={handleExportUsers}>
             导出用户
           </Button>
           <Button
-            icon={<ExportOutlined />}
+            icon={<Download size={16} />}
             onClick={handleBatchExport}
             disabled={selectedRows.length === 0}
           >
