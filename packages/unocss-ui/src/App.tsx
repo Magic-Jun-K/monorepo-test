@@ -3,13 +3,10 @@ import { AutoComplete } from './components/AutoComplete';
 import { Menu } from './components/Menu';
 import { Dropdown } from './components/Dropdown';
 import type { MenuType } from './components/Menu/types';
-// import './utils/myCall';
-// import './utils/myApply';
-// import './utils/myBind';
 
 import './App.css';
 
-// antd 5.25.0 风格 menuConfig
+// antd 5.x 风格 menuConfig
 const menuConfig: MenuType[] = [
   {
     key: 'dashboard',
