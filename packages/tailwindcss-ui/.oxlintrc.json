@@ -6,7 +6,8 @@
   },
   "globals": {
     "React": "readonly",
-    "JSX": "readonly"
+    "JSX": "readonly",
+    "global": "readonly"
   },
   "ignorePatterns": [
     "dist/",
