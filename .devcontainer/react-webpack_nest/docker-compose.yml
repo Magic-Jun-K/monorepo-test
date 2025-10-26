@@ -1,0 +1,54 @@
+services:
+  eggshell-bmap-postgresql:
+    image: bitnami/postgresql:latest
+    container_name: eggshell-bmap-postgresql
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=test123
+      # - POSTGRESQL_DATABASE=bmap-nest
+      - POSTGRESQL_DATABASE=baidu-map-nest
+      # 添加以下配置使PostgreSQL监听所有地址
+      - POSTGRESQL_POSTGRES_PASSWORD=test123
+      - POSTGRESQL_LISTEN_ADDRESSES=*
+    # volumes:
+    # - ../postgresql_data:/bitnami/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      eggshell-bmap-network:
+        aliases:
+          - localhost
+          - 127.0.0.1
+
+  # 添加 MongoDB 服务
+  eggshell-bmap-mongodb:
+    image: mongo:latest
+    container_name: eggshell-bmap-mongodb
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    # volumes:
+    #   - ../mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      eggshell-bmap-network:
+        aliases:
+          - localhost
+          - 127.0.0.1
+
+networks:
+  eggshell-bmap-network:
+    driver: bridge
+
+# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=bmap-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
