@@ -3,7 +3,8 @@
   "extends": ["recommended", "typescript"],
   "plugins": ["typescript", "unicorn", "react", "jsx-a11y"],
   "env": {
-    "node": true
+    "node": true,
+    "browser": true
   },
   "categories": {
     "correctness": "error",
