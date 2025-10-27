@@ -15,7 +15,7 @@ export const login = async (data: LoginPayload): Promise<LoginRes> => {
  * @returns
  */
 export const currentUser = async (): Promise<CurrentUserRes> => {
-  return await request.get('/current-user');
+  return await request.get('/auth/current-user');
 };
 
 /**
