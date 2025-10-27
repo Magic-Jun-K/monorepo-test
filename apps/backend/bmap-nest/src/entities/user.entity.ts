@@ -13,37 +13,124 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { UserProfileEntity } from './user_profile.entity';
-import { RoleEntity } from './user_role.entity';
-import { UserOAuthEntity } from './user_oauth.entity';
+import { UserProfileEntity } from './user-profile.entity';
+import { RoleEntity } from './role.entity';
+import { UserOAuthEntity } from './user-oauth.entity';
 import { PhotoEntity } from './photo.entity';
+
+/**
+ * 用户状态枚举
+ */
+export enum UserStatus {
+  ACTIVE = 'ACTIVE', // 激活
+  INACTIVE = 'INACTIVE', // 未激活
+  SUSPENDED = 'SUSPENDED', // 暂停
+  DELETED = 'DELETED', // 已删除
+  LOCKED = 'LOCKED', // 锁定
+}
+
+/**
+ * 用户类型枚举（仅用于标识，权限由角色控制）
+ */
+export enum UserType {
+  INTERNAL = 'INTERNAL', // 内部用户
+  EXTERNAL = 'EXTERNAL', // 外部用户
+  SYSTEM = 'SYSTEM', // 系统用户
+}
 
 @Entity({ name: 'user' })
 export class UserEntity {
+  /**
+   * 用户ID
+   */
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true, nullable: true }) // 用户名
+  /**
+   * 用户名
+   */
+  @Column({ unique: true, nullable: true })
   username: string;
 
-  @Column({ nullable: true }) // 密码（加密存储）
+  /**
+   * 密码
+   */
+  @Column({ nullable: true })
   password: string;
 
-  @Column({ unique: true, nullable: true }) // 手机号码
+  /**
+   * 手机号
+   */
+  @Column({ unique: true, nullable: true })
   phone: string;
 
-  @Column({ unique: true, nullable: true }) // 邮箱
+  /**
+   * 邮箱
+   */
+  @Column({ unique: true, nullable: true })
   email: string;
 
+  /**
+   * 用户类型（仅用于标识，权限由角色控制）
+   */
   @Column({
     type: 'enum',
-    enum: ['admin', 'user'],
-    default: 'user',
-  }) // 用户类型：admin管理员，user普通用户
-  userType: string;
+    enum: UserType,
+    default: UserType.INTERNAL,
+  })
+  userType: UserType;
 
-  @Column({ default: true }) // 账户是否激活
-  isActive: boolean;
+  /**
+   * 用户状态
+   */
+  @Column({
+    type: 'enum',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
+  })
+  status: UserStatus;
+
+  /**
+   * 是否为超级管理员（通过环境变量配置）
+   */
+  @Column({ default: false })
+  isSuperAdmin: boolean;
+
+  /**
+   * 最后登录时间
+   */
+  @Column({ name: 'last_login_at', nullable: true })
+  lastLoginAt: Date;
+
+  /**
+   * 最后登录IP
+   */
+  @Column({ name: 'last_login_ip', nullable: true })
+  lastLoginIp: string;
+
+  /**
+   * 登录失败次数
+   */
+  @Column({ name: 'login_failed_count', default: 0 })
+  loginFailedCount: number;
+
+  /**
+   * 账户锁定时间
+   */
+  @Column({ name: 'locked_until', nullable: true })
+  lockedUntil: Date;
+
+  /**
+   * 密码过期时间
+   */
+  @Column({ name: 'password_expires_at', nullable: true })
+  passwordExpiresAt: Date;
+
+  /**
+   * 是否需要修改密码
+   */
+  @Column({ name: 'password_change_required', default: false })
+  passwordChangeRequired: boolean;
 
   @OneToOne(() => UserProfileEntity, (profile) => profile.user)
   profile: UserProfileEntity;
@@ -51,36 +138,32 @@ export class UserEntity {
   @OneToMany(() => UserOAuthEntity, (oauth) => oauth.user)
   oAuths: UserOAuthEntity[];
 
-  // 如果数据量较大，可以使用懒加载来优化性能 lazy: true
-  // @OneToMany(() => PhotoEntity, (photo) => photo.user, { lazy: true })
-  @OneToMany(() => PhotoEntity, (photo) => photo.user) // 定义一对多关系
-  photos: PhotoEntity[]; // 用户关联的照片列表
+  @OneToMany(() => PhotoEntity, (photo) => photo.user)
+  photos: PhotoEntity[];
 
   @ManyToMany(() => RoleEntity, (role) => role.users)
   @JoinTable({
-    name: 'user_roles', // 中间表名
+    name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
   roles: RoleEntity[];
 
   /**
-   * 用户创建时间
-   * 用户注册或首次创建记录的时间，当用户记录第一次插入数据库时自动设置，之后不会自动改变
+   * 创建时间
    */
   @CreateDateColumn({
-    type: 'timestamp',
+    type: 'timestamp with time zone', // 使用标准的带时区时间戳类型
     name: 'created_at',
     comment: '用户创建时间（注册时间）',
   })
   createdAt: Date;
 
   /**
-   * 用户信息最后更新时间
-   * 用户信息（如用户名、邮箱、手机号等）最后一次被修改的时间，每次更新用户信息时都会自动更新
+   * 更新时间
    */
   @UpdateDateColumn({
-    type: 'timestamp',
+    type: 'timestamp with time zone', // 使用标准的带时区时间戳类型
     name: 'updated_at',
     comment: '用户信息最后更新时间',
   })
