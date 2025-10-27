@@ -4,7 +4,7 @@ import styles from './index.module.scss';
 
 const menuItems = [
   { path: '/', name: '首页' },
-  { path: '/form-test', name: '表单测试页' },
+  { path: '/form-test', name: '表单测试' },
   { path: '/baidu-map', name: '百度地图' }
 ];
 
