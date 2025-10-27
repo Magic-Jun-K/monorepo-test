@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "核心业务组件库",
+  "author": "Magic-Jun-K",
+  "license": "ISC",
+  "keywords": [],
   "main": "./lib/es/index.js",
   "module": "./lib/es/index.js",
   "types": "./lib/types/index.d.ts",
@@ -16,15 +20,6 @@
   "files": [
     "lib"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Magic-Jun-K/monorepo-test.git",
-    "directory": "packages/core-business-components"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
-  },
   "scripts": {
     "dev": "vite",
     "build:workers": "tsc -p tsconfig.worker.json",
@@ -35,31 +30,40 @@
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "pnpm asbuild:debug && pnpm asbuild:release",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "start": "npx serve ."
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "dependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
     "@eggshell/unocss-ui": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "18.3.24",
-    "@types/react-dom": "18.3.7",
-    "@types/node": "24.4.0",
+    "@eslint/js": "^9.38.0",
     "@testing-library/react": "^16.0.1",
-    "@eslint/js": "^9.35.0",
-    "eslint": "^9.35.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
+    "@types/react": "18.3.26",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "^5.1.0",
+    "assemblyscript": "0.28.9",
+    "eslint": "^9.38.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.4.0",
-    "typescript": "~5.9.2",
-    "typescript-eslint": "^8.43.0",
-    "vite": "^7.1.5",
-    "@vitejs/plugin-react": "^5.0.0",
-    "vite-plugin-wasm": "3.5.0",
+    "tslib": "2.8.1",
+    "typescript-eslint": "^8.46.2",
+    "vite": "^7.1.12",
     "vite-plugin-dts": "4.5.4",
-    "assemblyscript": "0.28.8",
-    "tslib": "2.8.1"
+    "vite-plugin-wasm": "3.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Magic-Jun-K/monorepo-test.git",
+    "directory": "packages/core-business-components"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   }
 }
