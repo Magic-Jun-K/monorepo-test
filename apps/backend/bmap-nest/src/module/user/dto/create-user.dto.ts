@@ -4,8 +4,10 @@ export const CreateUserSchema = z.object({
   username: z.string(),
   email: z.string().optional(),
   phone: z.string().optional(),
-  userType: z.enum(['user', 'admin']).optional().default('user'),
-  isActive: z.boolean().optional().default(true),
+  password: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).optional().default('ACTIVE'),
+  isSuperAdmin: z.boolean().optional().default(false),
+  roleIds: z.array(z.number()).optional(),
 });
 
 export type CreateUserDto = z.infer<typeof CreateUserSchema>;
