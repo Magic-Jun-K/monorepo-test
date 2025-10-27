@@ -1,10 +1,8 @@
 import VirtualList from './VirtualList';
 
-import styles from './index.module.scss';
-
 export default () => {
   return (
-    <div className={styles.container}>
+    <div className="h-[92.5vh] p-4 bg-[rgb(238,238,238)]">
       <VirtualList />
     </div>
   );

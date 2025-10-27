@@ -1,6 +1,4 @@
-import { FC, UIEvent, useRef, useState, useEffect } from 'react';
-
-import styles from './index.module.scss';
+import { FC, UIEvent, useRef, useState, useEffect, useCallback } from 'react';
 
 interface Item {
   id: number;
@@ -39,7 +37,7 @@ const VirtualList: FC = () => {
   // 计算初始数据量
   const calculateInitialItemCount = () => {
     if (!containerRef.current) return initialItemCount;
-    
+
     // 获取容器高度
     const containerHeight = containerRef.current.clientHeight;
     // 计算可以显示的项目数量，并向上取整
@@ -59,6 +57,54 @@ const VirtualList: FC = () => {
     setTotalItems(count);
     setIsInitialized(true);
   };
+
+  const fetchData = useCallback(async (): Promise<Item[]> => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const currentLength = items.length; // 当前数据长度
+        const remainingItems = totalDataLimit - currentLength; // 剩余数据长度
+
+        // 如果剩余数据不足10条，就只加载剩余的数据
+        const newItemCount = Math.min(10, remainingItems);
+
+        if (newItemCount <= 0) {
+          resolve([]);
+          return;
+        }
+
+        // 生成新的数据项
+        const newItems: Item[] = Array.from({ length: newItemCount }, (_, i) => ({
+          id: currentLength + i,
+          text: generateRandomText(currentLength + i)
+        }));
+        resolve(newItems); // 返回新的数据项
+      }, 500);
+    });
+  }, [items.length]);
+
+  // 动态加载数据
+  const loadMoreData = useCallback(async () => {
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+    try {
+      const newItems = await fetchData();
+      if (newItems.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      setItems(prev => [...prev, ...newItems]);
+      setTotalItems(prev => prev + newItems.length);
+
+      // 检查是否达到数据限制
+      if (items.length + newItems.length >= totalDataLimit) {
+        setHasMore(false);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasMore, isLoading, items.length, fetchData]);
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -105,7 +151,7 @@ const VirtualList: FC = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isInitialized, scrollTop, items.length, isLoading, hasMore]);
+  }, [isInitialized, scrollTop, items.length, isLoading, hasMore, loadMoreData, totalItems]);
 
   // 计算可见范围
   useEffect(() => {
@@ -124,31 +170,7 @@ const VirtualList: FC = () => {
     // 设置可见项
     const visibleIndices = Array.from({ length: endIndex - startIndex }, (_, i) => startIndex + i);
     setVisibleItems(visibleIndices);
-  }, [totalItems, itemHeight, buffer, scrollTop]);
-
-  // 动态加载数据
-  const loadMoreData = async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const newItems = await fetchData();
-      if (newItems.length === 0) {
-        setHasMore(false);
-        return;
-      }
-
-      setItems(prev => [...prev, ...newItems]);
-      setTotalItems(prev => prev + newItems.length);
-
-      // 检查是否达到数据限制
-      if (items.length + newItems.length >= totalDataLimit) {
-        setHasMore(false);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [totalItems, scrollTop]);
 
   // 滚动事件处理
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
@@ -168,30 +190,6 @@ const VirtualList: FC = () => {
     }
   };
 
-  const fetchData = async (): Promise<Item[]> => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const currentLength = items.length; // 当前数据长度
-        const remainingItems = totalDataLimit - currentLength; // 剩余数据长度
-
-        // 如果剩余数据不足10条，就只加载剩余的数据
-        const newItemCount = Math.min(10, remainingItems);
-
-        if (newItemCount <= 0) {
-          resolve([]);
-          return;
-        }
-
-        // 生成新的数据项
-        const newItems: Item[] = Array.from({ length: newItemCount }, (_, i) => ({
-          id: currentLength + i,
-          text: generateRandomText(currentLength + i)
-        }));
-        resolve(newItems); // 返回新的数据项
-      }, 500);
-    });
-  };
-
   // 计算加载动画的位置
   const getLoadingPosition = () => {
     if (!isLoading) return 0;
@@ -201,13 +199,19 @@ const VirtualList: FC = () => {
   };
 
   return (
-    <div ref={containerRef} className={styles.virtualListContainer} onScroll={handleScroll}>
+    <div
+      ref={containerRef}
+      /* 虚拟列表容器 */
+      className="h-full overflow-auto relative bg-white"
+      onScroll={handleScroll}
+    >
       {/* 占位元素，高度根据实际加载的数据量动态计算 */}
       <div style={{ height: `${totalItems * itemHeight}px` }} />
 
       {/* 实际渲染的列表项 */}
       <div
-        className={styles.listContainer}
+        /* 列表容器定位样式 */
+        className="absolute top-0 left-0 w-full"
         style={{
           transform: `translateY(${Math.floor(scrollTop / itemHeight) * itemHeight}px)`
         }}
@@ -217,7 +221,12 @@ const VirtualList: FC = () => {
           if (!item) return null;
 
           return (
-            <div key={item.id} className={styles.listItem} style={{ height: `${itemHeight}px` }}>
+            <div
+              key={item.id}
+              /* 列表项样式 */
+              className="flex items-center px-2.5 box-border border-b border-[#eee] overflow-hidden text-ellipsis whitespace-nowrap"
+              style={{ height: `${itemHeight}px` }}
+            >
               {item.text}
             </div>
           );
@@ -226,15 +235,21 @@ const VirtualList: FC = () => {
 
       {/* 加载状态提示 */}
       {isLoading && (
-        <div className={styles.loadingContainer} style={{ top: `${getLoadingPosition()}px` }}>
-          <div className={styles.loadingSpinner} />
+        <div
+          /* 加载容器样式 */
+          className="absolute bottom-0 left-0 right-0 h-10 flex items-center justify-center bg-white border-t border-[#eee]"
+          style={{ top: `${getLoadingPosition()}px` }}
+        >
+          {/* 加载动画样式 */}
+          <div className="w-5 h-5 border-2 border-[#f3f3f3] border-t-2 border-t-[#3498db] rounded-full animate-spin" />
         </div>
       )}
 
       {/* 没有更多数据提示 */}
       {!hasMore && items.length > 0 && (
         <div
-          className={styles.noMoreData}
+          /* 无数据提示样式 */
+          className="absolute left-0 right-0 h-10 leading-10 text-center bg-white border-t border-[#eee] pointer-events-none"
           style={{ top: `${(totalItems - 1) * itemHeight + itemHeight}px` }}
         >
           没有更多数据了
@@ -243,5 +258,4 @@ const VirtualList: FC = () => {
     </div>
   );
 };
-
 export default VirtualList;
