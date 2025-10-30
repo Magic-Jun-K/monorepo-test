@@ -8,10 +8,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@eggshell/unocss-ui": ["../../../../packages/unocss-ui/src"],
       "@eggshell/antd-ui": ["../../../../packages/antd-ui/src"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["../../../node_modules/@types", "./node_modules/@types", "./src/types"]
   },
   // 指定 需要 编译的文件
   "include": [
@@ -19,7 +18,10 @@
     "src/types/*.d.ts",
     "plugins/**/*",
     "vitest.config.ts",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    "tests/e2e/*.spec.ts",
+    "tests/e2e/setup/**/*.ts",
+    "playwright.config.ts"
   ],
   // 指定 不需要 编译的文件
   "exclude": ["node_modules", "build", "public"]
