@@ -1,6 +1,3 @@
-// playwright.config.ts is a Node.js module
-/// <reference types="node" />
-
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
