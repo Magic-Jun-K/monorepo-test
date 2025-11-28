@@ -7,8 +7,8 @@ services:
     environment:
       - POSTGRESQL_USERNAME=postgres
       - POSTGRESQL_PASSWORD=test123
-      # - POSTGRESQL_DATABASE=bmap-nest
-      - POSTGRESQL_DATABASE=baidu-map-nest
+      - POSTGRESQL_DATABASE=bmap-nest
+      # - POSTGRESQL_DATABASE=baidu-map-nest
       # 添加以下配置使PostgreSQL监听所有地址
       - POSTGRESQL_POSTGRES_PASSWORD=test123
       - POSTGRESQL_LISTEN_ADDRESSES=*
@@ -46,6 +46,26 @@ services:
         aliases:
           - localhost
           - 127.0.0.1
+    
+  # Redis 缓存服务
+  eggshell-bmap-redis:
+    container_name: eggshell-bmap-redis
+    image: redis:8-alpine
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+    # volumes:
+    #   - redis_data:/data
+    ports:
+      - '6379:6379'
+    restart: always
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eggshell-bmap-network
 
 networks:
   eggshell-bmap-network:
