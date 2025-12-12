@@ -1,4 +1,4 @@
-import { Module, Global, DynamicModule } from '@nestjs/common';
+import { Module, Global, DynamicModule, Type } from '@nestjs/common';
 
 import { InfluxService } from './influx.service';
 import { InfluxConfig } from './influx.interface';
@@ -7,11 +7,13 @@ import { InfluxConfig } from './influx.interface';
 @Module({})
 export class InfluxModule {
   static registerAsync(options: {
-    useFactory: (...args: any[]) => Promise<InfluxConfig> | InfluxConfig;
-    inject?: any[];
+    imports?: Array<Type<unknown> | DynamicModule | Promise<DynamicModule>>;
+    useFactory: (...args: unknown[]) => Promise<InfluxConfig> | InfluxConfig;
+    inject?: Array<Type<unknown> | string | symbol>;
   }): DynamicModule {
     return {
       module: InfluxModule,
+      imports: options.imports || [],
       providers: [
         {
           provide: 'INFLUX_CONFIG',

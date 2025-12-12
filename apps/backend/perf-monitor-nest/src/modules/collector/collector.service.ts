@@ -12,7 +12,7 @@ export class CollectorService {
     @InjectQueue('error') private errorQueue: Queue,
   ) {}
 
-  async addToQueue(type: 'performance' | 'error', data: any) {
+  async addToQueue(type: 'performance' | 'error', data: unknown) {
     const queue = type === 'performance' ? this.performanceQueue : this.errorQueue;
 
     await queue.add('process', data, {

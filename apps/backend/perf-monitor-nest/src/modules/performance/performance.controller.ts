@@ -24,7 +24,7 @@ export class PerformanceController {
   }
 
   @Post('report')
-  async report(@Body() body: any) {
+  async report(@Body() body: unknown) {
     const result = ReportPerformanceSchema.safeParse(body);
     if (!result.success) {
       const errorMessages = result.error.issues.map((err) => {

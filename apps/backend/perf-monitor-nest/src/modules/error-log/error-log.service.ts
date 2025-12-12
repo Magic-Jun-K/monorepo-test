@@ -8,7 +8,7 @@ import { ErrorLog } from './schemas/error-log.schema';
 export class ErrorLogService {
   constructor(@InjectModel(ErrorLog.name) private errorModel: Model<ErrorLog>) {}
 
-  async bulkInsert(errors: Partial<ErrorLog>[]): Promise<any> {
+  async bulkInsert(errors: Partial<ErrorLog>[]): Promise<unknown> {
     // 使用 insertMany 替代 bulkWrite 以避免类型问题
     return this.errorModel.insertMany(errors, { ordered: false });
   }

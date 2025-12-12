@@ -4,10 +4,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 
 import { InfluxModule } from './influx/influx.module';
-import { MongooseConfig } from './mongoose.config';
-import { RedisCacheModule } from './redis.module';
+import { RedisCacheModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { RedisCacheModule } from './redis.module';
 
     // 时序数据库 (InfluxDB)
     InfluxModule.registerAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         url: config.get<string>('INFLUX_URL')!,
@@ -25,10 +27,25 @@ import { RedisCacheModule } from './redis.module';
     }),
 
     // MongoDB (错误日志)
-    MongooseConfig,
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('MONGO_URI'),
+        dbName: config.get<string>('MONGO_DB_ERRORS'),
+        connectionFactory: (connection: Connection) => {
+          // 性能优化配置
+          connection.set('debug', config.get('NODE_ENV') === 'development');
+          connection.set('bufferCommands', false);
+          connection.set('autoIndex', false);
+          return connection;
+        },
+      }),
+    }),
 
     // PostgreSQL (元数据)
     TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',

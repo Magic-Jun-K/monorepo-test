@@ -13,7 +13,7 @@ export class ErrorLog extends Document {
   url: string;
 
   @Prop({ type: Object })
-  userAgent: Record<string, any>;
+  userAgent: Record<string, unknown>;
 
   @Prop()
   ip: string;
@@ -23,8 +23,8 @@ export class ErrorLog extends Document {
     message: string;
     stack: string;
     type: 'js_error' | 'resource_error' | 'promise_rejection';
-    context?: Record<string, any>;
-    device?: Record<string, any>;
+    context?: Record<string, unknown>;
+    device?: Record<string, unknown>;
   };
 
   @Prop({ type: [String], index: true })

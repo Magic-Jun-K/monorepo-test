@@ -14,25 +14,6 @@ export class InfluxService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private readonly config: InfluxConfig) {}
 
-  // constructor(private configService: ConfigService) {
-  //   const client = new InfluxDB({
-  //     url: configService.get('INFLUX_URL') || '',
-  //     token: configService.get('INFLUX_TOKEN'),
-  //   });
-
-  //   this.writeApi = client.getWriteApi(
-  //     configService.get('INFLUX_ORG') || '',
-  //     configService.get('INFLUX_BUCKET') || '',
-  //     'ms',
-  //   );
-
-  //   // 配置数据点格式
-  //   this.writeApi.useDefaultTags({
-  //     region: 'east-1',
-  //     version: '1.0',
-  //   });
-  // }
-
   async writePerformance(data: PerformanceDTO) {
     const point = new Point('web_perf')
       .tag('project', data.project)
@@ -71,9 +52,9 @@ export class InfluxService implements OnModuleInit, OnModuleDestroy {
   }
 
   // 批量写入数据
-  writePoints(points: Point[]): void {
+  async writePoints(points: Point[]): Promise<void> {
     points.forEach((point) => this.writeApi.writePoint(point));
-    this.writeApi.flush().catch(console.error);
+    await this.writeApi.flush();
   }
 
   // 执行查询

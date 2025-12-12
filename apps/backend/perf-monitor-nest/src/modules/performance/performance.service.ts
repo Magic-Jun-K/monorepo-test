@@ -9,7 +9,7 @@ import { FilterQuery, Model } from 'mongoose';
 
 import { InfluxService } from '../../database/influx/influx.service';
 import { PerformanceDataDto } from './dto/performance-data.dto';
-import { PerformanceDocument } from './performance.schema';
+import { Performance, PerformanceDocument } from './performance.schema';
 
 @Injectable()
 export class PerformanceService {
@@ -87,7 +87,7 @@ export class PerformanceService {
     return result;
   }
 
-  async handleReport(data: any) {
+  async handleReport(data: unknown) {
     // 推送到队列，异步处理
     await this.performanceQueue.add('report', data);
   }

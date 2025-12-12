@@ -1,7 +1,9 @@
 {
   "extends": ["../../../.oxlintrc.json"],
   "rules": {
-    "no-console": "warn",
+    "no-console": "off",
+    "no-undef": "off",
+    "unicorn/no-array-sort": "off",
     "typescript/no-unused-vars": "error",
     "typescript/no-explicit-any": "warn",
     "typescript/no-floating-promises": "warn",
@@ -12,5 +14,24 @@
     "build/**/*",
     "node_modules/**/*",
     "eslint.config.mjs"
-  ]
+  ],
+  "globals": {
+    "console": "readonly",
+    "process": "readonly",
+    "setTimeout": "readonly",
+    "setInterval": "readonly",
+    "clearTimeout": "readonly",
+    "clearInterval": "readonly",
+    "__dirname": "readonly",
+    "__filename": "readonly",
+    "describe": "readonly",
+    "it": "readonly",
+    "test": "readonly",
+    "expect": "readonly",
+    "beforeEach": "readonly",
+    "afterEach": "readonly",
+    "beforeAll": "readonly",
+    "afterAll": "readonly",
+    "jest": "readonly"
+  }
 }
