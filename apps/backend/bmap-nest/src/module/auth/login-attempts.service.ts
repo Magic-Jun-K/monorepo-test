@@ -17,7 +17,7 @@ export class LoginAttemptsService {
   async isBlocked(identifier: string): Promise<boolean> {
     const key = `${this.ATTEMPT_PREFIX}${identifier}`;
     const attempts = await this.redisService.get(key);
-    return attempts ? parseInt(attempts) >= this.MAX_ATTEMPTS : false;
+    return attempts ? Number.parseInt(attempts) >= this.MAX_ATTEMPTS : false;
   }
 
   /**
@@ -27,7 +27,7 @@ export class LoginAttemptsService {
   async recordFailedAttempt(identifier: string): Promise<void> {
     const key = `${this.ATTEMPT_PREFIX}${identifier}`;
     const currentAttempts = await this.redisService.get(key);
-    const attempts = currentAttempts ? parseInt(currentAttempts) : 0;
+    const attempts = currentAttempts ? Number.parseInt(currentAttempts) : 0;
 
     // 增加尝试次数并设置过期时间
     await this.redisService.set(key, (attempts + 1).toString(), this.LOCKOUT_TIME);
@@ -49,7 +49,7 @@ export class LoginAttemptsService {
   async getRemainingAttempts(identifier: string): Promise<number> {
     const key = `${this.ATTEMPT_PREFIX}${identifier}`;
     const attempts = await this.redisService.get(key);
-    const currentAttempts = attempts ? parseInt(attempts) : 0;
+    const currentAttempts = attempts ? Number.parseInt(attempts) : 0;
     return Math.max(0, this.MAX_ATTEMPTS - currentAttempts);
   }
 

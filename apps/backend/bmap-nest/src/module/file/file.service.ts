@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
@@ -10,6 +10,7 @@ import { File } from '../../entities/file.entity';
 
 @Injectable()
 export class FileService {
+  private readonly logger = new Logger(FileService.name);
   private readonly uploadDir: string;
 
   constructor(
@@ -24,12 +25,12 @@ export class FileService {
   }
 
   // 上传文件
-  async uploadFile(file: any): Promise<File> {
+  async uploadFile(file: Express.Multer.File): Promise<File> {
     if (!existsSync(this.uploadDir)) {
       mkdirSync(this.uploadDir, { recursive: true });
     }
-    console.log('测试file', file);
-    console.log('测试this.uploadDir', this.uploadDir);
+    this.logger.log('测试file', file);
+    this.logger.log('测试this.uploadDir', this.uploadDir);
     const filePath = `upload/${file.originalname}`;
     writeFileSync(join(this.uploadDir, file.originalname), file.buffer);
 
@@ -49,7 +50,7 @@ export class FileService {
 
   // 下载文件
   async downloadFile(filename: string, res: Response) {
-    console.log('测试service downloadFile filename', filename);
+    this.logger.log('测试service downloadFile filename', filename);
     // const file = await this.fileRepository.findOne({ where: { filename } });
     // console.log('测试service downloadFile findOne file', file);
     // if (!file) {
@@ -59,7 +60,7 @@ export class FileService {
 
     // const filePath = join(process.cwd(), 'upload', filename);
     const filePath = join(this.uploadDir, filename);
-    console.log('测试service downloadFile filePath', filePath);
+    this.logger.log('测试service downloadFile filePath', filePath);
 
     if (!existsSync(filePath)) {
       res.status(404).send('File not found');
@@ -73,7 +74,7 @@ export class FileService {
 
     const fileStream = createReadStream(filePath);
     fileStream.on('error', (err) => {
-      console.error('文件流错误:', err);
+      this.logger.error('文件流错误:', err);
       res.status(500).send('文件传输失败');
     });
     fileStream.pipe(res);

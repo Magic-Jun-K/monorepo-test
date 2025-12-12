@@ -1,17 +1,19 @@
 /**
  * @description 异常过滤器
  */
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
 
 @Catch(HttpException)
 export class HttpErrorFilter implements ExceptionFilter<HttpException> {
+  private readonly logger = new Logger(HttpErrorFilter.name);
+
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp(); // 获取请求上下文
     const response = ctx.getResponse(); // 获取请求上下文中的 response 对象
     const request = ctx.getRequest(); // 获取请求上下文中的 request 对象
     const status = exception.getStatus(); // 获取状态码
 
-    const exceptionRes: any = exception.getResponse(); // 获取异常响应
+    const exceptionRes = exception.getResponse() as { error: string; message: string | string[] }; // 获取异常响应
     const { error, message } = exceptionRes;
 
     // let message = exception.message;
@@ -38,7 +40,7 @@ export class HttpErrorFilter implements ExceptionFilter<HttpException> {
       message,
       // detail,
     });
-    console.log('HttpErrorFilter', {
+    this.logger.error('HttpErrorFilter', {
       code: status,
       timestamp: new Date().toISOString(),
       path: request.url,

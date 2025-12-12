@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 
@@ -7,6 +7,8 @@ import { SearchTableDto } from './dto/search-table.dto';
 
 @Injectable()
 export class TableService {
+  private readonly logger = new Logger(TableService.name);
+
   constructor(
     @InjectRepository(TableData)
     private readonly tableRepo: Repository<TableData>,
@@ -15,7 +17,7 @@ export class TableService {
   async search(query: SearchTableDto) {
     const { page = 1, pageSize = 10, ...filters } = query;
     const skip = (page - 1) * pageSize;
-    console.log('测试query', query);
+    this.logger.log('测试query', query);
 
     const queryBuilder = this.tableRepo.createQueryBuilder('table');
 

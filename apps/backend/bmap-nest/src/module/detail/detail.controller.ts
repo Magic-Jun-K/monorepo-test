@@ -1,7 +1,7 @@
 /**
  * @description 路由处理的控制器（控制器层）
  */
-import { Controller, Get, Param, UsePipes, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UsePipes, UseGuards, Logger } from '@nestjs/common';
 
 import { DetailService } from './detail.service';
 import { DetailPipe } from '../../common/pipes/detail.pipe';
@@ -11,6 +11,8 @@ import { PgService } from '../../app.service';
 // 路由拦截
 @Controller('/detail')
 export class DetailController {
+  private readonly logger = new Logger(DetailController.name);
+  
   constructor(
     private readonly detailService: DetailService,
     private readonly pgService: PgService,
@@ -19,7 +21,7 @@ export class DetailController {
   @Get('/pg')
   async getHelloPg() {
     const res = await this.pgService.query('SELECT * FROM detail');
-    console.log(
+    this.logger.log(
       'getHelloPg res',
       'res.rows是数据',
       res.rows,
@@ -47,7 +49,7 @@ export class DetailController {
   @UsePipes(new DetailPipe())
   @UseGuards(AuthGuard)
   getHello(@Param('id') id): string {
-    console.log('测试Body id', id, typeof id);
+    this.logger.log('测试Body id', id, typeof id);
     return this.detailService.getHello();
   }
 }

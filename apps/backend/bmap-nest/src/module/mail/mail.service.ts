@@ -9,7 +9,7 @@ export class MailService {
     // 创建邮件传输器
     this.transporter = createTransport({
       host: process.env.MAILER_HOST, // 邮箱服务器地址
-      port: parseInt(process.env.MAILER_PORT || '465'), // 端口号
+      port: Number.parseInt(process.env.MAILER_PORT || '465'), // 端口号
       secure: true, // 是否使用安全传输协议（TLS端口设为false，SSL端口设为true）
       auth: {
         user: process.env.MAILER_USER, // 邮箱用户名

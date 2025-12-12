@@ -114,7 +114,7 @@ export class ExampleService {
   async getAllData(): Promise<ExampleData[]> {
     this.logger.log('Fetching all data');
     // 返回所有数据（实际项目中这里应该是数据库查询）
-    return Array.from(this.dataStore.values());
+    return [...this.dataStore.values()];
   }
 
   /**

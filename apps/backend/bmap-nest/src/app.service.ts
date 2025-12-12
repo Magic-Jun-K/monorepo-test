@@ -4,7 +4,7 @@
  * 调用第三方接口
  * 数据加工
  */
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
 
@@ -18,10 +18,12 @@ export class AppService {}
 @Injectable()
 export class PgService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
+  private readonly logger = new Logger(PgService.name);
+  
   constructor(private readonly configService: ConfigService) {
     const dsConfig = {
       host: this.configService.get<string>('PG_HOST'),
-      port: parseInt(this.configService.get<string>('PG_PORT'), 10),
+      port: Number.parseInt(this.configService.get<string>('PG_PORT'), 10),
       user: this.configService.get<string>('PG_USER'),
       password: this.configService.get<string>('PG_PASSWORD'),
       database: this.configService.get<string>('PG_DATABASE_NAME'),
@@ -44,7 +46,7 @@ export class PgService implements OnModuleInit, OnModuleDestroy {
       const result = await this.pool.query(sql);
       return result;
     } catch (error) {
-      console.error('pg query error', error);
+      this.logger.error('pg query error', error);
       // 业务异常一般不要吞掉
       throw error;
     }

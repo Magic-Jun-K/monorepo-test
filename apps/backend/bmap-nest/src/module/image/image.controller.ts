@@ -9,6 +9,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
@@ -20,12 +21,14 @@ import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('image')
 export class ImageController {
+  private readonly logger = new Logger(ImageController.name);
+  
   constructor(private readonly imageService: ImageService) {}
 
   @Post('compress')
   @UseInterceptors(FileInterceptor('image'))
   async compressImage(
-    @UploadedFile() file: any,
+    @UploadedFile() file: Express.Multer.File,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     try {

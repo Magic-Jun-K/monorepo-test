@@ -2,6 +2,7 @@
  * @description 入口文件
  */
 import { NestFactory /* , Reflector */ } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 // 设置时区为东八区
@@ -15,6 +16,7 @@ import { HttpErrorFilter } from './common/filters/exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
 
   // 添加 cookie 解析中间件
   app.use(cookieParser());
@@ -27,7 +29,7 @@ async function bootstrap() {
 
   // const reflector = app.get(Reflector);
   // app.useGlobalGuards(new AuthGuard(reflector));
-  console.log('process.env.NODE_ENV', process.env.NODE_ENV);
+  logger.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
   // 启用 CORS
   app.enableCors({
@@ -43,7 +45,7 @@ async function bootstrap() {
     methods: 'GET,POST,HEAD,PUT,PATCH,DELETE',
     credentials: true, // 允许携带 cookie
   });
-  console.log('process.env.PORT', process.env.PORT);
+  logger.log('process.env.PORT', process.env.PORT);
 
   await app.listen(process.env.PORT ?? 7000);
 }

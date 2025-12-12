@@ -78,8 +78,8 @@ export class PermissionController {
     @Query('resourceType') resourceType?: ResourceType,
   ): Promise<{ permissions: PermissionEntity[]; total: number }> {
     return this.permissionService.getAllPermissions(
-      page ? parseInt(page.toString()) : 1,
-      limit ? parseInt(limit.toString()) : 10,
+      page ? Number.parseInt(page.toString()) : 1,
+      limit ? Number.parseInt(limit.toString()) : 10,
       search,
       type,
       resourceType,
@@ -93,7 +93,7 @@ export class PermissionController {
   @RequirePermissions(PermissionType.PERMISSION_READ)
   @ApiOperation({ summary: '获取权限树' })
   @ApiResponse({ status: 200, description: '获取权限树成功' })
-  async getPermissionTree(): Promise<any[]> {
+  async getPermissionTree(): Promise<unknown[]> {
     return this.permissionService.getPermissionTree();
   }
 

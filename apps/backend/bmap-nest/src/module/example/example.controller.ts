@@ -43,7 +43,7 @@ export class ExampleController {
    * 创建数据，同时更新缓存
    */
   @Post('data')
-  async createData(@Body() data: any): Promise<ExampleData> {
+  async createData(@Body() data: unknown): Promise<ExampleData> {
     return this.exampleService.createData(data);
   }
 

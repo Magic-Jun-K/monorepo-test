@@ -3,9 +3,12 @@
  * @param sourcePath 源目录
  * @param destPath 目标目录
  */
+import { Logger } from '@nestjs/common';
 import { join, extname } from 'node:path';
 import { existsSync, mkdirSync, readdirSync } from 'node:fs';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
+
+const logger = new Logger('CompressImages');
 
 async function compressImage(sourcePath: string, destPath: string): Promise<void> {
   await sharp(sourcePath)
@@ -34,7 +37,7 @@ async function main() {
 
   // 确保源目录存在
   if (!existsSync(publicDir)) {
-    console.error('公共图片目录不存在');
+    logger.error('公共图片目录不存在');
     process.exit(1);
   }
 
@@ -47,7 +50,7 @@ async function main() {
     return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
   });
 
-  console.log(`找到 ${imageFiles.length} 个图片文件需要压缩`);
+  logger.log(`找到 ${imageFiles.length} 个图片文件需要压缩`);
 
   // 批量压缩
   const results = { success: 0, failed: 0 };
@@ -58,14 +61,14 @@ async function main() {
 
       await compressImage(sourcePath, destPath);
       results.success++;
-      console.log(`成功压缩: ${file}`);
+      logger.log(`成功压缩: ${file}`);
     } catch (error) {
       results.failed++;
-      console.error(`压缩失败 ${file}:`, error);
+      logger.error(`压缩失败 ${file}:`, error);
     }
   }
 
-  console.log(`压缩完成: 成功 ${results.success} 个, 失败 ${results.failed} 个`);
+  logger.log(`压缩完成: 成功 ${results.success} 个, 失败 ${results.failed} 个`);
 }
 
-main().catch(console.error);
+main().catch(logger.error);

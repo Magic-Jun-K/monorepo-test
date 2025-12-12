@@ -36,7 +36,7 @@
 
 ```env
 # 超级管理员配置
-SUPER_ADMIN_USERNAME=superadmin
+SUPER_ADMIN_USERNAME=superAdmin
 SUPER_ADMIN_PASSWORD=your_secure_password
 SUPER_ADMIN_EMAIL=admin@example.com
 ```
@@ -58,7 +58,7 @@ npx ts-node src/scripts/init-super-admin.ts
 curl -X POST http://localhost:3000/admin/create-super-admin \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "superadmin",
+    "username": "superAdmin",
     "password": "your_secure_password",
     "email": "admin@example.com"
   }'

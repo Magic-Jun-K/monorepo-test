@@ -1,9 +1,10 @@
 import * as argon2 from 'argon2';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { jwtDecrypt, importPKCS8 } from 'jose';
 
 @Injectable()
 export class AuthUtils {
+  private readonly logger = new Logger(AuthUtils.name);
   /**
    * 对前端传递的哈希值进行哈希处理
    * @param hashedPassword 前端传递的哈希值
@@ -26,7 +27,7 @@ export class AuthUtils {
    */
   async decryptRSA(encryptedPassword: string): Promise<string> {
     try {
-      console.log('开始RSA解密...');
+      this.logger.log('开始RSA解密...');
 
       // 从环境变量获取RSA私钥
       const privateKey = process.env.RSA_PRIVATE_KEY;
@@ -40,13 +41,13 @@ export class AuthUtils {
       // 解密JWE
       const { payload } = await jwtDecrypt(encryptedPassword, key);
 
-      console.log('RSA解密成功');
+      this.logger.log('RSA解密成功');
 
-      // 返回解密后的密码
-      return (payload as any).password as string;
+      // 返回解密后的密码，更安全的类型断言
+      return (payload as { password: string }).password;
     } catch (error) {
-      console.error('RSA解密失败:', error);
-      throw new Error('Failed to decrypt RSA password');
+      this.logger.error('RSA解密失败:', error);
+      throw new Error(`Failed to decrypt RSA password: ${error.message || error}`);
     }
   }
 
@@ -60,25 +61,25 @@ export class AuthUtils {
     finalHashedPassword: string,
     inputEncryptPassword: string,
   ): Promise<boolean> {
-    console.log('authUtils verifyPassword finalHashedPassword:', finalHashedPassword);
-    console.log('authUtils verifyPassword inputEncryptPassword:', inputEncryptPassword);
+    this.logger.log('authUtils verifyPassword finalHashedPassword:', finalHashedPassword);
+    this.logger.log('authUtils verifyPassword inputEncryptPassword:', inputEncryptPassword);
     try {
       let passwordToVerify = inputEncryptPassword;
 
       // 检查是否是JWT格式的RSA加密密码
       if (inputEncryptPassword.includes('.') && inputEncryptPassword.length > 100) {
-        console.log('检测到RSA加密密码，开始解密...');
+        this.logger.log('检测到RSA加密密码，开始解密...');
         passwordToVerify = await this.decryptRSA(inputEncryptPassword);
-        console.log('RSA解密后的密码:', passwordToVerify);
+        this.logger.log('RSA解密后的密码:', passwordToVerify);
       }
 
       // 使用argon2验证密码
       const isValid = await argon2.verify(finalHashedPassword, passwordToVerify);
-      console.log('authUtils verifyPassword isValid:', isValid);
+      this.logger.log('authUtils verifyPassword isValid:', isValid);
 
       return isValid;
     } catch (error) {
-      console.error('密码验证失败:', error);
+      this.logger.error('密码验证失败:', error);
       return false;
     }
   }

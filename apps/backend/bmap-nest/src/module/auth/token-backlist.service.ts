@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
@@ -6,6 +6,7 @@ import Redis from 'ioredis';
 @Injectable()
 export class TokenBlacklistService {
   private readonly BLACKLIST_PREFIX = 'token:blacklist:';
+  private readonly logger = new Logger(TokenBlacklistService.name);
 
   constructor(
     @InjectRedis() private readonly redis: Redis,
@@ -36,7 +37,7 @@ export class TokenBlacklistService {
         ttl + 60, // 额外增加60秒缓冲时间
       );
     } catch (error) {
-      console.error('将令牌加入黑名单失败:', error);
+      this.logger.error('将令牌加入黑名单失败:', error);
     }
   }
 

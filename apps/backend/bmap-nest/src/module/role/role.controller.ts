@@ -74,8 +74,8 @@ export class RoleController {
     @Query('isActive') isActive?: boolean,
   ): Promise<{ roles: RoleEntity[]; total: number }> {
     return this.roleService.getAllRoles(
-      page ? parseInt(page.toString()) : 1,
-      limit ? parseInt(limit.toString()) : 10,
+      page ? Number.parseInt(page.toString()) : 1,
+      limit ? Number.parseInt(limit.toString()) : 10,
       search,
       type,
       level,
@@ -90,7 +90,7 @@ export class RoleController {
   @RequirePermissions(PermissionType.ROLE_READ)
   @ApiOperation({ summary: '获取角色树' })
   @ApiResponse({ status: 200, description: '获取角色树成功' })
-  async getRoleTree(): Promise<any[]> {
+  async getRoleTree(): Promise<unknown[]> {
     return this.roleService.getRoleTree();
   }
 

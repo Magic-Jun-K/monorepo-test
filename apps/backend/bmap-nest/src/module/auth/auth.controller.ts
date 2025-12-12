@@ -11,6 +11,7 @@ import {
   HttpException,
   HttpStatus,
   UsePipes,
+  Logger
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -27,6 +28,8 @@ import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 // 路由拦截
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
@@ -46,7 +49,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      console.log('测试auth.controller.ts loginDto', loginDto);
+      this.logger.log('测试auth.controller.ts loginDto', loginDto);
 
       // 检查是否被锁定
       const isBlocked = await this.loginAttemptsService.isBlocked(loginDto.username);
@@ -66,7 +69,7 @@ export class AuthController {
         req.user, // 来自LocalStrategy的用户对象
       );
 
-      console.log('登录时生成的 refresh_token:', refresh_token);
+      this.logger.log('登录时生成的 refresh_token:', refresh_token);
 
       /* 设置 httpOnly cookie */
       // 设置 refresh_token
@@ -142,8 +145,8 @@ export class AuthController {
     // 从cookie中获取refresh token
     const refreshToken = req.cookies.refresh_token;
     // 调试日志
-    console.log('Refresh token from cookie:', refreshToken);
-    console.log('All cookies:', req.cookies);
+    this.logger.log('Refresh token from cookie:', refreshToken);
+    this.logger.log('All cookies:', req.cookies);
 
     // 如果没有refresh token，返回明确的错误
     if (!refreshToken) {
@@ -161,12 +164,12 @@ export class AuthController {
     try {
       const { access_token } = await this.authService.refreshToken(refreshToken);
 
-      console.log('✅ 后端 Token 刷新成功！:', access_token);
+      this.logger.log('✅ 后端 Token 刷新成功！:', access_token);
 
       return { success: true, data: access_token };
     } catch (error) {
-      console.error('Token 刷新失败:', error);
-      console.error('错误的refresh_token:', refreshToken);
+      this.logger.error('Token 刷新失败:', error);
+      this.logger.error('错误的refresh_token:', refreshToken);
       throw new UnauthorizedException('刷新令牌无效');
     }
   }
@@ -216,7 +219,7 @@ export class AuthController {
   @Public()
   @Post('send-code')
   async sendVerificationCode(@Body('email') email: string) {
-    console.log('发送验证码:', email);
+    this.logger.log('发送验证码:', email);
     return await this.authService.sendVerificationCode(email);
   }
 

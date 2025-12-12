@@ -3,6 +3,7 @@ import {
   HttpException,
   Injectable,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,11 +14,21 @@ import { AuthUtils } from '../../common/utils/auth.utils';
 import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
-import { AuthUser, AuthRole } from './types/user.interface';
+import { AuthUser } from './types/user.interface';
 import { RoleService } from '../role/role.service';
+
+interface RoleQueryResult {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  level: number;
+  isSuperAdmin: boolean;
+}
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly REFRESH_TOKEN_PREFIX = 'refresh_token:';
   private readonly ACCESS_TOKEN_PREFIX = 'access_token:';
 
@@ -38,7 +49,7 @@ export class AuthService {
    * @param password
    * @returns
    */
-  async validateUser(username: string): Promise<any> {
+  async validateUser(username: string): Promise<UserEntity | null> {
     const user = await this.userRepository.findOne({
       where: { username },
       select: ['id', 'username', 'password', 'status', 'isSuperAdmin'],
@@ -86,7 +97,7 @@ export class AuthService {
       [user.id],
     );
 
-    const roles = userRoles.map((role: any) => ({
+    const roles = (userRoles as unknown as RoleQueryResult[]).map((role) => ({
       id: role.id,
       name: role.name,
       code: role.code,
@@ -156,15 +167,15 @@ export class AuthService {
    * @returns
    */
   private async generateTokenPair(user: AuthUser) {
-    console.log('Generating token pair for user:', user);
+    this.logger.log('Generating token pair for user:', user);
 
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user),
     ]);
 
-    console.log('Generated accessToken:', accessToken);
-    console.log('Generated refreshToken:', refreshToken);
+    this.logger.log('Generated accessToken:', accessToken);
+    this.logger.log('Generated refreshToken:', refreshToken);
 
     return {
       access_token: accessToken,
@@ -202,8 +213,8 @@ export class AuthService {
    * @param user
    * @returns
    */
-  async login(user: AuthUser): Promise<any> {
-    console.log('login 登录用户:', user);
+  async login(user: AuthUser): Promise<{ access_token: string; refresh_token: string }> {
+    this.logger.log('login 登录用户:', user);
 
     const tokens = await this.generateTokenPair(user);
 
@@ -237,7 +248,7 @@ export class AuthService {
         where: { id: payload.sub },
         select: ['id', 'username'],
       });
-      console.log('测试refreshToken user', user);
+      this.logger.log('测试refreshToken user', user);
 
       if (!user) {
         throw new UnauthorizedException('用户不存在');
@@ -247,7 +258,7 @@ export class AuthService {
 
       return { access_token: accessToken };
     } catch (error) {
-      console.error('刷新token失败:', error);
+      this.logger.error('刷新token失败:', error);
       throw new UnauthorizedException('无效的Refresh Token');
     }
   }
@@ -266,7 +277,7 @@ export class AuthService {
 
       return payload;
     } catch (error) {
-      console.log('验证Access Token失败:', error);
+      this.logger.log('验证Access Token失败:', error);
       throw new UnauthorizedException('无效的Token');
     }
   }
@@ -275,7 +286,7 @@ export class AuthService {
    * 退出登录
    * @returns
    */
-  async logout(userId: number): Promise<any> {
+  async logout(userId: number): Promise<boolean> {
     // 请注意，jwt token是无状态的，所以不需要做任何操作，没法将其置为失效
     // 但是可以在前端删除token，这样就达到了退出登录的目的
     // 如果要严格来做，有以下几种方案：
@@ -307,7 +318,7 @@ export class AuthService {
       });
       await this.redisService.del(`${this.REFRESH_TOKEN_PREFIX}${payload.sub}`);
     } catch (e) {
-      console.warn('无法解析刷新令牌进行撤销', e);
+      this.logger.warn('无法解析刷新令牌进行撤销', e);
     }
   }
 
@@ -370,12 +381,12 @@ export class AuthService {
         if (defaultRole) {
           // 使用角色服务分配默认角色
           await this.roleService.batchAssignRolesToUser(userId, [defaultRole.id]);
-          console.log('✅ 为邮箱注册用户分配默认USER角色成功');
+          this.logger.log('✅ 为邮箱注册用户分配默认USER角色成功');
         } else {
           throw new Error('未找到默认USER角色');
         }
       } catch (error) {
-        console.error('为邮箱注册用户分配默认角色失败:', error.message);
+        this.logger.error('为邮箱注册用户分配默认角色失败:', error.message);
         // 角色分配失败时抛出异常，确保用户创建失败
         throw new HttpException(
           {

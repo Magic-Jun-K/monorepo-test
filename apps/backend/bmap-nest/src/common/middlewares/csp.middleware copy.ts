@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 export function strictCSP(req: Request, res: Response, next: NextFunction) {
   // 生成加密安全的nonce（全环境一致）

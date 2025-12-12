@@ -3,7 +3,7 @@
  */
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
+import { Repository, Like, In, FindOptionsWhere } from 'typeorm';
 
 import { PermissionEntity, PermissionType, ResourceType } from '../../entities/permission.entity';
 import { RoleEntity } from '../../entities/role.entity';
@@ -11,6 +11,18 @@ import {
   RolePermissionEntity,
   PermissionAssignmentStatus,
 } from '../../entities/role-permission.entity';
+
+export interface PermissionTreeNode {
+  id: number;
+  name: string;
+  code: string;
+  type: PermissionType;
+  resourceType: ResourceType;
+  description: string;
+  level: number;
+  isActive: boolean;
+  children: PermissionTreeNode[];
+}
 
 @Injectable()
 export class PermissionService {
@@ -93,7 +105,7 @@ export class PermissionService {
     type?: PermissionType,
     resourceType?: ResourceType,
   ): Promise<{ permissions: PermissionEntity[]; total: number }> {
-    const whereConditions: any = {};
+    const whereConditions: FindOptionsWhere<PermissionEntity> = {};
 
     if (search) {
       whereConditions.name = Like(`%${search}%`);
@@ -383,14 +395,14 @@ export class PermissionService {
   /**
    * 获取权限树
    */
-  async getPermissionTree(): Promise<any[]> {
+  async getPermissionTree(): Promise<PermissionTreeNode[]> {
     const permissions = await this.permissionRepository.find({
       order: { level: 'DESC', id: 'ASC' },
     });
 
     // 构建权限树
-    const permissionMap = new Map<number, any>();
-    const rootPermissions: any[] = [];
+    const permissionMap = new Map<number, PermissionTreeNode>();
+    const rootPermissions: PermissionTreeNode[] = [];
 
     // 第一遍：创建所有权限节点
     for (const permission of permissions) {

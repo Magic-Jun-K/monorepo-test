@@ -3,12 +3,24 @@
  */
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, In } from 'typeorm';
+import { Repository, Like, In, FindOptionsWhere } from 'typeorm';
 
 import { RoleEntity, RoleType, RoleLevel } from '../../entities/role.entity';
 import { UserEntity } from '../../entities/user.entity';
 import { RolePermissionEntity } from '../../entities/role-permission.entity';
 import { PermissionService } from '../permission/permission.service';
+
+interface RoleTreeNode {
+  id: number;
+  name: string;
+  code: string;
+  type: RoleType;
+  level: RoleLevel;
+  description: string;
+  isSystem: boolean;
+  isActive: boolean;
+  children: RoleTreeNode[];
+}
 
 @Injectable()
 export class RoleService {
@@ -98,7 +110,7 @@ export class RoleService {
     level?: RoleLevel,
     isActive?: boolean,
   ): Promise<{ roles: RoleEntity[]; total: number }> {
-    const whereConditions: any = {};
+    const whereConditions: FindOptionsWhere<RoleEntity> = {};
 
     if (search) {
       whereConditions.name = Like(`%${search}%`);
@@ -374,10 +386,10 @@ export class RoleService {
 
     // 获取用户当前的角色
     const userRoles = await this.getUserRoles(userId);
-    const userRoleIds = userRoles.map((r) => r.id);
+    const userRoleIds = new Set(userRoles.map((r) => r.id));
 
     // 过滤掉用户已有的角色
-    const newRoles = roles.filter((role) => !userRoleIds.includes(role.id));
+    const newRoles = roles.filter((role) => !userRoleIds.has(role.id));
 
     if (newRoles.length > 0) {
       // 使用直接SQL插入的方式添加角色，避免TypeORM元数据解析问题
@@ -508,14 +520,14 @@ export class RoleService {
   /**
    * 获取角色树
    */
-  async getRoleTree(): Promise<any[]> {
+  async getRoleTree(): Promise<RoleTreeNode[]> {
     const roles = await this.roleRepository.find({
       order: { level: 'DESC', sortOrder: 'ASC' },
     });
 
     // 构建角色树
-    const roleMap = new Map<number, any>();
-    const rootRoles: any[] = [];
+    const roleMap = new Map<number, RoleTreeNode>();
+    const rootRoles: RoleTreeNode[] = [];
 
     // 第一遍：创建所有角色节点
     for (const role of roles) {
