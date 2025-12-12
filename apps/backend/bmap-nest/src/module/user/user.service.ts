@@ -13,7 +13,7 @@ import { AuthUser } from '../../module/auth/types/user.interface';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-  
+
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
@@ -50,9 +50,7 @@ export class UserService {
 
     // 权限控制：基于角色权限控制数据访问
     const userRoles = await this.getUserRoles(currentUser.id);
-    const hasSuperAdminRole = userRoles.some(
-      (role: Record<string, unknown>) => role.isSuperAdmin,
-    );
+    const hasSuperAdminRole = userRoles.some((role: Record<string, unknown>) => role.isSuperAdmin);
 
     // 非超级管理员不能看到超级管理员用户
     if (!hasSuperAdminRole) {
@@ -81,9 +79,9 @@ export class UserService {
         .where('role.code = :role', { role })
         .select('user.id')
         .getMany();
-      
+
       if (usersWithRole.length > 0) {
-        const userIds = usersWithRole.map(user => user.id);
+        const userIds = usersWithRole.map((user) => user.id);
         where.id = In(userIds);
       } else {
         // 如果没有找到匹配角色的用户，返回空结果
@@ -94,12 +92,12 @@ export class UserService {
     // 创建时间范围搜索
     if (createdAtRange && Array.isArray(createdAtRange) && createdAtRange.length === 2) {
       const [startDate, endDate] = createdAtRange;
-      
+
       if (startDate && endDate) {
         // 处理时间字符串格式 YYYY-MM-DD HH:mm:ss
         let startDateTime: Date | null = null;
         let endDateTime: Date | null = null;
-        
+
         if (typeof startDate === 'string') {
           // 处理 YYYY-MM-DD HH:mm:ss 格式
           if (startDate.includes(' ')) {
@@ -114,7 +112,7 @@ export class UserService {
         } else if (startDate instanceof Date) {
           startDateTime = startDate;
         }
-        
+
         if (typeof endDate === 'string') {
           // 处理 YYYY-MM-DD HH:mm:ss 格式
           if (endDate.includes(' ')) {
@@ -129,8 +127,13 @@ export class UserService {
         } else if (endDate instanceof Date) {
           endDateTime = endDate;
         }
-        
-        if (startDateTime && endDateTime && !Number.isNaN(startDateTime.getTime()) && !Number.isNaN(endDateTime.getTime())) {
+
+        if (
+          startDateTime &&
+          endDateTime &&
+          !Number.isNaN(startDateTime.getTime()) &&
+          !Number.isNaN(endDateTime.getTime())
+        ) {
           // 只有当结束时间没有指定具体时间时（即只有日期部分），才设置为当天的23:59:59.999
           // 如果已经指定了具体时间，则使用指定的时间
           if (typeof endDate === 'string' && !endDate.includes(' ') && endDateTime) {
@@ -144,12 +147,12 @@ export class UserService {
     // 更新时间范围搜索
     if (updatedAtRange && Array.isArray(updatedAtRange) && updatedAtRange.length === 2) {
       const [startDate, endDate] = updatedAtRange;
-      
+
       if (startDate && endDate) {
         // 处理时间字符串格式 YYYY-MM-DD HH:mm:ss
         let startDateTime: Date | null = null;
         let endDateTime: Date | null = null;
-        
+
         if (typeof startDate === 'string') {
           // 处理 YYYY-MM-DD HH:mm:ss 格式
           if (startDate.includes(' ')) {
@@ -164,7 +167,7 @@ export class UserService {
         } else if (startDate instanceof Date) {
           startDateTime = startDate;
         }
-        
+
         if (typeof endDate === 'string') {
           // 处理 YYYY-MM-DD HH:mm:ss 格式
           if (endDate.includes(' ')) {
@@ -179,8 +182,13 @@ export class UserService {
         } else if (endDate instanceof Date) {
           endDateTime = endDate;
         }
-        
-        if (startDateTime && endDateTime && !Number.isNaN(startDateTime.getTime()) && !Number.isNaN(endDateTime.getTime())) {
+
+        if (
+          startDateTime &&
+          endDateTime &&
+          !Number.isNaN(startDateTime.getTime()) &&
+          !Number.isNaN(endDateTime.getTime())
+        ) {
           // 只有当结束时间没有指定具体时间时（即只有日期部分），才设置为当天的23:59:59.999
           // 如果已经指定了具体时间，则使用指定的时间
           if (typeof endDate === 'string' && !endDate.includes(' ') && endDateTime) {
@@ -209,11 +217,11 @@ export class UserService {
 
     // 处理角色数据，只返回必要信息
     const processedList = [];
-    
+
     // 批量获取所有用户的角色信息
-    const userIds = list.map(user => user.id);
+    const userIds = list.map((user) => user.id);
     const allUserRoles: Record<number, Array<Record<string, unknown>>> = {};
-    
+
     if (userIds.length > 0) {
       // 构建批量查询用户角色的SQL
       const roleQuery = `
@@ -223,7 +231,7 @@ export class UserService {
         WHERE ur.user_id IN (${userIds.map((_, index) => `$${index + 1}`).join(',')})
       `;
       const roleResults = await this.userRepo.manager.query(roleQuery, userIds);
-      
+
       // 按用户ID分组角色数据
       for (const roleResult of roleResults) {
         const userId = roleResult.user_id;
@@ -233,19 +241,19 @@ export class UserService {
         allUserRoles[userId].push(roleResult);
       }
     }
-    
+
     // 构建返回数据
     for (const user of list) {
       const userRoles = allUserRoles[user.id] || [];
       processedList.push({
         ...user,
-        roles: userRoles.map(role => ({
+        roles: userRoles.map((role) => ({
           id: role.id,
           name: role.name,
           code: role.code,
           level: role.level,
           isSuperAdmin: role.isSuperAdmin,
-        }))
+        })),
       });
     }
 
@@ -259,29 +267,29 @@ export class UserService {
       const existingUser = await this.userRepo.findOne({
         where: { username: dto.username },
       });
-      
+
       if (existingUser) {
         throw new Error('用户名已存在');
       }
     }
-    
+
     // 检查邮箱是否已存在
     if (dto.email) {
       const existingEmail = await this.userRepo.findOne({
         where: { email: dto.email },
       });
-      
+
       if (existingEmail) {
         throw new Error('邮箱已存在');
       }
     }
-    
+
     // 检查手机号是否已存在
     if (dto.phone) {
       const existingPhone = await this.userRepo.findOne({
         where: { phone: dto.phone },
       });
-      
+
       if (existingPhone) {
         throw new Error('手机号已存在');
       }
@@ -314,7 +322,7 @@ export class UserService {
 
     // 获取用户角色信息
     const userRoles = await this.getUserRoles(userId);
-    
+
     // 重新查询用户基本信息
     const userWithRoles = await this.userRepo.findOne({
       where: { id: userId },
@@ -323,13 +331,13 @@ export class UserService {
     // 优化角色数据返回
     return {
       ...userWithRoles,
-      roles: userRoles.map(role => ({
+      roles: userRoles.map((role) => ({
         id: role.id,
         name: role.name,
         code: role.code,
         level: role.level,
         isSuperAdmin: role.isSuperAdmin,
-      }))
+      })),
     };
   }
 
@@ -393,9 +401,7 @@ export class UserService {
 
           if (defaultRole) {
             for (const user of savedUsers) {
-              await this.roleService.batchAssignRolesToUser(user.id, [
-                defaultRole.id,
-              ]);
+              await this.roleService.batchAssignRolesToUser(user.id, [defaultRole.id]);
             }
           }
         } catch {
@@ -479,19 +485,19 @@ export class UserService {
           level: role.level,
           isSuperAdmin: role.isSuperAdmin,
         }));
-        
+
         excelData.push({
-            ID: user.id,
-            用户名: user.username,
-            邮箱: user.email || '',
-            手机号: user.phone || '',
-            用户状态: user.status,
-            超级管理员: user.isSuperAdmin ? '是' : '否',
-            用户角色: optimizedRoles.map(role => role.name).join(', '),
-            创建时间: user.createdAt,
-            更新时间: user.updatedAt,
-          });
-        }
+          ID: user.id,
+          用户名: user.username,
+          邮箱: user.email || '',
+          手机号: user.phone || '',
+          用户状态: user.status,
+          超级管理员: user.isSuperAdmin ? '是' : '否',
+          用户角色: optimizedRoles.map((role) => role.name).join(', '),
+          创建时间: user.createdAt,
+          更新时间: user.updatedAt,
+        });
+      }
 
       // 创建工作簿
       const worksheet = utils.json_to_sheet(excelData);
@@ -567,19 +573,19 @@ export class UserService {
           level: role.level,
           isSuperAdmin: role.isSuperAdmin,
         }));
-        
+
         excelData.push({
-            ID: user.id,
-            用户名: user.username,
-            邮箱: user.email || '',
-            手机号: user.phone || '',
-            用户状态: user.status,
-            超级管理员: user.isSuperAdmin ? '是' : '否',
-            用户角色: optimizedRoles.map(role => role.name).join(', '),
-            创建时间: user.createdAt,
-            更新时间: user.updatedAt,
-          });
-        }
+          ID: user.id,
+          用户名: user.username,
+          邮箱: user.email || '',
+          手机号: user.phone || '',
+          用户状态: user.status,
+          超级管理员: user.isSuperAdmin ? '是' : '否',
+          用户角色: optimizedRoles.map((role) => role.name).join(', '),
+          创建时间: user.createdAt,
+          更新时间: user.updatedAt,
+        });
+      }
 
       // 创建工作簿
       const worksheet = utils.json_to_sheet(excelData);
@@ -629,20 +635,20 @@ export class UserService {
     }
 
     const updatedUser = await this.userRepo.save(user);
-    
+
     // 获取用户角色信息
     const userRoles = await this.getUserRoles(id);
-    
+
     // 优化角色数据返回
     return {
       ...updatedUser,
-      roles: userRoles.map(role => ({
+      roles: userRoles.map((role) => ({
         id: role.id,
         name: role.name,
         code: role.code,
         level: role.level,
         isSuperAdmin: role.isSuperAdmin,
-      }))
+      })),
     };
   }
 
@@ -662,12 +668,12 @@ export class UserService {
     }
 
     await this.userRepo.remove(user);
-    
+
     // 只返回必要的确认信息，而不是完整的用户数据
     return {
       id: user.id,
       username: user.username,
-      message: '用户删除成功'
+      message: '用户删除成功',
     };
   }
 
@@ -700,13 +706,13 @@ export class UserService {
     }
 
     await this.userRepo.remove(filteredUsers);
-    
+
     // 返回统计信息，而不是完整的用户数据
     return {
       deletedCount: filteredUsers.length,
       skippedCount: superAdminUsers.length,
       skippedReason: superAdminUsers.length > 0 ? '超级管理员不能删除' : null,
-      message: `成功删除 ${filteredUsers.length} 个用户${superAdminUsers.length > 0 ? `，跳过 ${superAdminUsers.length} 个超级管理员` : ''}`
+      message: `成功删除 ${filteredUsers.length} 个用户${superAdminUsers.length > 0 ? `，跳过 ${superAdminUsers.length} 个超级管理员` : ''}`,
     };
   }
 }

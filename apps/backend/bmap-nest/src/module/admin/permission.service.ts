@@ -1,11 +1,7 @@
 /**
  * 权限管理服务
  */
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity, UserType } from '../../entities/user.entity';
@@ -78,8 +74,7 @@ export class PermissionService {
       status: RequestStatus.PENDING,
     });
 
-    const savedRequest =
-      await this.permissionRequestRepository.save(permissionRequest);
+    const savedRequest = await this.permissionRequestRepository.save(permissionRequest);
 
     // 记录审计日志
     await this.auditLogRepository.save({
@@ -132,9 +127,7 @@ export class PermissionService {
     }
 
     // 更新申请状态
-    permissionRequest.status = approve
-      ? RequestStatus.APPROVED
-      : RequestStatus.REJECTED;
+    permissionRequest.status = approve ? RequestStatus.APPROVED : RequestStatus.REJECTED;
     permissionRequest.approvedById = approvedById;
     permissionRequest.approvedAt = new Date();
 
@@ -142,8 +135,7 @@ export class PermissionService {
       permissionRequest.rejectionReason = rejectionReason;
     }
 
-    const updatedRequest =
-      await this.permissionRequestRepository.save(permissionRequest);
+    const updatedRequest = await this.permissionRequestRepository.save(permissionRequest);
 
     // 如果批准，执行相应的权限变更
     if (approve) {
@@ -218,9 +210,7 @@ export class PermissionService {
   /**
    * 获取用户的历史申请记录
    */
-  async getUserRequestHistory(
-    userId: number,
-  ): Promise<PermissionRequestEntity[]> {
+  async getUserRequestHistory(userId: number): Promise<PermissionRequestEntity[]> {
     return this.permissionRequestRepository.find({
       where: [{ requestedById: userId }, { targetUserId: userId }],
       relations: ['targetUser', 'requestedBy', 'approvedBy'],
@@ -244,10 +234,7 @@ export class PermissionService {
       .orderBy('log.createdAt', 'DESC');
 
     if (userId) {
-      queryBuilder.andWhere(
-        'log.userId = :userId OR log.targetUserId = :userId',
-        { userId },
-      );
+      queryBuilder.andWhere('log.userId = :userId OR log.targetUserId = :userId', { userId });
     }
 
     if (action) {

@@ -57,9 +57,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload || !payload.sub) return null;
 
     // 检查Redis中是否存在该Token
-    const storedToken = await this.redisService.get(
-      `access_token:${payload.sub}`,
-    );
+    const storedToken = await this.redisService.get(`access_token:${payload.sub}`);
 
     if (!storedToken) {
       throw new UnauthorizedException('Token已失效');
@@ -85,14 +83,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // console.log('测试jwt validate password', _password);
     // console.log('测试jwt validate payload.isSuperAdmin', payload.isSuperAdmin);
     // console.log('测试jwt validate user.isSuperAdmin', user.isSuperAdmin);
-    
+
     // 将JWT payload中的角色信息合并到用户对象中
     const completeUser = {
       ...userWithoutPassword,
       roles: payload.roles || [], // 从JWT payload中获取角色信息
       isSuperAdmin: payload.isSuperAdmin !== undefined ? payload.isSuperAdmin : user.isSuperAdmin, // 优先使用JWT payload中的值，如果没有则使用数据库中的值
     };
-    
+
     // console.log('测试jwt validate completeUser', completeUser);
     return completeUser;
   }

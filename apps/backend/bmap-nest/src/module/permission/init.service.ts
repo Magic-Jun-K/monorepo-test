@@ -6,13 +6,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 
+import { PermissionEntity, PermissionType, ResourceType } from '../../entities/permission.entity';
+import { RoleEntity, RoleType, RoleLevel } from '../../entities/role.entity';
 import {
-  PermissionEntity,
-  PermissionType,
-  ResourceType,
-} from '../../entities/permission.entity';
-import { RoleEntity, RoleType, RoleLevel } from '../../entities/user_role.entity';
-import { RolePermissionEntity, PermissionAssignmentStatus } from '../../entities/role-permission.entity';
+  RolePermissionEntity,
+  PermissionAssignmentStatus,
+} from '../../entities/role-permission.entity';
 import { UserEntity, UserStatus } from '../../entities/user.entity';
 
 @Injectable()
@@ -309,9 +308,7 @@ export class InitService implements OnModuleInit {
     ]);
 
     const roleMap = new Map(roles.map((role) => [role.code, role]));
-    const permissionMap = new Map(
-      permissions.map((permission) => [permission.code, permission]),
-    );
+    const permissionMap = new Map(permissions.map((permission) => [permission.code, permission]));
 
     // 超级管理员拥有所有权限
     const superAdminRole = roleMap.get('SUPER_ADMIN');
@@ -453,7 +450,7 @@ export class InitService implements OnModuleInit {
    */
   private async initSuperAdmin() {
     const superAdminUsername = process.env.SUPER_ADMIN_USERNAME || 'admin';
-    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || 'admin123';
+    const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD || '&RbaEw%QDRV*eG!SJY85';
 
     let superAdmin = await this.userRepo.findOne({
       where: { username: superAdminUsername },
@@ -481,14 +478,19 @@ export class InitService implements OnModuleInit {
       where: { code: 'SUPER_ADMIN' },
     });
 
-    if (superAdminRole && superAdmin.roles) {
-      const hasSuperAdminRole = superAdmin.roles.some(
-        (role) => role.id === superAdminRole.id,
+    if (superAdminRole) {
+      // 检查是否已经分配了角色
+      const existingRoleAssignment = await this.userRepo.manager.query(
+        'SELECT * FROM user_roles WHERE user_id = $1 AND role_id = $2',
+        [superAdmin.id, superAdminRole.id],
       );
 
-      if (!hasSuperAdminRole) {
-        superAdmin.roles = [...(superAdmin.roles || []), superAdminRole];
-        await this.userRepo.save(superAdmin);
+      if (!existingRoleAssignment || existingRoleAssignment.length === 0) {
+        // 使用直接SQL插入的方式分配角色，避免TypeORM元数据解析问题
+        await this.userRepo.manager.query(
+          'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)',
+          [superAdmin.id, superAdminRole.id],
+        );
         this.logger.log(`为超级管理员用户分配超级管理员角色`);
       }
     }

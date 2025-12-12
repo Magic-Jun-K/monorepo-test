@@ -13,12 +13,7 @@ import { PermissionModule } from '../permission/permission.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      RoleEntity,
-      UserProfileEntity,
-      UserOAuthEntity,
-    ]),
+    TypeOrmModule.forFeature([UserEntity, RoleEntity, UserProfileEntity, UserOAuthEntity]),
     RoleModule,
     PermissionModule,
   ],

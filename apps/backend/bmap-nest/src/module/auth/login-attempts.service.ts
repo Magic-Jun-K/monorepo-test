@@ -30,11 +30,7 @@ export class LoginAttemptsService {
     const attempts = currentAttempts ? parseInt(currentAttempts) : 0;
 
     // 增加尝试次数并设置过期时间
-    await this.redisService.set(
-      key,
-      (attempts + 1).toString(),
-      this.LOCKOUT_TIME,
-    );
+    await this.redisService.set(key, (attempts + 1).toString(), this.LOCKOUT_TIME);
   }
 
   /**

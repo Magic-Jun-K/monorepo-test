@@ -19,10 +19,7 @@ import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 
 import { PermissionGuard } from '../../common/guards/permission.guard';
-import {
-  RequirePermissions,
-  RequireRoleLevel,
-} from '../../common/guards/permission.guard';
+import { RequirePermissions, RequireRoleLevel } from '../../common/guards/permission.guard';
 import { UserService } from './user.service';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -34,7 +31,7 @@ import { AuthUser } from '../../module/auth/types/user.interface';
 @Controller('users')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
-  
+
   constructor(
     private readonly userService: UserService,
     private readonly roleService: RoleService,
@@ -65,9 +62,7 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'), PermissionGuard)
   @RequirePermissions(PermissionType.USER_MANAGE, PermissionType.USER_CREATE)
   @Post()
-  async create(
-    @Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto,
-  ) {
+  async create(@Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto) {
     try {
       const result = await this.userService.create(createUserDto);
       return {
@@ -96,12 +91,12 @@ export class UserController {
       this.logger.log('📁 收到导入文件请求:', {
         filename: file?.originalname,
         size: file?.size,
-        mimetype: file?.mimetype
+        mimetype: file?.mimetype,
       });
-      
+
       const result = await this.userService.importUsers(file);
       this.logger.log('✅ 导入处理完成:', result);
-      
+
       return {
         success: true,
         data: result,
@@ -124,7 +119,11 @@ export class UserController {
   @Get('export')
   @UseGuards(AuthGuard('jwt'), PermissionGuard)
   @RequirePermissions(PermissionType.USER_MANAGE, PermissionType.USER_READ)
-  async export(@Query() query: Record<string, unknown>, @Res() res: Response, @Req() req: { user: AuthUser }) {
+  async export(
+    @Query() query: Record<string, unknown>,
+    @Res() res: Response,
+    @Req() req: { user: AuthUser },
+  ) {
     const currentUser = req.user;
     await this.userService.exportUsers(query, res, currentUser);
   }
@@ -189,14 +188,8 @@ export class UserController {
   @Post(':userId/roles')
   @UseGuards(AuthGuard('jwt'), PermissionGuard)
   @RequirePermissions(PermissionType.USER_MANAGE, PermissionType.ROLE_MANAGE)
-  async assignRoles(
-    @Param('userId') userId: number,
-    @Body('roleIds') roleIds: number[],
-  ) {
-    const result = await this.roleService.batchAssignRolesToUser(
-      userId,
-      roleIds,
-    );
+  async assignRoles(@Param('userId') userId: number, @Body('roleIds') roleIds: number[]) {
+    const result = await this.roleService.batchAssignRolesToUser(userId, roleIds);
     return {
       success: true,
       data: result,
@@ -212,14 +205,8 @@ export class UserController {
   @Delete(':userId/roles')
   @UseGuards(AuthGuard('jwt'), PermissionGuard)
   @RequirePermissions(PermissionType.USER_MANAGE, PermissionType.ROLE_MANAGE)
-  async removeRoles(
-    @Param('userId') userId: number,
-    @Body('roleIds') roleIds: number[],
-  ) {
-    const result = await this.roleService.batchRemoveRolesFromUser(
-      userId,
-      roleIds,
-    );
+  async removeRoles(@Param('userId') userId: number, @Body('roleIds') roleIds: number[]) {
+    const result = await this.roleService.batchRemoveRolesFromUser(userId, roleIds);
     return {
       success: true,
       data: result,

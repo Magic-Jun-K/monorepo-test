@@ -10,15 +10,19 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  UsePipes,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
-import { Public } from '@/common/decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { AuthRequest } from './types/auth-request.interface';
+import { setPasswordSchema } from './dto/set-password.dto';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 
 // 路由拦截
 @Controller('auth')
@@ -45,13 +49,9 @@ export class AuthController {
       console.log('测试auth.controller.ts loginDto', loginDto);
 
       // 检查是否被锁定
-      const isBlocked = await this.loginAttemptsService.isBlocked(
-        loginDto.username,
-      );
+      const isBlocked = await this.loginAttemptsService.isBlocked(loginDto.username);
       if (isBlocked) {
-        const remainingTime = await this.getLockoutRemainingTime(
-          loginDto.username,
-        );
+        const remainingTime = await this.getLockoutRemainingTime(loginDto.username);
         throw new HttpException(
           {
             message: `账户已被锁定，请${remainingTime}分钟后重试`,
@@ -90,8 +90,9 @@ export class AuthController {
       await this.loginAttemptsService.recordFailedAttempt(loginDto.username);
 
       // 获取剩余尝试次数
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(loginDto.username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
+        loginDto.username,
+      );
 
       throw new UnauthorizedException({
         message: '登录失败',
@@ -158,8 +159,7 @@ export class AuthController {
     }
 
     try {
-      const { access_token } =
-        await this.authService.refreshToken(refreshToken);
+      const { access_token } = await this.authService.refreshToken(refreshToken);
 
       console.log('✅ 后端 Token 刷新成功！:', access_token);
 
@@ -182,6 +182,30 @@ export class AuthController {
   @Get('current-user')
   currentUser(@Request() req) {
     return req.user;
+  }
+
+  /**
+   * 为邮箱注册用户设置密码
+   * @param req
+   * @param setPasswordDto
+   * @returns
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @UsePipes(new ZodValidationPipe(setPasswordSchema))
+  @Post('set-password')
+  async setPassword(@Req() req: AuthRequest, @Body() setPasswordDto: SetPasswordDto) {
+    return this.authService.setPasswordForEmailUser(req.user.id, setPasswordDto.password);
+  }
+
+  /**
+   * 检查用户是否可以设置密码
+   * @param req
+   * @returns
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Get('can-set-password')
+  async canSetPassword(@Req() req: AuthRequest) {
+    return this.authService.canUserSetPassword(req.user.id);
   }
 
   /**
@@ -208,8 +232,10 @@ export class AuthController {
     @Body() body: { email: string; code: string },
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { access_token, refresh_token } =
-      await this.authService.verifyEmailCodeAndLogin(body.email, body.code);
+    const { access_token, refresh_token } = await this.authService.verifyEmailCodeAndLogin(
+      body.email,
+      body.code,
+    );
 
     // 设置 access_token
     // response.cookie('access_token', access_token, {

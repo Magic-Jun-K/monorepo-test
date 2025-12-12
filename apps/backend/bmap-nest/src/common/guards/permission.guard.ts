@@ -1,20 +1,12 @@
 /**
  * 权限守卫
  */
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import {
-  PermissionEntity,
-  PermissionType,
-} from '../../entities/permission.entity';
+import { PermissionEntity, PermissionType } from '../../entities/permission.entity';
 import { UserEntity } from '../../entities/user.entity';
 import { RoleEntity, RoleLevel } from '../../entities/role.entity';
 import { PermissionService } from '../../module/permission/permission.service';
@@ -24,11 +16,7 @@ import { PermissionService } from '../../module/permission/permission.service';
  */
 export const RequirePermissions = (...permissions: PermissionType[]) => {
   return (target: unknown, key?: string, descriptor?: PropertyDescriptor) => {
-    Reflect.defineMetadata(
-      'required_permissions',
-      permissions,
-      descriptor?.value,
-    );
+    Reflect.defineMetadata('required_permissions', permissions, descriptor?.value);
   };
 };
 
@@ -44,10 +32,7 @@ export const RequireRoleLevel = (minLevel: RoleLevel) => {
 /**
  * 资源权限检查装饰器
  */
-export const RequireResourcePermission = (
-  resourceType: string,
-  action: string,
-) => {
+export const RequireResourcePermission = (resourceType: string, action: string) => {
   return (target: unknown, key?: string, descriptor?: PropertyDescriptor) => {
     Reflect.defineMetadata(
       'required_resource_permission',
@@ -92,9 +77,7 @@ export class PermissionGuard implements CanActivate {
     );
 
     if (requiredRoleLevel) {
-      const hasSufficientRoleLevel = userRoles.some(
-        (role) => role.level >= requiredRoleLevel,
-      );
+      const hasSufficientRoleLevel = userRoles.some((role) => role.level >= requiredRoleLevel);
       if (!hasSufficientRoleLevel) {
         throw new ForbiddenException('用户角色级别不足');
       }
@@ -107,10 +90,7 @@ export class PermissionGuard implements CanActivate {
     );
 
     if (requiredPermissions && requiredPermissions.length > 0) {
-      const hasRequiredPermissions = await this.checkUserPermissions(
-        user,
-        requiredPermissions,
-      );
+      const hasRequiredPermissions = await this.checkUserPermissions(user, requiredPermissions);
       if (!hasRequiredPermissions) {
         throw new ForbiddenException('用户权限不足');
       }
@@ -160,19 +140,17 @@ export class PermissionGuard implements CanActivate {
     const userPermissionCodes = new Set<string>();
 
     // 收集用户所有角色的权限
-    const rolePermissionsPromises = userRoles.map(role => 
-      this.permissionService.getRolePermissions(role.id)
+    const rolePermissionsPromises = userRoles.map((role) =>
+      this.permissionService.getRolePermissions(role.id),
     );
     const rolePermissionsArray = await Promise.all(rolePermissionsPromises);
-    
+
     rolePermissionsArray.flat().forEach((permission) => {
       userPermissionCodes.add(permission.type);
     });
 
     // 检查是否拥有所有必需权限
-    return requiredPermissions.every((permission) =>
-      userPermissionCodes.has(permission),
-    );
+    return requiredPermissions.every((permission) => userPermissionCodes.has(permission));
   }
 
   /**
@@ -187,11 +165,11 @@ export class PermissionGuard implements CanActivate {
     const userPermissions: PermissionEntity[] = [];
 
     // 收集用户所有角色的权限
-    const rolePermissionsPromises = userRoles.map(role => 
-      this.permissionService.getRolePermissions(role.id)
+    const rolePermissionsPromises = userRoles.map((role) =>
+      this.permissionService.getRolePermissions(role.id),
     );
     const rolePermissionsArray = await Promise.all(rolePermissionsPromises);
-    
+
     userPermissions.push(...rolePermissionsArray.flat());
 
     // 检查是否有匹配的资源权限
@@ -254,11 +232,11 @@ export class PermissionGuard implements CanActivate {
       return false;
     }
 
-    const rolePermissionsPromises = userRoles.map(role => 
-      permissionService.getRolePermissions(role.id)
+    const rolePermissionsPromises = userRoles.map((role) =>
+      permissionService.getRolePermissions(role.id),
     );
     const rolePermissionsArray = await Promise.all(rolePermissionsPromises);
-    
+
     for (const rolePermissions of rolePermissionsArray) {
       if (rolePermissions.some((permission) => permission.type === permissionType)) {
         return true;
@@ -293,11 +271,11 @@ export class PermissionGuard implements CanActivate {
       return false;
     }
 
-    const rolePermissionsPromises = userRoles.map(role => 
-      permissionService.getRolePermissions(role.id)
+    const rolePermissionsPromises = userRoles.map((role) =>
+      permissionService.getRolePermissions(role.id),
     );
     const rolePermissionsArray = await Promise.all(rolePermissionsPromises);
-    
+
     for (const rolePermissions of rolePermissionsArray) {
       if (
         rolePermissions.some(

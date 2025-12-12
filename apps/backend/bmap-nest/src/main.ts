@@ -2,7 +2,10 @@
  * @description 入口文件
  */
 import { NestFactory /* , Reflector */ } from '@nestjs/core';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
+
+// 设置时区为东八区
+process.env.TZ = 'Asia/Shanghai';
 
 import { AppModule } from './app.module';
 // import { LoggerMiddleware } from './middlewares/LoggerMiddleware';

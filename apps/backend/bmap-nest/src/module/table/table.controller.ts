@@ -14,7 +14,7 @@ export class TableController {
   //   return this.tableService.search(dto);
   // }
   private readonly logger = new Logger(TableController.name);
-  
+
   constructor(private readonly tableService: TableService) {
     this.logger.log('TableController initialized');
   }

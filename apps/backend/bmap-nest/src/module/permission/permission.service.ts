@@ -1,20 +1,11 @@
 /**
  * 权限服务
  */
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 
-import {
-  PermissionEntity,
-  PermissionType,
-  ResourceType,
-} from '../../entities/permission.entity';
+import { PermissionEntity, PermissionType, ResourceType } from '../../entities/permission.entity';
 import { RoleEntity } from '../../entities/role.entity';
 import {
   RolePermissionEntity,
@@ -180,10 +171,7 @@ export class PermissionService {
     // 检查权限名称或代码是否与其他权限冲突
     if (updatePermissionDto.name || updatePermissionDto.code) {
       const existingPermission = await this.permissionRepository.findOne({
-        where: [
-          { name: updatePermissionDto.name },
-          { code: updatePermissionDto.code },
-        ],
+        where: [{ name: updatePermissionDto.name }, { code: updatePermissionDto.code }],
       });
 
       if (existingPermission && existingPermission.id !== id) {
@@ -279,8 +267,7 @@ export class PermissionService {
       remarks,
     });
 
-    const savedAssignment =
-      await this.rolePermissionRepository.save(rolePermission);
+    const savedAssignment = await this.rolePermissionRepository.save(rolePermission);
     this.logger.log(`为角色 ${role.name} 分配权限 ${permission.name} 成功`);
 
     return savedAssignment;
@@ -289,10 +276,7 @@ export class PermissionService {
   /**
    * 移除角色的权限
    */
-  async removePermissionFromRole(
-    roleId: number,
-    permissionId: number,
-  ): Promise<void> {
+  async removePermissionFromRole(roleId: number, permissionId: number): Promise<void> {
     const rolePermission = await this.rolePermissionRepository.findOne({
       where: {
         roleId,
@@ -368,25 +352,18 @@ export class PermissionService {
           assignedBy,
         });
 
-        assignments.push(
-          await this.rolePermissionRepository.save(rolePermission),
-        );
+        assignments.push(await this.rolePermissionRepository.save(rolePermission));
       }
     }
 
-    this.logger.log(
-      `为角色 ${role.name} 批量分配权限成功，共 ${assignments.length} 个权限`,
-    );
+    this.logger.log(`为角色 ${role.name} 批量分配权限成功，共 ${assignments.length} 个权限`);
     return assignments;
   }
 
   /**
    * 批量移除角色的权限
    */
-  async batchRemovePermissionsFromRole(
-    roleId: number,
-    permissionIds: number[],
-  ): Promise<void> {
+  async batchRemovePermissionsFromRole(roleId: number, permissionIds: number[]): Promise<void> {
     const rolePermissions = await this.rolePermissionRepository.find({
       where: {
         roleId,
@@ -400,9 +377,7 @@ export class PermissionService {
     }
 
     await this.rolePermissionRepository.remove(rolePermissions);
-    this.logger.log(
-      `批量移除角色权限成功，共 ${rolePermissions.length} 个权限`,
-    );
+    this.logger.log(`批量移除角色权限成功，共 ${rolePermissions.length} 个权限`);
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { AdminEntity } from './admin.entity';
+import { UserEntity } from './user.entity';
 
 @Entity('application')
 export class ApplicationEntity {
@@ -61,6 +61,6 @@ export class ApplicationEntity {
    * 除了多对一，还有一对一、一对多、多对多等关系
    * 分别为：@OneToOne、@OneToMany、@ManyToMany、
    */
-  @ManyToOne('AdminEntity', 'applications')
-  user: AdminEntity;
+  @ManyToOne('UserEntity', 'applications')
+  user: UserEntity;
 }

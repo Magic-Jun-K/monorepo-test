@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Request } from 'express';
@@ -59,10 +54,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 检查是否被锁定（基于IP地址）
-    if (
-      clientIp &&
-      (await this.loginAttemptsService.isBlocked(`ip:${clientIp}`))
-    ) {
+    if (clientIp && (await this.loginAttemptsService.isBlocked(`ip:${clientIp}`))) {
       throw new HttpException(
         {
           message: '登录尝试次数过多，请15分钟后重试',
@@ -100,8 +92,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       }
 
       // 获取剩余尝试次数并添加到错误信息中
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
       throw new UnauthorizedException({
         message: '认证失败',
         error: '无效凭证',
@@ -110,10 +101,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 验证密码
-    const isPasswordValid = await this.authService.verifyPassword(
-      user.password,
-      password,
-    );
+    const isPasswordValid = await this.authService.verifyPassword(user.password, password);
     if (!isPasswordValid) {
       // 记录失败尝试
       await this.loginAttemptsService.recordFailedAttempt(username);
@@ -122,8 +110,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       }
 
       // 获取剩余尝试次数并添加到错误信息中
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
       throw new UnauthorizedException({
         message: '密码错误',
         error: '无效凭证',

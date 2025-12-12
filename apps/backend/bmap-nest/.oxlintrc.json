@@ -1,0 +1,18 @@
+{
+  "extends": ["../../../.oxlintrc.json"],
+  "env": {
+    "node": true
+  },
+  "rules": {
+    "no-console": "warn",
+    "typescript/no-unused-vars": "error",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-floating-promises": "warn"
+  },
+  "ignore": [
+    "dist/**/*",
+    "build/**/*",
+    "node_modules/**/*",
+    ".eslintrc.js"
+  ]
+}

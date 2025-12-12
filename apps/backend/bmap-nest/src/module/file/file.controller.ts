@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-  Get,
-  Param,
-  Res,
-} from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Get, Param, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -22,7 +14,7 @@ export class FileController {
   // UseInterceptors是一个装饰器，用于在控制器方法上添加拦截器
   // 'file'是表单字段名
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: any) {
     return this.fileService.uploadFile(file);
   }
 

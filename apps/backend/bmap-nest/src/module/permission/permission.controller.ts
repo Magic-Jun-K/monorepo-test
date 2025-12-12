@@ -15,19 +15,10 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
-import {
-  PermissionEntity,
-  PermissionType,
-  ResourceType,
-} from '../../entities/permission.entity';
+import { PermissionEntity, PermissionType, ResourceType } from '../../entities/permission.entity';
 import { RolePermissionEntity } from '../../entities/role-permission.entity';
 import { PermissionService } from './permission.service';
 import {
@@ -164,10 +155,7 @@ export class PermissionController {
    * 为角色分配权限
    */
   @Post('roles/:roleId/permissions/:permissionId')
-  @RequirePermissions(
-    PermissionType.ROLE_UPDATE,
-    PermissionType.PERMISSION_UPDATE,
-  )
+  @RequirePermissions(PermissionType.ROLE_UPDATE, PermissionType.PERMISSION_UPDATE)
   @RequireRoleLevel(RoleLevel.ADMIN)
   @ApiOperation({ summary: '为角色分配权限' })
   @ApiResponse({ status: 201, description: '权限分配成功' })
@@ -196,10 +184,7 @@ export class PermissionController {
    * 移除角色的权限
    */
   @Delete('roles/:roleId/permissions/:permissionId')
-  @RequirePermissions(
-    PermissionType.ROLE_UPDATE,
-    PermissionType.PERMISSION_UPDATE,
-  )
+  @RequirePermissions(PermissionType.ROLE_UPDATE, PermissionType.PERMISSION_UPDATE)
   @RequireRoleLevel(RoleLevel.ADMIN)
   @ApiOperation({ summary: '移除角色的权限' })
   @ApiResponse({ status: 204, description: '权限移除成功' })
@@ -220,9 +205,7 @@ export class PermissionController {
   @ApiOperation({ summary: '获取角色的所有权限' })
   @ApiResponse({ status: 200, description: '获取角色权限成功' })
   @ApiResponse({ status: 404, description: '角色不存在' })
-  async getRolePermissions(
-    @Param('roleId') roleId: number,
-  ): Promise<PermissionEntity[]> {
+  async getRolePermissions(@Param('roleId') roleId: number): Promise<PermissionEntity[]> {
     return this.permissionService.getRolePermissions(roleId);
   }
 
@@ -230,10 +213,7 @@ export class PermissionController {
    * 批量为角色分配权限
    */
   @Post('roles/:roleId/permissions/batch')
-  @RequirePermissions(
-    PermissionType.ROLE_UPDATE,
-    PermissionType.PERMISSION_UPDATE,
-  )
+  @RequirePermissions(PermissionType.ROLE_UPDATE, PermissionType.PERMISSION_UPDATE)
   @RequireRoleLevel(RoleLevel.ADMIN)
   @ApiOperation({ summary: '批量为角色分配权限' })
   @ApiResponse({ status: 201, description: '批量权限分配成功' })
@@ -257,10 +237,7 @@ export class PermissionController {
    * 批量移除角色的权限
    */
   @Delete('roles/:roleId/permissions/batch')
-  @RequirePermissions(
-    PermissionType.ROLE_UPDATE,
-    PermissionType.PERMISSION_UPDATE,
-  )
+  @RequirePermissions(PermissionType.ROLE_UPDATE, PermissionType.PERMISSION_UPDATE)
   @RequireRoleLevel(RoleLevel.ADMIN)
   @ApiOperation({ summary: '批量移除角色的权限' })
   @ApiResponse({ status: 204, description: '批量权限移除成功' })

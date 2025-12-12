@@ -12,11 +12,7 @@ import { RoleModule } from '../role/role.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      PermissionRequestEntity,
-      AuditLogEntity,
-    ]),
+    TypeOrmModule.forFeature([UserEntity, PermissionRequestEntity, AuditLogEntity]),
     RoleModule,
   ],
   controllers: [AdminController],

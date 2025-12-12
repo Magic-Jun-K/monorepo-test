@@ -122,10 +122,7 @@ export class RoleEntity {
   /**
    * 角色权限关联
    */
-  @OneToMany(
-    () => RolePermissionEntity,
-    (rolePermission) => rolePermission.role,
-  )
+  @OneToMany(() => RolePermissionEntity, (rolePermission) => rolePermission.role)
   rolePermissions: RolePermissionEntity[];
 
   /**

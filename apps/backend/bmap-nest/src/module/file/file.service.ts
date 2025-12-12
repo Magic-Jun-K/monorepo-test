@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import {
-  createReadStream,
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-} from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Response } from 'express';
 
@@ -29,7 +24,7 @@ export class FileService {
   }
 
   // 上传文件
-  async uploadFile(file: Express.Multer.File): Promise<File> {
+  async uploadFile(file: any): Promise<File> {
     if (!existsSync(this.uploadDir)) {
       mkdirSync(this.uploadDir, { recursive: true });
     }

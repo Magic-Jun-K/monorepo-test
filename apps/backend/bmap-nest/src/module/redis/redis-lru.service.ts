@@ -35,12 +35,16 @@ export class RedisLRUService {
     const effectiveTTL = ttl || (category && this.ttlConfig[category]) || this.defaultTTL;
     const prefixedKey = this.getPrefixedKey(key); // 缓存键前缀 + 缓存键
     // 如果值是对象，转换为JSON字符串
-    const stringValue =
-      typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
     // 使用EX设置过期时间（秒）
     await this.redis.set(prefixedKey, stringValue, 'EX', effectiveTTL);
-    console.log(`%c[Cache SET] %cKey: ${prefixedKey}`, 'color: blue; font-weight: bold;', 'color: blue;', { value: stringValue, ttl: effectiveTTL });
+    console.log(
+      `%c[Cache SET] %cKey: ${prefixedKey}`,
+      'color: blue; font-weight: bold;',
+      'color: blue;',
+      { value: stringValue, ttl: effectiveTTL },
+    );
   }
 
   /**
@@ -49,17 +53,18 @@ export class RedisLRUService {
    * @param parseJson 是否将结果解析为JSON对象
    * @returns 缓存值或null（如果不存在）
    */
-  async get<T = any>(
-    key: string,
-    parseJson: boolean = true,
-  ): Promise<T | null> {
+  async get<T = any>(key: string, parseJson: boolean = true): Promise<T | null> {
     const prefixedKey = this.getPrefixedKey(key); // 缓存键前缀 + 缓存键
     // 从Redis获取缓存值
     const value = await this.redis.get(prefixedKey);
 
     // 如果缓存不存在，返回null
     if (!value) {
-      console.log(`%c[Cache MISS] %cKey: ${prefixedKey}`, 'color: orange; font-weight: bold;', 'color: blue;');
+      console.log(
+        `%c[Cache MISS] %cKey: ${prefixedKey}`,
+        'color: orange; font-weight: bold;',
+        'color: blue;',
+      );
       return null;
     }
 
@@ -94,7 +99,12 @@ export class RedisLRUService {
 
     // 如果缓存存在，直接返回
     if (cached !== null) {
-      console.log(`%c[Cache HIT] %cKey: ${this.getPrefixedKey(key)}`, 'color: green; font-weight: bold;', 'color: blue;', { value: cached });
+      console.log(
+        `%c[Cache HIT] %cKey: ${this.getPrefixedKey(key)}`,
+        'color: green; font-weight: bold;',
+        'color: blue;',
+        { value: cached },
+      );
       return cached;
     }
 
@@ -116,7 +126,11 @@ export class RedisLRUService {
   async delete(key: string): Promise<void> {
     const prefixedKey = this.getPrefixedKey(key);
     await this.redis.del(prefixedKey);
-    console.log(`%c[Cache CLEAR] %cKey: ${prefixedKey}`, 'color: red; font-weight: bold;', 'color: blue;');
+    console.log(
+      `%c[Cache CLEAR] %cKey: ${prefixedKey}`,
+      'color: red; font-weight: bold;',
+      'color: blue;',
+    );
   }
 
   /**
@@ -188,7 +202,7 @@ export class RedisLRUService {
     }
     return `${this.keyPrefix}${key}`;
   }
-  
+
   /**
    * 获取指定类别的TTL
    * @param category 数据类别

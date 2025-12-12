@@ -51,9 +51,7 @@ export class ExampleController {
    * 删除数据，同时清除缓存
    */
   @Delete('data/:id')
-  async deleteData(
-    @Param('id') id: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async deleteData(@Param('id') id: string): Promise<{ success: boolean; message: string }> {
     return this.exampleService.deleteData(id);
   }
 
@@ -61,9 +59,7 @@ export class ExampleController {
    * 清除指定类型的所有缓存
    */
   @Delete('cache')
-  async clearCache(
-    @Query('type') type: string,
-  ): Promise<{ success: boolean; message: string }> {
+  async clearCache(@Query('type') type: string): Promise<{ success: boolean; message: string }> {
     return this.exampleService.clearCache(type);
   }
 }

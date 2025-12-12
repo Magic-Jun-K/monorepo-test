@@ -18,15 +18,6 @@ import { TableModule } from './module/table/table.module';
 import { DetailModule } from './module/detail/detail.module';
 import { FileModule } from './module/file/file.module';
 import { ExampleModule } from './module/example/example.module';
-import { AuthUtils } from './common/utils/auth.utils';
-import { InitService } from './module/permission/init.service';
-import { PermissionEntity } from './entities/permission.entity';
-import { RoleEntity } from './entities/role.entity';
-import { RolePermissionEntity } from './entities/role-permission.entity';
-import { UserEntity } from './entities/user.entity';
-import { PermissionModule } from './module/permission/permission.module';
-import { RoleModule } from './module/role/role.module';
-import { AnalyticsModule } from './module/analytics/analytics.module';
 import database from './config/database';
 
 @Module({
@@ -42,12 +33,8 @@ import database from './config/database';
       useFactory: database,
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([PermissionEntity, RoleEntity, RolePermissionEntity, UserEntity]),
     ServeStaticModule.forRoot({
-      rootPath:
-        process.env.NODE_ENV === 'production'
-          ? join(__dirname, '..', 'public')
-          : join(__dirname, '..', '..', 'public'), // 静态资源目录
+      rootPath: join(__dirname, '..', 'public'), // 静态资源目录
       serveStaticOptions: {
         // 强缓存配置（1年，immutable）
         cacheControl: true,
@@ -77,12 +64,9 @@ import database from './config/database';
     ImageModule,
     TableModule,
     ExampleModule,
-    PermissionModule,
-    RoleModule,
-    AnalyticsModule,
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
-  providers: [AppService, PgService, Reflector, AuthUtils, InitService], // 提供可注入的一些服务
+  providers: [AppService, PgService, Reflector], // 提供可注入的一些服务
 })
 export class AppModule {}

@@ -14,19 +14,10 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 
-import {
-  RoleEntity,
-  RoleType,
-  RoleLevel,
-} from '../../entities/role.entity';
+import { RoleEntity, RoleType, RoleLevel } from '../../entities/role.entity';
 import { RoleService } from './role.service';
 import {
   PermissionGuard,
@@ -219,10 +210,7 @@ export class RoleController {
       roleIds: number[];
     },
   ): Promise<void> {
-    await this.roleService.batchAssignRolesToUser(
-      userId,
-      batchAssignDto.roleIds,
-    );
+    await this.roleService.batchAssignRolesToUser(userId, batchAssignDto.roleIds);
   }
 
   /**
@@ -242,10 +230,7 @@ export class RoleController {
       roleIds: number[];
     },
   ): Promise<void> {
-    await this.roleService.batchRemoveRolesFromUser(
-      userId,
-      batchRemoveDto.roleIds,
-    );
+    await this.roleService.batchRemoveRolesFromUser(userId, batchRemoveDto.roleIds);
   }
 
   /**

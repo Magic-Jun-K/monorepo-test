@@ -1,20 +1,11 @@
 /**
  * 角色服务
  */
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 
-import {
-  RoleEntity,
-  RoleType,
-  RoleLevel,
-} from '../../entities/user_role.entity';
+import { RoleEntity, RoleType, RoleLevel } from '../../entities/role.entity';
 import { UserEntity } from '../../entities/user.entity';
 import { RolePermissionEntity } from '../../entities/role-permission.entity';
 import { PermissionService } from '../permission/permission.service';
@@ -127,7 +118,6 @@ export class RoleService {
 
     const [roles, total] = await this.roleRepository.findAndCount({
       where: whereConditions,
-      relations: ['permissions', 'users'],
       skip: (page - 1) * limit,
       take: limit,
       order: { level: 'DESC', sortOrder: 'ASC', createdAt: 'DESC' },
@@ -142,7 +132,6 @@ export class RoleService {
   async getRoleById(id: number): Promise<RoleEntity> {
     const role = await this.roleRepository.findOne({
       where: { id },
-      relations: ['permissions', 'users'],
     });
 
     if (!role) {
@@ -156,14 +145,31 @@ export class RoleService {
    * 根据代码获取角色
    */
   async getRoleByCode(code: string): Promise<RoleEntity> {
-    const role = await this.roleRepository.findOne({
-      where: { code },
-      relations: ['permissions', 'users'],
-    });
+    // 使用直接SQL查询获取角色，避免TypeORM关系操作
+    const roles = await this.roleRepository.manager.query('SELECT * FROM role WHERE code = $1', [
+      code,
+    ]);
 
-    if (!role) {
+    if (roles.length === 0) {
       throw new NotFoundException('角色不存在');
     }
+
+    // 将查询结果转换为RoleEntity对象
+    const roleData = roles[0];
+    const role = new RoleEntity();
+    role.id = roleData.id;
+    role.name = roleData.name;
+    role.code = roleData.code;
+    role.type = roleData.type;
+    role.level = roleData.level;
+    role.description = roleData.description;
+    role.isSystem = roleData.isSystem;
+    role.isActive = roleData.isActive;
+    role.isSuperAdmin = roleData.isSuperAdmin;
+    role.parentId = roleData.parentId;
+    role.sortOrder = roleData.sortOrder;
+    role.createdAt = new Date(roleData.created_at);
+    role.updatedAt = new Date(roleData.updated_at);
 
     return role;
   }
@@ -264,7 +270,6 @@ export class RoleService {
   async assignRoleToUser(userId: number, roleId: number): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['roles'],
     });
 
     if (!user) {
@@ -280,12 +285,17 @@ export class RoleService {
     }
 
     // 检查用户是否已有该角色
-    if (user.roles.some((r) => r.id === roleId)) {
+    const userRoles = await this.getUserRoles(userId);
+    if (userRoles.some((r) => r.id === roleId)) {
       throw new ConflictException('用户已拥有该角色');
     }
 
-    user.roles.push(role);
-    await this.userRepository.save(user);
+    // 使用直接SQL插入的方式添加角色，避免TypeORM元数据解析问题
+    await this.userRepository.manager.query(
+      'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)',
+      [userId, roleId],
+    );
+
     this.logger.log(`为用户 ${user.username} 分配角色 ${role.name} 成功`);
   }
 
@@ -295,20 +305,25 @@ export class RoleService {
   async removeRoleFromUser(userId: number, roleId: number): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['roles'],
     });
 
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
 
-    const roleIndex = user.roles.findIndex((r) => r.id === roleId);
+    // 检查用户是否拥有该角色
+    const userRoles = await this.getUserRoles(userId);
+    const roleIndex = userRoles.findIndex((r) => r.id === roleId);
     if (roleIndex === -1) {
       throw new NotFoundException('用户未拥有该角色');
     }
 
-    user.roles.splice(roleIndex, 1);
-    await this.userRepository.save(user);
+    // 使用直接SQL删除的方式移除角色，避免TypeORM元数据解析问题
+    await this.userRepository.manager.query(
+      'DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2',
+      [userId, roleId],
+    );
+
     this.logger.log(`移除用户 ${user.username} 的角色成功`);
   }
 
@@ -318,26 +333,30 @@ export class RoleService {
   async getUserRoles(userId: number): Promise<RoleEntity[]> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['roles'],
     });
 
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
 
-    return user.roles || [];
+    // 使用直接SQL查询获取用户角色，避免TypeORM关系操作
+    const userRoles = await this.userRepository.manager.query(
+      `SELECT r.id, r.name, r.code, r.type, r.level, r.description, r."isSystem", r."isActive", r."isSuperAdmin", r."parentId", r."sortOrder", r."created_at", r."updated_at" 
+       FROM role r 
+       INNER JOIN user_roles ur ON r.id = ur.role_id 
+       WHERE ur.user_id = $1`,
+      [userId],
+    );
+
+    return userRoles || [];
   }
 
   /**
    * 批量为用户分配角色
    */
-  async batchAssignRolesToUser(
-    userId: number,
-    roleIds: number[],
-  ): Promise<void> {
+  async batchAssignRolesToUser(userId: number, roleIds: number[]): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['roles'],
     });
 
     if (!user) {
@@ -353,44 +372,54 @@ export class RoleService {
       throw new NotFoundException('部分角色不存在');
     }
 
+    // 获取用户当前的角色
+    const userRoles = await this.getUserRoles(userId);
+    const userRoleIds = userRoles.map((r) => r.id);
+
     // 过滤掉用户已有的角色
-    const newRoles = roles.filter(
-      (role) => !user.roles.some((r) => r.id === role.id),
-    );
+    const newRoles = roles.filter((role) => !userRoleIds.includes(role.id));
 
     if (newRoles.length > 0) {
-      user.roles.push(...newRoles);
-      await this.userRepository.save(user);
-      this.logger.log(
-        `为用户 ${user.username} 批量分配角色成功，共 ${newRoles.length} 个角色`,
-      );
+      // 使用直接SQL插入的方式添加角色，避免TypeORM元数据解析问题
+      for (const role of newRoles) {
+        await this.userRepository.manager.query(
+          'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)',
+          [userId, role.id],
+        );
+      }
+
+      this.logger.log(`为用户 ${user.username} 批量分配角色成功，共 ${newRoles.length} 个角色`);
     }
   }
 
   /**
    * 批量移除用户的角色
    */
-  async batchRemoveRolesFromUser(
-    userId: number,
-    roleIds: number[],
-  ): Promise<void> {
+  async batchRemoveRolesFromUser(userId: number, roleIds: number[]): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['roles'],
     });
 
     if (!user) {
       throw new NotFoundException('用户不存在');
     }
 
-    const removedRoles = user.roles.filter((role) => roleIds.includes(role.id));
+    // 获取用户当前的角色
+    const userRoles = await this.getUserRoles(userId);
+    const removedRoles = userRoles.filter((role) => roleIds.includes(role.id));
 
     if (removedRoles.length === 0) {
       throw new NotFoundException('用户未拥有指定的角色');
     }
 
-    user.roles = user.roles.filter((role) => !roleIds.includes(role.id));
-    await this.userRepository.save(user);
+    // 使用直接SQL删除的方式移除角色，避免TypeORM元数据解析问题
+    for (const roleId of roleIds) {
+      await this.userRepository.manager.query(
+        'DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2',
+        [userId, roleId],
+      );
+    }
+
     this.logger.log(`批量移除用户角色成功，共 ${removedRoles.length} 个角色`);
   }
 
@@ -447,13 +476,30 @@ export class RoleService {
     ];
 
     for (const roleData of defaultRoles) {
-      const existingRole = await this.roleRepository.findOne({
-        where: { code: roleData.code },
-      });
+      // 使用直接SQL查询检查角色是否存在，避免TypeORM关系操作
+      const existingRoles = await this.roleRepository.manager.query(
+        'SELECT * FROM role WHERE code = $1',
+        [roleData.code],
+      );
 
-      if (!existingRole) {
-        const role = this.roleRepository.create(roleData);
-        await this.roleRepository.save(role);
+      if (existingRoles.length === 0) {
+        // 使用直接SQL插入创建角色，避免TypeORM元数据解析问题
+        await this.roleRepository.manager.query(
+          `INSERT INTO role (name, code, type, level, description, isSystem, isActive, isSuperAdmin, parentId, sortOrder, created_at, updated_at) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          [
+            roleData.name,
+            roleData.code,
+            roleData.type,
+            roleData.level,
+            roleData.description,
+            roleData.isSystem,
+            true, // isActive
+            false, // isSuperAdmin
+            null, // parentId
+            roleData.sortOrder,
+          ],
+        );
         this.logger.log(`创建默认角色成功: ${roleData.name}`);
       }
     }

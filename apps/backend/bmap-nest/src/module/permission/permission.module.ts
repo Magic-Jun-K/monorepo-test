@@ -14,12 +14,7 @@ import { InitService } from './init.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      PermissionEntity,
-      RolePermissionEntity,
-      RoleEntity,
-      UserEntity,
-    ]),
+    TypeOrmModule.forFeature([PermissionEntity, RolePermissionEntity, RoleEntity, UserEntity]),
   ],
   controllers: [PermissionController],
   providers: [PermissionService, InitService],

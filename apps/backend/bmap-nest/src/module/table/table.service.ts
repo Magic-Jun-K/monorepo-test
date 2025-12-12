@@ -22,19 +22,11 @@ export class TableService {
     // 动态添加筛选条件
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
-        if (
-          key === 'createTime' &&
-          Array.isArray(value) &&
-          value.length === 2
-        ) {
+        if (key === 'createTime' && Array.isArray(value) && value.length === 2) {
           queryBuilder.andWhere({
             createTime: Between(new Date(value[0]), new Date(value[1])),
           });
-        } else if (
-          key === 'updateTime' &&
-          Array.isArray(value) &&
-          value.length === 2
-        ) {
+        } else if (key === 'updateTime' && Array.isArray(value) && value.length === 2) {
           queryBuilder.andWhere({
             updateTime: Between(new Date(value[0]), new Date(value[1])),
           });
@@ -48,10 +40,7 @@ export class TableService {
       }
     });
 
-    const [data, total] = await queryBuilder
-      .skip(skip)
-      .take(pageSize)
-      .getManyAndCount();
+    const [data, total] = await queryBuilder.skip(skip).take(pageSize).getManyAndCount();
 
     return {
       data,

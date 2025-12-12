@@ -1,19 +1,20 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-// import * as argon2 from 'argon2';
 
-import { UserEntity } from '../../entities/user.entity';
+import { UserEntity, UserStatus, UserType } from '../../entities/user.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
 import { AuthUser, AuthRole } from './types/user.interface';
+import { RoleService } from '../role/role.service';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,7 @@ export class AuthService {
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly redisService: RedisService,
     private readonly mailService: MailService,
+    private readonly roleService: RoleService,
   ) {}
 
   /**
@@ -39,11 +41,14 @@ export class AuthService {
   async validateUser(username: string): Promise<any> {
     const user = await this.userRepository.findOne({
       where: { username },
-      select: ['id', 'username', 'password', 'userType', 'isActive'],
-      relations: ['roles'],
+      select: ['id', 'username', 'password', 'status', 'isSuperAdmin'],
     });
 
-    if (user && user.isActive) {
+    if (user && user.status === UserStatus.ACTIVE) {
+      // 检查用户是否有密码，如果没有密码说明是邮箱注册用户，不能使用账号密码登录
+      if (!user.password) {
+        throw new UnauthorizedException('该账户只能通过邮箱验证码登录，请使用邮箱登录方式');
+      }
       return user;
     }
     return null;
@@ -52,17 +57,18 @@ export class AuthService {
   /**
    * 验证密码是否正确
    * @param finalHashedPassword 数据库存储的哈希值
-   * @param inputHashedPassword 前端传递的哈希值
+   * @param inputEncryptPassword 前端传递的RSA加密密码
    * @returns 是否验证成功
    */
   async verifyPassword(
     finalHashedPassword: string,
-    inputHashedPassword: string,
+    inputEncryptPassword: string,
   ): Promise<boolean> {
-    return this.authUtils.verifyPassword(
-      finalHashedPassword,
-      inputHashedPassword,
-    );
+    // 如果数据库存储的密码为null，说明是邮箱注册用户，不能使用密码登录
+    if (!finalHashedPassword) {
+      return false;
+    }
+    return this.authUtils.verifyPassword(finalHashedPassword, inputEncryptPassword);
   }
 
   /**
@@ -71,13 +77,30 @@ export class AuthService {
    * @returns
    */
   private async generateAccessToken(user: AuthUser): Promise<string> {
-    const roles = user.roles ? user.roles.map((role: AuthRole) => role.name) : [];
-    
+    // 使用直接SQL查询获取用户角色，避免TypeORM关系操作
+    const userRoles = await this.userRepository.manager.query(
+      `SELECT r.id, r.name, r.code, r.type, r.level, r."isSuperAdmin" 
+       FROM role r 
+       INNER JOIN user_roles ur ON r.id = ur.role_id 
+       WHERE ur.user_id = $1`,
+      [user.id],
+    );
+
+    const roles = userRoles.map((role: any) => ({
+      id: role.id,
+      name: role.name,
+      code: role.code,
+      type: role.type,
+      level: role.level,
+      isSuperAdmin: role.isSuperAdmin,
+    }));
+
     const accessToken = this.jwtService.sign(
       {
         sub: user.id,
         username: user.username,
-        userType: user.userType,
+        status: user.status,
+        isSuperAdmin: user.isSuperAdmin,
         roles: roles,
       },
       { expiresIn: '15m' },
@@ -123,11 +146,7 @@ export class AuthService {
    * @param ttl
    * @returns
    */
-  private async storeTokenInRedis(
-    key: string,
-    token: string,
-    ttl: number,
-  ): Promise<void> {
+  private async storeTokenInRedis(key: string, token: string, ttl: number): Promise<void> {
     await this.redisService.set(key, token, ttl);
   }
 
@@ -206,9 +225,7 @@ export class AuthService {
       });
 
       // 从Redis获取存储的Refresh Token
-      const storedToken = await this.redisService.get(
-        `${this.REFRESH_TOKEN_PREFIX}${payload.sub}`,
-      );
+      const storedToken = await this.redisService.get(`${this.REFRESH_TOKEN_PREFIX}${payload.sub}`);
 
       // 检查Redis中存储的Refresh Token是否匹配
       if (!storedToken || storedToken !== refreshToken) {
@@ -219,7 +236,6 @@ export class AuthService {
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
         select: ['id', 'username'],
-        relations: ['roles'], // 如果需要角色信息，通过关联查询获取
       });
       console.log('测试refreshToken user', user);
 
@@ -242,9 +258,7 @@ export class AuthService {
       const payload = this.jwtService.verify(token);
 
       // 检查Redis中是否存在该Token
-      const storedToken = await this.redisService.get(
-        `${this.ACCESS_TOKEN_PREFIX}${payload.sub}`,
-      );
+      const storedToken = await this.redisService.get(`${this.ACCESS_TOKEN_PREFIX}${payload.sub}`);
 
       if (!storedToken || storedToken !== token) {
         throw new UnauthorizedException('Token已失效');
@@ -331,22 +345,53 @@ export class AuthService {
       throw new BadRequestException('验证码错误或已过期');
     }
 
-    let user = await this.userRepository.findOne({ where: { email } });
+    let user = await this.userRepository.findOne({
+      where: { email },
+    });
 
     if (!user) {
       // 首次登录：自动注册
-      const hashedPassword = await this.authUtils.hashPassword(
-        this.generateRandomPassword(),
-      );
       const username = this.generateUniqueUsername(email);
-      user = this.userRepository.create({
+      const newUser = this.userRepository.create({
         email,
-        password: hashedPassword,
+        password: null, // 邮箱注册的用户不设置密码，只能通过邮箱验证码登录
         username,
-        userType: 'user',
-        isActive: true,
+        userType: UserType.EXTERNAL,
+        status: UserStatus.ACTIVE,
       });
-      await this.userRepository.save(user);
+
+      const savedUser = await this.userRepository.save(newUser);
+      const userId = savedUser.id;
+
+      // 为新注册的用户分配默认角色
+      try {
+        // 查找默认角色
+        const defaultRole = await this.roleService.getRoleByCode('USER');
+        if (defaultRole) {
+          // 使用角色服务分配默认角色
+          await this.roleService.batchAssignRolesToUser(userId, [defaultRole.id]);
+          console.log('✅ 为邮箱注册用户分配默认USER角色成功');
+        } else {
+          throw new Error('未找到默认USER角色');
+        }
+      } catch (error) {
+        console.error('为邮箱注册用户分配默认角色失败:', error.message);
+        // 角色分配失败时抛出异常，确保用户创建失败
+        throw new HttpException(
+          {
+            message: '用户角色分配失败，请重试',
+            error: 'role assignment failed',
+            details: error.message,
+          },
+          500,
+        );
+      }
+
+      // 重新查询用户以获取角色信息
+      user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['roles'],
+      });
     }
 
     const tokens = await this.generateTokenPair(user);
@@ -376,5 +421,55 @@ export class AuthService {
    */
   private generateRandomPassword(): string {
     return Math.random().toString(36).slice(-8); // 生成8位随机密码
+  }
+
+  /**
+   * 为邮箱注册用户设置密码
+   * @param userId 用户ID
+   * @param newPassword 新密码
+   * @returns
+   */
+  async setPasswordForEmailUser(userId: number, newPassword: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'username', 'password', 'email'],
+    });
+
+    if (!user) {
+      throw new BadRequestException('用户不存在');
+    }
+
+    // 只有邮箱注册的用户（没有密码）才能设置密码
+    if (user.password !== null) {
+      throw new BadRequestException('该账户已有密码，无法重复设置');
+    }
+
+    // 验证用户是否是通过邮箱注册的（有email字段）
+    if (!user.email) {
+      throw new BadRequestException('只有邮箱注册用户才能设置密码');
+    }
+
+    // 哈希新密码
+    const hashedPassword = await this.authUtils.hashPassword(newPassword);
+
+    // 更新用户密码
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
+
+    return true;
+  }
+
+  /**
+   * 检查用户是否可以设置密码（邮箱注册且无密码）
+   * @param userId 用户ID
+   * @returns
+   */
+  async canUserSetPassword(userId: number): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'password', 'email'],
+    });
+
+    return user && user.email && user.password === null;
   }
 }

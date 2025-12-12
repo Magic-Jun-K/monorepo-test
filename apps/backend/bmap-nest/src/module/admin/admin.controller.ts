@@ -1,4 +1,14 @@
-import { Body, Controller, Post, Get, Param, Query, UseGuards, Request, Logger } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+  Logger,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AdminService } from './admin.service';
@@ -42,17 +52,17 @@ export class AdminController {
     const superAdmin = await this.adminService.createSuperAdmin(
       body.username,
       body.password,
-      body.email
+      body.email,
     );
-    
-    return { 
-      message: '超级管理员创建成功', 
+
+    return {
+      message: '超级管理员创建成功',
       success: true,
       data: {
         id: superAdmin.id,
         username: superAdmin.username,
-        email: superAdmin.email
-      }
+        email: superAdmin.email,
+      },
     };
   }
 
@@ -69,18 +79,18 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '权限申请创建成功' })
   async requestAdminPermission(
     @Body() body: { targetUserId: number; reason: string },
-    @Request() req
+    @Request() req,
   ) {
     const permissionRequest = await this.adminService.requestAdminPermission(
       body.targetUserId,
       body.reason,
-      req.user.id
+      req.user.id,
     );
-    
-    return { 
-      message: '权限申请创建成功', 
+
+    return {
+      message: '权限申请创建成功',
       success: true,
-      data: permissionRequest
+      data: permissionRequest,
     };
   }
 
@@ -95,19 +105,13 @@ export class AdminController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '批准管理员权限申请' })
   @ApiResponse({ status: 200, description: '权限申请批准成功' })
-  async approveAdminRequest(
-    @Param('requestId') requestId: number,
-    @Request() req
-  ) {
-    const permissionRequest = await this.adminService.approveAdminRequest(
-      requestId,
-      req.user.id
-    );
-    
-    return { 
-      message: '权限申请批准成功', 
+  async approveAdminRequest(@Param('requestId') requestId: number, @Request() req) {
+    const permissionRequest = await this.adminService.approveAdminRequest(requestId, req.user.id);
+
+    return {
+      message: '权限申请批准成功',
       success: true,
-      data: permissionRequest
+      data: permissionRequest,
     };
   }
 
@@ -126,18 +130,18 @@ export class AdminController {
   async rejectAdminRequest(
     @Param('requestId') requestId: number,
     @Body() body: { rejectionReason: string },
-    @Request() req
+    @Request() req,
   ) {
     const permissionRequest = await this.adminService.rejectAdminRequest(
       requestId,
       req.user.id,
-      body.rejectionReason
+      body.rejectionReason,
     );
-    
-    return { 
-      message: '权限申请拒绝成功', 
+
+    return {
+      message: '权限申请拒绝成功',
       success: true,
-      data: permissionRequest
+      data: permissionRequest,
     };
   }
 
@@ -152,11 +156,11 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '获取待处理申请成功' })
   async getPendingRequests() {
     const requests = await this.adminService.getPendingRequests();
-    
-    return { 
-      message: '获取待处理申请成功', 
+
+    return {
+      message: '获取待处理申请成功',
       success: true,
-      data: requests
+      data: requests,
     };
   }
 
@@ -172,11 +176,11 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '获取申请历史成功' })
   async getUserRequestHistory(@Param('userId') userId: number) {
     const history = await this.adminService.getUserRequestHistory(userId);
-    
-    return { 
-      message: '获取申请历史成功', 
+
+    return {
+      message: '获取申请历史成功',
       success: true,
-      data: history
+      data: history,
     };
   }
 
@@ -197,17 +201,17 @@ export class AdminController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
     @Query('userId') userId?: number,
-    @Query('action') action?: AuditAction
+    @Query('action') action?: AuditAction,
   ) {
     const result = await this.adminService.getAuditLogs(page, limit, userId, action);
-    
-    return { 
-      message: '获取审计日志成功', 
+
+    return {
+      message: '获取审计日志成功',
       success: true,
       data: result.logs,
       total: result.total,
       page,
-      limit
+      limit,
     };
   }
 
@@ -224,18 +228,18 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '撤销权限申请创建成功' })
   async revokeAdminPermission(
     @Body() body: { targetUserId: number; reason: string },
-    @Request() req
+    @Request() req,
   ) {
     const permissionRequest = await this.adminService.revokeAdminPermission(
       body.targetUserId,
       body.reason,
-      req.user.id
+      req.user.id,
     );
-    
-    return { 
-      message: '撤销权限申请创建成功', 
+
+    return {
+      message: '撤销权限申请创建成功',
       success: true,
-      data: permissionRequest
+      data: permissionRequest,
     };
   }
 
@@ -250,11 +254,11 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '获取管理员列表成功' })
   async getAllAdmins() {
     const admins = await this.adminService.getAllAdmins();
-    
-    return { 
-      message: '获取管理员列表成功', 
+
+    return {
+      message: '获取管理员列表成功',
       success: true,
-      data: admins
+      data: admins,
     };
   }
 
@@ -270,11 +274,11 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '检查成功' })
   async isSuperAdmin(@Request() req) {
     const isSuperAdmin = await this.adminService.isSuperAdmin(req.user.id);
-    
-    return { 
-      message: '检查成功', 
+
+    return {
+      message: '检查成功',
       success: true,
-      data: { isSuperAdmin }
+      data: { isSuperAdmin },
     };
   }
 
@@ -290,11 +294,11 @@ export class AdminController {
   @ApiResponse({ status: 200, description: '检查成功' })
   async isAdmin(@Request() req) {
     const isAdmin = await this.adminService.isAdmin(req.user.id);
-    
-    return { 
-      message: '检查成功', 
+
+    return {
+      message: '检查成功',
       success: true,
-      data: { isAdmin }
+      data: { isAdmin },
     };
   }
 }

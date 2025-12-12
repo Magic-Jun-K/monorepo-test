@@ -1,17 +1,8 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Put,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { nanoid } from 'nanoid';
 
-import { AdminEntity } from '../../entities/admin.entity';
+import { UserEntity } from '../../entities/user.entity';
 import { ApplicationEntity } from '../../entities/application.entity';
 import { ApplicationService } from './application.service';
 
@@ -32,18 +23,14 @@ export class ApplicationController {
 
   @Post()
   async create(@Body() body, @Request() req) {
-    const admin = new AdminEntity();
-    admin.id = req.user.id;
+    const user = new UserEntity();
+    user.id = req.user.id;
     const application = new ApplicationEntity(body);
-    Reflect.set<ApplicationEntity, 'appId'>(
-      application,
-      'appId',
-      application.type + nanoid(6),
-    );
+    Reflect.set<ApplicationEntity, 'appId'>(application, 'appId', application.type + nanoid(6));
 
     const newUser = await this.applicationService.create({
       ...application,
-      user: admin,
+      user: user,
     });
     return { data: newUser, success: true };
   }

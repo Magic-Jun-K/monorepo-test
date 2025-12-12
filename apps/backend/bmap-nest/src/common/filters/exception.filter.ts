@@ -1,12 +1,7 @@
 /**
  * @description 异常过滤器
  */
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-} from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from '@nestjs/common';
 
 @Catch(HttpException)
 export class HttpErrorFilter implements ExceptionFilter<HttpException> {

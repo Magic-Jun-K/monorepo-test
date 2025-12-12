@@ -1,9 +1,4 @@
-import {
-  HttpException,
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { HttpException, Injectable, BadRequestException, Logger } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -41,10 +36,7 @@ export class AdminService {
       where: { username: body.username },
     });
     if (userIsExist) {
-      throw new HttpException(
-        { message: '用户已存在', error: 'user is existed' },
-        400,
-      );
+      throw new HttpException({ message: '用户已存在', error: 'user is existed' }, 400);
     }
 
     // 只在提供了手机号时才检查手机号
@@ -196,8 +188,7 @@ export class AdminService {
       await this.roleService.initializeDefaultRoles();
 
       // 获取SUPER_ADMIN角色
-      const superAdminRole =
-        await this.roleService.getRoleByCode('SUPER_ADMIN');
+      const superAdminRole = await this.roleService.getRoleByCode('SUPER_ADMIN');
 
       // 为用户分配角色
       await this.roleService.assignRoleToUser(savedAdmin.id, superAdminRole.id);
@@ -223,11 +214,7 @@ export class AdminService {
    * @param requestedById 申请人ID
    * @returns 权限申请
    */
-  async requestAdminPermission(
-    targetUserId: number,
-    reason: string,
-    requestedById: number,
-  ) {
+  async requestAdminPermission(targetUserId: number, reason: string, requestedById: number) {
     return this.permissionService.createPermissionRequest(
       RequestType.PROMOTE_TO_ADMIN,
       targetUserId,
@@ -243,11 +230,7 @@ export class AdminService {
    * @returns 更新后的申请
    */
   async approveAdminRequest(requestId: number, approvedById: number) {
-    return this.permissionService.approvePermissionRequest(
-      requestId,
-      approvedById,
-      true,
-    );
+    return this.permissionService.approvePermissionRequest(requestId, approvedById, true);
   }
 
   /**
@@ -257,11 +240,7 @@ export class AdminService {
    * @param rejectionReason 拒绝理由
    * @returns 更新后的申请
    */
-  async rejectAdminRequest(
-    requestId: number,
-    approvedById: number,
-    rejectionReason: string,
-  ) {
+  async rejectAdminRequest(requestId: number, approvedById: number, rejectionReason: string) {
     return this.permissionService.approvePermissionRequest(
       requestId,
       approvedById,
@@ -295,12 +274,7 @@ export class AdminService {
    * @param action 操作类型（可选）
    * @returns 审计日志
    */
-  async getAuditLogs(
-    page: number = 1,
-    limit: number = 20,
-    userId?: number,
-    action?: AuditAction,
-  ) {
+  async getAuditLogs(page: number = 1, limit: number = 20, userId?: number, action?: AuditAction) {
     return this.permissionService.getAuditLogs(page, limit, userId, action);
   }
 
@@ -311,11 +285,7 @@ export class AdminService {
    * @param requestedById 操作人ID
    * @returns 权限申请
    */
-  async revokeAdminPermission(
-    targetUserId: number,
-    reason: string,
-    requestedById: number,
-  ) {
+  async revokeAdminPermission(targetUserId: number, reason: string, requestedById: number) {
     return this.permissionService.createPermissionRequest(
       RequestType.DEMOTE_FROM_ADMIN,
       targetUserId,
