@@ -12,7 +12,7 @@ import { PgService } from '../../app.service';
 @Controller('/detail')
 export class DetailController {
   private readonly logger = new Logger(DetailController.name);
-  
+
   constructor(
     private readonly detailService: DetailService,
     private readonly pgService: PgService,

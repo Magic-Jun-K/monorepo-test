@@ -1,4 +1,13 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Get, Param, Res, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+  Get,
+  Param,
+  Res,
+  Logger,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -8,7 +17,7 @@ import { Public } from '../../common/decorators/public.decorator';
 @Controller('file')
 export class FileController {
   private readonly logger = new Logger(FileController.name);
-  
+
   constructor(private readonly fileService: FileService) {}
 
   @Public()

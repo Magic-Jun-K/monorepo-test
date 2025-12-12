@@ -35,7 +35,10 @@ export class AuthUtils {
     try {
       // 对前端传递的哈希值进行二次哈希
       const inputFinalHashedPassword = await this.hashPassword(inputHashedPassword);
-      this.logger.log('authUtils verifyPassword inputFinalHashedPassword:', inputFinalHashedPassword);
+      this.logger.log(
+        'authUtils verifyPassword inputFinalHashedPassword:',
+        inputFinalHashedPassword,
+      );
 
       // 比较二次哈希值
       // return finalHashedPassword === inputFinalHashedPassword;

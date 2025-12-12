@@ -22,7 +22,7 @@ import { Public } from '../../common/decorators/public.decorator';
 @Controller('image')
 export class ImageController {
   private readonly logger = new Logger(ImageController.name);
-  
+
   constructor(private readonly imageService: ImageService) {}
 
   @Post('compress')

@@ -19,7 +19,7 @@ export class AppService {}
 export class PgService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
   private readonly logger = new Logger(PgService.name);
-  
+
   constructor(private readonly configService: ConfigService) {
     const dsConfig = {
       host: this.configService.get<string>('PG_HOST'),

@@ -11,7 +11,7 @@ import {
   HttpException,
   HttpStatus,
   UsePipes,
-  Logger
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';

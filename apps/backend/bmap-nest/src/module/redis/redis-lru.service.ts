@@ -36,13 +36,14 @@ export class RedisLRUService {
     const effectiveTTL = ttl || (category && this.ttlConfig[category]) || this.defaultTTL;
     const prefixedKey = this.getPrefixedKey(key); // 缓存键前缀 + 缓存键
     // 如果值是对象，转换为JSON字符串
-    const stringValue = typeof value === 'object' && value !== null ? JSON.stringify(value as unknown) : String(value);
+    const stringValue =
+      typeof value === 'object' && value !== null
+        ? JSON.stringify(value as unknown)
+        : String(value);
 
     // 使用EX设置过期时间（秒）
     await this.redis.set(prefixedKey, stringValue, 'EX', effectiveTTL);
-    this.logger.log(
-      `Cache SET - Key: ${prefixedKey}, Value: ${stringValue}, TTL: ${effectiveTTL}`,
-    );
+    this.logger.log(`Cache SET - Key: ${prefixedKey}, Value: ${stringValue}, TTL: ${effectiveTTL}`);
   }
 
   /**
@@ -93,7 +94,9 @@ export class RedisLRUService {
 
     // 如果缓存存在，直接返回
     if (cached !== null) {
-      this.logger.debug(`Cache HIT - Key: ${this.getPrefixedKey(key)}, Value: ${JSON.stringify(cached)}`);
+      this.logger.debug(
+        `Cache HIT - Key: ${this.getPrefixedKey(key)}, Value: ${JSON.stringify(cached)}`,
+      );
       return cached;
     }
 
