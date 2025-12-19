@@ -1,8 +1,13 @@
 import * as argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 @Injectable()
 export class AuthUtils {
+  constructor(private readonly logger: AppLoggerService) {
+    this.logger.setContext('AuthUtils');
+  }
+
   /**
    * 对前端传递的哈希值进行二次哈希
    * @param hashedPassword 前端传递的哈希值
@@ -27,31 +32,16 @@ export class AuthUtils {
    * @param inputHashedPassword 前端传递的哈希值
    * @returns 是否验证成功
    */
-  async verifyPassword(
-    finalHashedPassword: string,
-    inputHashedPassword: string,
-  ): Promise<boolean> {
-    console.log(
-      'authUtils verifyPassword finalHashedPassword:',
-      finalHashedPassword,
-    );
-    console.log(
-      'authUtils verifyPassword inputHashedPassword:',
-      inputHashedPassword,
-    );
+  async verifyPassword(finalHashedPassword: string, inputHashedPassword: string): Promise<boolean> {
+    this.logger.debug('Password verification attempt');
     try {
       // 对前端传递的哈希值进行二次哈希
-      const inputFinalHashedPassword =
-        await this.hashPassword(inputHashedPassword);
-      console.log(
-        'authUtils verifyPassword inputFinalHashedPassword:',
-        inputFinalHashedPassword,
-      );
+      const inputFinalHashedPassword = await this.hashPassword(inputHashedPassword);
 
       // 比较二次哈希值
       return finalHashedPassword === inputFinalHashedPassword;
     } catch (error) {
-      console.error('密码验证失败:', error);
+      this.logger.error('Password verification failed', (error as Error).stack);
       return false;
     }
   }

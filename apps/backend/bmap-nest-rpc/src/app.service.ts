@@ -6,7 +6,7 @@
  */
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Pool/* , PoolConfig */ } from 'pg';
+import { Pool /* , PoolConfig */ } from 'pg';
 
 // const dsConfig: PoolConfig = {
 //   // host: 'localhost',
@@ -38,12 +38,11 @@ export class PgService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {
     const dsConfig = {
       host: this.configService.get<string>('PG_HOST'),
-      port: parseInt(this.configService.get<string>('PG_PORT'), 10),
+      port: Number.parseInt(this.configService.get<string>('PG_PORT') || '5432', 10),
       user: this.configService.get<string>('PG_USER'),
       password: this.configService.get<string>('PG_PASSWORD'),
       database: this.configService.get<string>('PG_DATABASE_NAME'),
     };
-    // console.log('PG Config:', dsConfig);
     this.pool = new Pool(dsConfig);
   }
   onModuleInit() {
@@ -56,14 +55,8 @@ export class PgService implements OnModuleInit, OnModuleDestroy {
   /**
    * 提供方法来调用数据库的查询
    */
-  async query(sql) {
-    try {
-      const result = await this.pool.query(sql);
-      return result;
-    } catch (error) {
-      console.error('pg query error', error);
-      // 业务异常一般不要吞掉
-      throw error;
-    }
+  async query(sql: string) {
+    const result = await this.pool.query(sql);
+    return result;
   }
 }

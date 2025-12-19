@@ -39,21 +39,19 @@ async function bootstrap() {
   });
 
   // 启动 HTTP 服务
-  await httpApp.listen(process.env.PORT ?? 7100);
-  logger.log(`✅ HTTP 服务已启动在端口 ${process.env.PORT ?? 7100}`);
+  const port = process.env.PORT ?? 7100;
+  await httpApp.listen(port);
+  logger.log(`✅ HTTP 服务已启动在端口 ${port}`);
 
   // 创建 gRPC 微服务
-  const grpcApp = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.GRPC,
-      options: {
-        package: 'auth',
-        protoPath: join(process.cwd(), 'src/proto/auth.proto'),
-        ...grpcConfig,
-      },
+  const grpcApp = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.GRPC,
+    options: {
+      package: 'auth',
+      protoPath: join(process.cwd(), 'src/proto/auth.proto'),
+      ...grpcConfig,
     },
-  );
+  });
 
   // 启动gRPC微服务
   await grpcApp.listen();

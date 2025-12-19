@@ -4,7 +4,7 @@ import { Inject } from '@nestjs/common';
 
 export interface KafkaEvent {
   eventType: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   correlationId?: string; // 关联ID，用于跟踪请求
 }
@@ -21,9 +21,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private eventBuffer: Record<string, KafkaEvent[]> = {};
   private batchTimeouts: Record<string, NodeJS.Timeout> = {};
 
-  constructor(
-    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
-  ) {}
+  constructor(@Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka) {}
 
   /**
    * 初始化Kafka连接
@@ -47,7 +45,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
    * @param data 事件数据
    * @param correlationId 关联ID
    */
-  async sendAuthEvent(eventType: string, data: any, correlationId?: string) {
+  async sendAuthEvent(eventType: string, data: unknown, correlationId?: string) {
     const event: KafkaEvent = {
       eventType,
       data,
@@ -64,7 +62,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
    * @param data 事件数据
    * @param correlationId 关联ID
    */
-  async sendUserEvent(eventType: string, data: any, correlationId?: string) {
+  async sendUserEvent(eventType: string, data: unknown, correlationId?: string) {
     const event: KafkaEvent = {
       eventType,
       data,
@@ -82,12 +80,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
    * @param data 事件数据
    * @param correlationId 关联ID
    */
-  async sendEvent(
-    topic: string,
-    eventType: string,
-    data: any,
-    correlationId?: string,
-  ) {
+  async sendEvent(topic: string, eventType: string, data: unknown, correlationId?: string) {
     const event: KafkaEvent = {
       eventType,
       data,
@@ -107,7 +100,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
    */
   async sendEventWithConfig(
     eventType: string,
-    data: any,
+    data: unknown,
     config: KafkaConfig,
     correlationId?: string,
   ) {
@@ -135,11 +128,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
    * @param event 事件
    * @param config Kafka配置
    */
-  private async sendBatchEvent(
-    topic: string,
-    event: KafkaEvent,
-    config: KafkaConfig,
-  ) {
+  private async sendBatchEvent(topic: string, event: KafkaEvent, config: KafkaConfig) {
     // 初始化缓冲区
     if (!this.eventBuffer[topic]) {
       this.eventBuffer[topic] = [];

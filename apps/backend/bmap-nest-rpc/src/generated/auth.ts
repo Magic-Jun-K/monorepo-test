@@ -4,11 +4,10 @@
 //   protoc               v6.31.0
 // source: auth.proto
 
-/* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
-import { Observable } from "rxjs";
+import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 
-export const protobufPackage = "auth";
+export const protobufPackage = 'auth';
 
 export interface LoginRequest {
   username: string;
@@ -92,7 +91,7 @@ export interface EmailLoginResponse {
   data: TokenData | undefined;
 }
 
-export const AUTH_PACKAGE_NAME = "auth";
+export const AUTH_PACKAGE_NAME = 'auth';
 
 export interface AuthServiceClient {
   login(request: LoginRequest): Observable<LoginResponse>;
@@ -105,7 +104,9 @@ export interface AuthServiceClient {
 
   validateToken(request: ValidateTokenRequest): Observable<ValidateTokenResponse>;
 
-  sendVerificationCode(request: SendVerificationCodeRequest): Observable<SendVerificationCodeResponse>;
+  sendVerificationCode(
+    request: SendVerificationCodeRequest,
+  ): Observable<SendVerificationCodeResponse>;
 
   emailLogin(request: EmailLoginRequest): Observable<EmailLoginResponse>;
 }
@@ -113,7 +114,9 @@ export interface AuthServiceClient {
 export interface AuthServiceController {
   login(request: LoginRequest): Promise<LoginResponse> | Observable<LoginResponse> | LoginResponse;
 
-  logout(request: LogoutRequest): Promise<LogoutResponse> | Observable<LogoutResponse> | LogoutResponse;
+  logout(
+    request: LogoutRequest,
+  ): Promise<LogoutResponse> | Observable<LogoutResponse> | LogoutResponse;
 
   refreshToken(
     request: RefreshTokenRequest,
@@ -129,7 +132,10 @@ export interface AuthServiceController {
 
   sendVerificationCode(
     request: SendVerificationCodeRequest,
-  ): Promise<SendVerificationCodeResponse> | Observable<SendVerificationCodeResponse> | SendVerificationCodeResponse;
+  ):
+    | Promise<SendVerificationCodeResponse>
+    | Observable<SendVerificationCodeResponse>
+    | SendVerificationCodeResponse;
 
   emailLogin(
     request: EmailLoginRequest,
@@ -139,24 +145,24 @@ export interface AuthServiceController {
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      "login",
-      "logout",
-      "refreshToken",
-      "getCurrentUser",
-      "validateToken",
-      "sendVerificationCode",
-      "emailLogin",
+      'login',
+      'logout',
+      'refreshToken',
+      'getCurrentUser',
+      'validateToken',
+      'sendVerificationCode',
+      'emailLogin',
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: unknown = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod('AuthService', method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
-      GrpcStreamMethod("AuthService", method)(constructor.prototype[method], method, descriptor);
+      const descriptor: unknown = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod('AuthService', method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const AUTH_SERVICE_NAME = "AuthService";
+export const AUTH_SERVICE_NAME = 'AuthService';

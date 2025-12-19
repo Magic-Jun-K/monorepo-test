@@ -1,4 +1,3 @@
-
 import { diskStorage } from 'multer';
 import { extname } from 'node:path';
 
@@ -13,5 +12,5 @@ export default () => ({
         callback(null, filename);
       },
     }),
-  }
+  },
 });

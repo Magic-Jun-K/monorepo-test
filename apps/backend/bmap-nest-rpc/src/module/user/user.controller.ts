@@ -16,39 +16,43 @@ import { UserService } from './user.service';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe';
 import { AuthGuard } from '@nestjs/passport';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly logger: AppLoggerService,
+  ) {
+    this.logger.setContext('UserController');
+  }
 
   /**
    * 用户列表（带搜索、分页）
-   * @param query 
-   * @returns 
+   * @param query
+   * @returns
    */
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  async findAll(@Query() query: any) {
-    console.log('user findAll query', query);
+  async findAll(@Query() query: Record<string, unknown>) {
+    this.logger.log(`Get users with query: ${JSON.stringify(query)}`);
     return this.userService.findAll(query || {});
   }
 
   /**
    * 新增用户
-   * @param createUserDto 
-   * @returns 
+   * @param createUserDto
+   * @returns
    */
   @Post()
-  async create(
-    @Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto,
-  ) {
+  async create(@Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
   /**
    * 导入用户（上传文件）
-   * @param file 
-   * @returns 
+   * @param file
+   * @returns
    */
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))
@@ -58,16 +62,16 @@ export class UserController {
 
   /**
    * 导出用户（文件流）
-   * @param query 
-   * @param res 
+   * @param query
+   * @param res
    */
   @Get('export')
-  async export(@Query() query: any, @Res() res: Response) {
+  async export(@Query() query: Record<string, unknown>, @Res() res: Response) {
     try {
       await this.userService.exportUsers(query, res);
     } catch (error) {
       res.status(500).send('导出失败');
-      console.error('导出失败', error);
+      this.logger.error('导出失败', (error as Error).stack);
     }
   }
 }

@@ -1,13 +1,7 @@
 /**
  * 用户资料实体
  */
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 @Entity({ name: 'user_profile' })

@@ -78,10 +78,7 @@ class CircuitBreaker {
     // 检查是否可以尝试执行
     if (this.state === CircuitBreakerState.OPEN) {
       // 检查是否应该进入半开状态
-      if (
-        this.lastFailureTime &&
-        now - this.lastFailureTime > this.config.resetTimeout
-      ) {
+      if (this.lastFailureTime && now - this.lastFailureTime > this.config.resetTimeout) {
         this.state = CircuitBreakerState.HALF_OPEN;
         this.successCount = 0; // 重置成功计数
       } else {
@@ -115,8 +112,7 @@ class CircuitBreaker {
 
       // 基于失败次数或失败率检查是否需要打开熔断器
       const shouldOpen =
-        this.failureCount >= this.config.failureThreshold ||
-        this.getFailureRate(now) >= 0.5; // 50%失败率阈值
+        this.failureCount >= this.config.failureThreshold || this.getFailureRate(now) >= 0.5; // 50%失败率阈值
 
       if (shouldOpen) {
         this.state = CircuitBreakerState.OPEN;
@@ -146,9 +142,7 @@ class CircuitBreaker {
     const cutoffTime = now - windowTime;
 
     // 移除超出时间窗口的失败记录
-    this.failureTimestamps = this.failureTimestamps.filter(
-      (timestamp) => timestamp > cutoffTime,
-    );
+    this.failureTimestamps = this.failureTimestamps.filter((timestamp) => timestamp > cutoffTime);
 
     // 更新失败计数
     this.failureCount = this.failureTimestamps.length;

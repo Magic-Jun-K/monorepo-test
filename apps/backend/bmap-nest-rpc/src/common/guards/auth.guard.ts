@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
     if (isPublic) return true;
 
     const req = context.switchToHttp().getRequest();
-    
+
     // Allow access to register endpoint(允许访问注册端点)
     if (req.originalUrl === '/admin/register' || req.originalUrl === '/auth/login') {
       return true;

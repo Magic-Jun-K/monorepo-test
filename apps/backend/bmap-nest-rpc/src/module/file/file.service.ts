@@ -2,16 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import {
-  createReadStream,
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-} from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Response } from 'express';
 
 import { File } from '../../entities/file.entity';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 @Injectable()
 export class FileService {
@@ -20,12 +16,14 @@ export class FileService {
   constructor(
     @InjectRepository(File) private readonly fileRepository: Repository<File>,
     private readonly configService: ConfigService,
+    private readonly logger: AppLoggerService,
   ) {
     // 根据环境变量动态选择存储路径
     this.uploadDir =
       this.configService.get<string>('STORAGE_TYPE') === 'local'
         ? join(process.cwd(), 'upload') // 本地开发环境
         : '/var/www/upload'; // 生产环境
+    this.logger.setContext('FileService');
   }
 
   // 上传文件
@@ -33,8 +31,9 @@ export class FileService {
     if (!existsSync(this.uploadDir)) {
       mkdirSync(this.uploadDir, { recursive: true });
     }
-    console.log('测试file', file);
-    console.log('测试this.uploadDir', this.uploadDir);
+    this.logger.log(`Uploading file: ${file.originalname}`);
+    this.logger.debug('Upload directory', { uploadDir: this.uploadDir });
+    
     const filePath = `upload/${file.originalname}`;
     writeFileSync(join(this.uploadDir, file.originalname), file.buffer);
 
@@ -48,17 +47,17 @@ export class FileService {
   }
 
   // 获取文件
-  async getFileById(id: number): Promise<File> {
+  async getFileById(id: number): Promise<File | null> {
     return this.fileRepository.findOne({ where: { id } });
   }
 
   // 下载文件
   async downloadFile(filename: string, res: Response) {
-    console.log('测试service downloadFile filename', filename);
+    this.logger.log(`Downloading file: ${filename}`);
 
     // const filePath = join(process.cwd(), 'upload', filename);
     const filePath = join(this.uploadDir, filename);
-    console.log('测试service downloadFile filePath', filePath);
+    this.logger.debug('File path', { filePath });
 
     if (!existsSync(filePath)) {
       res.status(404).send('File not found');
@@ -70,7 +69,7 @@ export class FileService {
 
     const fileStream = createReadStream(filePath);
     fileStream.on('error', (err) => {
-      console.error('文件流错误:', err);
+      this.logger.error('File stream error', (err as Error).stack);
       res.status(500).send('文件传输失败');
     });
     fileStream.pipe(res);

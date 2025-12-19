@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 /**
  * Redis LRU缓存服务
@@ -16,11 +17,13 @@ export class RedisLRUService {
   constructor(
     @InjectRedis() private readonly redis: Redis,
     private readonly configService: ConfigService,
+    private readonly logger: AppLoggerService,
   ) {
     const redisConfig = this.configService.get('redis');
     this.keyPrefix = redisConfig?.lru?.keyPrefix || 'app:';
     this.defaultTTL = redisConfig?.lru?.defaultTTL || 3600; // 默认1小时
     this.ttlConfig = redisConfig?.lru?.ttl || {};
+    this.logger.setContext('RedisLRUService');
   }
 
   /**
@@ -30,17 +33,16 @@ export class RedisLRUService {
    * @param ttl 过期时间（秒），默认使用配置中的默认TTL
    * @param category 数据类别，用于应用不同的TTL策略
    */
-  async set(key: string, value: any, ttl?: number, category?: string): Promise<void> {
+  async set(key: string, value: unknown, ttl?: number, category?: string): Promise<void> {
     // 确定TTL：优先使用传入的TTL，其次使用类别TTL，最后使用默认TTL
     const effectiveTTL = ttl || (category && this.ttlConfig[category]) || this.defaultTTL;
     const prefixedKey = this.getPrefixedKey(key); // 缓存键前缀 + 缓存键
     // 如果值是对象，转换为JSON字符串
-    const stringValue =
-      typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
     // 使用EX设置过期时间（秒）
     await this.redis.set(prefixedKey, stringValue, 'EX', effectiveTTL);
-    console.log(`%c[Cache SET] %cKey: ${prefixedKey}`, 'color: blue; font-weight: bold;', 'color: blue;', { value: stringValue, ttl: effectiveTTL });
+    this.logger.logCache('SET', prefixedKey, { value: stringValue, ttl: effectiveTTL });
   }
 
   /**
@@ -49,17 +51,14 @@ export class RedisLRUService {
    * @param parseJson 是否将结果解析为JSON对象
    * @returns 缓存值或null（如果不存在）
    */
-  async get<T = any>(
-    key: string,
-    parseJson: boolean = true,
-  ): Promise<T | null> {
+  async get<T = unknown>(key: string, parseJson: boolean = true): Promise<T | null> {
     const prefixedKey = this.getPrefixedKey(key); // 缓存键前缀 + 缓存键
     // 从Redis获取缓存值
     const value = await this.redis.get(prefixedKey);
 
     // 如果缓存不存在，返回null
     if (!value) {
-      console.log(`%c[Cache MISS] %cKey: ${prefixedKey}`, 'color: orange; font-weight: bold;', 'color: blue;');
+      this.logger.logCache('MISS', prefixedKey);
       return null;
     }
 
@@ -83,7 +82,7 @@ export class RedisLRUService {
    * @param ttl 过期时间（秒）
    * @returns 缓存值
    */
-  async getOrSet<T = any>(
+  async getOrSet<T = unknown>(
     key: string,
     factory: () => Promise<T>,
     ttl?: number,
@@ -94,7 +93,7 @@ export class RedisLRUService {
 
     // 如果缓存存在，直接返回
     if (cached !== null) {
-      console.log(`%c[Cache HIT] %cKey: ${this.getPrefixedKey(key)}`, 'color: green; font-weight: bold;', 'color: blue;', { value: cached });
+      this.logger.logCache('HIT', this.getPrefixedKey(key), { value: cached });
       return cached;
     }
 
@@ -116,7 +115,7 @@ export class RedisLRUService {
   async delete(key: string): Promise<void> {
     const prefixedKey = this.getPrefixedKey(key);
     await this.redis.del(prefixedKey);
-    console.log(`%c[Cache CLEAR] %cKey: ${prefixedKey}`, 'color: red; font-weight: bold;', 'color: blue;');
+    this.logger.logCache('CLEAR', prefixedKey);
   }
 
   /**
@@ -188,7 +187,7 @@ export class RedisLRUService {
     }
     return `${this.keyPrefix}${key}`;
   }
-  
+
   /**
    * 获取指定类别的TTL
    * @param category 数据类别

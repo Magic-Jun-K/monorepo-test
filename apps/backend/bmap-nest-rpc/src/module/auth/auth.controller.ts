@@ -19,6 +19,7 @@ import { LoginAttemptsService } from './login-attempts.service';
 import { Public } from '@/common/decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { AuthRequest } from './types/auth-request.interface';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 // 路由拦截
 @Controller('auth')
@@ -26,7 +27,10 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
-  ) {}
+    private readonly logger: AppLoggerService,
+  ) {
+    this.logger.setContext('AuthController');
+  }
 
   /**
    * 用户登录
@@ -42,16 +46,12 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      console.log('测试auth.controller.ts loginDto', loginDto);
+      this.logger.log(`Login attempt: ${loginDto.username}`);
 
       // 检查是否被锁定
-      const isBlocked = await this.loginAttemptsService.isBlocked(
-        loginDto.username,
-      );
+      const isBlocked = await this.loginAttemptsService.isBlocked(loginDto.username);
       if (isBlocked) {
-        const remainingTime = await this.getLockoutRemainingTime(
-          loginDto.username,
-        );
+        const remainingTime = await this.getLockoutRemainingTime(loginDto.username);
         throw new HttpException(
           {
             message: `账户已被锁定，请${remainingTime}分钟后重试`,
@@ -66,7 +66,7 @@ export class AuthController {
         req.user, // 来自LocalStrategy的用户对象
       );
 
-      console.log('登录时生成的 refresh_token:', refresh_token);
+      this.logger.log(`Generated refresh_token for user: ${req.user.username}`);
 
       /* 设置 httpOnly cookie */
       // 设置 refresh_token
@@ -90,8 +90,9 @@ export class AuthController {
       await this.loginAttemptsService.recordFailedAttempt(loginDto.username);
 
       // 获取剩余尝试次数
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(loginDto.username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
+        loginDto.username,
+      );
 
       throw new UnauthorizedException({
         message: '登录失败',
@@ -141,8 +142,7 @@ export class AuthController {
     // 从cookie中获取refresh token
     const refreshToken = req.cookies.refresh_token;
     // 调试日志
-    console.log('Refresh token from cookie:', refreshToken);
-    console.log('All cookies:', req.cookies);
+    this.logger.log('Refresh token from cookie received');
 
     // 如果没有refresh token，返回明确的错误
     if (!refreshToken) {
@@ -158,15 +158,13 @@ export class AuthController {
     }
 
     try {
-      const { access_token } =
-        await this.authService.refreshToken(refreshToken);
+      const { access_token } = await this.authService.refreshToken(refreshToken);
 
-      console.log('✅ 后端 Token 刷新成功！:', access_token);
+      this.logger.log('Token refresh successful');
 
       return { success: true, data: access_token };
     } catch (error) {
-      console.error('Token 刷新失败:', error);
-      console.error('错误的refresh_token:', refreshToken);
+      this.logger.error('Token refresh failed', (error as Error).stack);
       throw new UnauthorizedException('刷新令牌无效');
     }
   }
@@ -192,7 +190,7 @@ export class AuthController {
   @Public()
   @Post('send-code')
   async sendVerificationCode(@Body('email') email: string) {
-    console.log('发送验证码:', email);
+    this.logger.log(`Sending verification code to: ${email}`);
     return await this.authService.sendVerificationCode(email);
   }
 
@@ -208,8 +206,10 @@ export class AuthController {
     @Body() body: { email: string; code: string },
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { access_token, refresh_token } =
-      await this.authService.verifyEmailCodeAndLogin(body.email, body.code);
+    const { access_token, refresh_token } = await this.authService.verifyEmailCodeAndLogin(
+      body.email,
+      body.code,
+    );
 
     // 设置 access_token
     // response.cookie('access_token', access_token, {

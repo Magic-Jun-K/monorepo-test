@@ -14,8 +14,6 @@ export class AdminController {
    */
   @Post('register')
   async register(@Body() body) {
-    console.log('测试register body', body);
-
     // 保存用户信息到数据库
     await this.adminService.register(body);
 

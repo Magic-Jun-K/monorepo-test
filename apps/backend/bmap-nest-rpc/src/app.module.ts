@@ -21,6 +21,7 @@ import { CircuitBreakerModule } from './module/circuit-breaker/circuit-breaker.m
 import { RateLimiterModule } from './module/rate-limiter/rate-limiter.module';
 import { FallbackModule } from './module/fallback/fallback.module';
 import { ExampleModule } from './module/example/example.module';
+import { LoggerModule } from './common/services/logger.module';
 import database from './config/database';
 
 @Module({
@@ -59,6 +60,7 @@ import database from './config/database';
         },
       },
     }),
+    LoggerModule,
     AuthModule,
     UserModule,
     DetailModule,

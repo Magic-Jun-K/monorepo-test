@@ -1,11 +1,5 @@
 // 数据库表实体，需要通过 typeorm 来进行装饰
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 
 import { UserEntity } from './user.entity';
 

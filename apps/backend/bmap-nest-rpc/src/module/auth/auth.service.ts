@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +10,7 @@ import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
 import { AuthUser } from './types/user.interface';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +25,10 @@ export class AuthService {
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly redisService: RedisService,
     private readonly mailService: MailService,
-  ) {}
+    private readonly logger: AppLoggerService,
+  ) {
+    this.logger.setContext('AuthService');
+  }
 
   /**
    * 验证用户
@@ -36,7 +36,7 @@ export class AuthService {
    * @param password
    * @returns
    */
-  async validateUser(username: string): Promise<any> {
+  async validateUser(username: string): Promise<AdminEntity | null> {
     const admin = await this.adminRepository.findOne({
       where: { username },
       select: ['id', 'username', 'password' /* , 'roles' */],
@@ -54,14 +54,8 @@ export class AuthService {
    * @param inputHashedPassword 前端传递的哈希值
    * @returns 是否验证成功
    */
-  async verifyPassword(
-    finalHashedPassword: string,
-    inputHashedPassword: string,
-  ): Promise<boolean> {
-    return this.authUtils.verifyPassword(
-      finalHashedPassword,
-      inputHashedPassword,
-    );
+  async verifyPassword(finalHashedPassword: string, inputHashedPassword: string): Promise<boolean> {
+    return this.authUtils.verifyPassword(finalHashedPassword, inputHashedPassword);
   }
 
   /**
@@ -118,11 +112,7 @@ export class AuthService {
    * @param ttl
    * @returns
    */
-  private async storeTokenInRedis(
-    key: string,
-    token: string,
-    ttl: number,
-  ): Promise<void> {
+  private async storeTokenInRedis(key: string, token: string, ttl: number): Promise<void> {
     await this.redisService.set(key, token, ttl);
   }
 
@@ -132,15 +122,14 @@ export class AuthService {
    * @returns
    */
   private async generateTokenPair(user: AuthUser) {
-    console.log('Generating token pair for user:', user);
+    this.logger.log(`Generating token pair for user: ${user.username}`);
 
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user),
     ]);
 
-    console.log('Generated accessToken:', accessToken);
-    console.log('Generated refreshToken:', refreshToken);
+    this.logger.log(`Generated access token for user: ${user.username}`);
 
     return {
       access_token: accessToken,
@@ -178,8 +167,8 @@ export class AuthService {
    * @param user
    * @returns
    */
-  async login(user: AuthUser): Promise<any> {
-    console.log('login 登录用户:', user);
+  async login(user: AuthUser): Promise<{ access_token: string; refresh_token: string }> {
+    this.logger.log(`Login user: ${user.username}`);
 
     const tokens = await this.generateTokenPair(user);
 
@@ -194,16 +183,14 @@ export class AuthService {
    * @param refreshToken
    * @returns
    */
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
       // 从Redis获取存储的Refresh Token
-      const storedToken = await this.redisService.get(
-        `${this.REFRESH_TOKEN_PREFIX}${payload.sub}`,
-      );
+      const storedToken = await this.redisService.get(`${this.REFRESH_TOKEN_PREFIX}${payload.sub}`);
 
       // 检查Redis中存储的Refresh Token是否匹配
       if (!storedToken || storedToken !== refreshToken) {
@@ -216,7 +203,7 @@ export class AuthService {
         select: ['id', 'username'],
         // relations: ['user', 'user.roles'], // 如果需要角色信息，通过关联查询获取
       });
-      console.log('测试refreshToken user', user);
+      this.logger.debug(`Refresh token user: ${user?.username}`);
 
       if (!user) {
         throw new UnauthorizedException('用户不存在');
@@ -226,20 +213,18 @@ export class AuthService {
 
       return { access_token: accessToken };
     } catch (error) {
-      console.error('刷新token失败:', error);
+      this.logger.error('Token refresh failed', (error as Error).stack);
       throw new UnauthorizedException('无效的Refresh Token');
     }
   }
 
   // 验证Access Token
-  async validateAccessToken(token: string) {
+  async validateAccessToken(token: string): Promise<unknown> {
     try {
       const payload = this.jwtService.verify(token);
 
       // 检查Redis中是否存在该Token
-      const storedToken = await this.redisService.get(
-        `${this.ACCESS_TOKEN_PREFIX}${payload.sub}`,
-      );
+      const storedToken = await this.redisService.get(`${this.ACCESS_TOKEN_PREFIX}${payload.sub}`);
 
       if (!storedToken || storedToken !== token) {
         throw new UnauthorizedException('Token已失效');
@@ -247,7 +232,7 @@ export class AuthService {
 
       return payload;
     } catch (error) {
-      console.log('验证Access Token失败:', error);
+      this.logger.error('Access token validation failed', (error as Error).stack);
       throw new UnauthorizedException('无效的Token');
     }
   }
@@ -256,7 +241,7 @@ export class AuthService {
    * 退出登录
    * @returns
    */
-  async logout(userId: number): Promise<any> {
+  async logout(userId: number): Promise<boolean> {
     // 请注意，jwt token是无状态的，所以不需要做任何操作，没法将其置为失效
     // 但是可以在前端删除token，这样就达到了退出登录的目的
     // 如果要严格来做，有以下几种方案：
@@ -277,7 +262,7 @@ export class AuthService {
    * 撤销token
    * @param token
    */
-  async revokeRefreshToken(token: string) {
+  async revokeRefreshToken(token: string): Promise<void> {
     // 添加到黑名单
     await this.tokenBlacklistService.addToBlacklist(token);
 
@@ -287,8 +272,8 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
       await this.redisService.del(`${this.REFRESH_TOKEN_PREFIX}${payload.sub}`);
-    } catch (e) {
-      console.warn('无法解析刷新令牌进行撤销', e);
+    } catch {
+      this.logger.warn('无法解析刷新令牌进行撤销');
     }
   }
 
@@ -330,9 +315,7 @@ export class AuthService {
 
     if (!user) {
       // 首次登录：自动注册
-      const hashedPassword = await this.authUtils.hashPassword(
-        this.generateRandomPassword(),
-      );
+      const hashedPassword = await this.authUtils.hashPassword(this.generateRandomPassword());
       const username = this.generateUniqueUsername(email);
       user = this.adminRepository.create({
         email,

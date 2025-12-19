@@ -30,9 +30,7 @@ export class ImageController {
   ): Promise<StreamableFile> {
     try {
       // 压缩图片
-      const compressedBuffer = await this.imageService.compressImage(
-        file.buffer,
-      );
+      const compressedBuffer = await this.imageService.compressImage(file.buffer);
 
       // 创建可读流
       const stream = Readable.from(compressedBuffer);
@@ -46,19 +44,13 @@ export class ImageController {
 
       return new StreamableFile(stream);
     } catch (error) {
-      throw new HttpException(
-        `图片处理失败: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new HttpException(`图片处理失败: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Public()
   @Get('public/compressed/:filename')
-  async getPublicCompressed(
-    @Param('filename') filename: string,
-    @Res() res: Response,
-  ) {
+  async getPublicCompressed(@Param('filename') filename: string, @Res() res: Response) {
     try {
       const filePath = await this.imageService.compressPublicImage(filename);
       // 验证文件存在性

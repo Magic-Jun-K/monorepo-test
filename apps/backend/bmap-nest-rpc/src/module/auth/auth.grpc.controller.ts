@@ -1,4 +1,4 @@
-import { Controller, Logger, UnauthorizedException } from '@nestjs/common';
+import { Controller, UnauthorizedException } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
+import { AppLoggerService } from '@/common/services/logger.service';
 import {
   LoginRequest,
   LoginResponse,
@@ -26,33 +27,29 @@ import {
 
 @Controller()
 export class AuthGrpcController {
-  private readonly logger = new Logger(AuthGrpcController.name);
-
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
     private readonly jwtService: JwtService,
     @InjectRepository(AdminEntity)
     private readonly adminRepository: Repository<AdminEntity>,
-  ) {}
+    private readonly logger: AppLoggerService,
+  ) {
+    this.logger.setContext('AuthGrpcController');
+  }
 
   @GrpcMethod('AuthService', 'login')
   async login(request: LoginRequest): Promise<LoginResponse> {
-    this.logger.log('🔍 测试gRPC service Login方法被调用，请求参数：', request);
+    this.logger.log(`🔍 测试gRPC service Login方法被调用，请求参数：${JSON.stringify(request)}`);
     try {
       // 检查是否被锁定
-      const isBlocked = await this.loginAttemptsService.isBlocked(
-        request.username,
-      );
+      const isBlocked = await this.loginAttemptsService.isBlocked(request.username);
       if (isBlocked) {
-        const remainingTime = await this.getLockoutRemainingTime(
+        const remainingTime = await this.getLockoutRemainingTime(request.username);
+        // 获取剩余尝试次数
+        const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
           request.username,
         );
-        // 获取剩余尝试次数
-        const remainingAttempts =
-          await this.loginAttemptsService.getRemainingAttempts(
-            request.username,
-          );
         return {
           success: false,
           message: `账户已被锁定，请${remainingTime}分钟后重试`,
@@ -72,10 +69,9 @@ export class AuthGrpcController {
         await this.loginAttemptsService.recordFailedAttempt(request.username);
 
         // 获取剩余尝试次数
-        const remainingAttempts =
-          await this.loginAttemptsService.getRemainingAttempts(
-            request.username,
-          );
+        const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
+          request.username,
+        );
 
         return {
           success: false,
@@ -97,13 +93,15 @@ export class AuthGrpcController {
         remainingAttempts: 0,
       };
     } catch (error) {
-      this.logger.error('登录失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : '登录失败';
+      this.logger.error('登录失败:', errorMessage);
       // 获取剩余尝试次数
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(request.username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
+        request.username,
+      );
       return {
         success: false,
-        message: error.message || '登录失败',
+        message: errorMessage,
         data: null,
         remainingAttempts,
       };
@@ -129,18 +127,17 @@ export class AuthGrpcController {
         message: '登出成功',
       };
     } catch (error) {
-      this.logger.error('登出失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : '登出失败';
+      this.logger.error('登出失败:', errorMessage);
       return {
         success: false,
-        message: error.message || '登出失败',
+        message: errorMessage,
       };
     }
   }
 
   @GrpcMethod('AuthService', 'refreshToken')
-  async refreshToken(
-    request: RefreshTokenRequest,
-  ): Promise<RefreshTokenResponse> {
+  async refreshToken(request: RefreshTokenRequest): Promise<RefreshTokenResponse> {
     try {
       // 黑名单验证
       if (await this.authService.isRefreshTokenRevoked(request.refreshToken)) {
@@ -154,19 +151,18 @@ export class AuthGrpcController {
         data: tokens.access_token,
       };
     } catch (error) {
-      this.logger.error('Token刷新失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Token刷新失败';
+      this.logger.error('Token刷新失败:', errorMessage);
       return {
         success: false,
-        message: error.message || 'Token刷新失败',
+        message: errorMessage,
         data: undefined,
       };
     }
   }
 
   @GrpcMethod('AuthService', 'getCurrentUser')
-  async getCurrentUser(
-    request: GetCurrentUserRequest,
-  ): Promise<GetCurrentUserResponse> {
+  async getCurrentUser(request: GetCurrentUserRequest): Promise<GetCurrentUserResponse> {
     try {
       // 验证access token
       const payload = this.jwtService.verify(request.accessToken, {
@@ -198,19 +194,18 @@ export class AuthGrpcController {
         },
       };
     } catch (error) {
-      this.logger.error('获取用户信息失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : '获取用户信息失败';
+      this.logger.error('获取用户信息失败:', errorMessage);
       return {
         success: false,
-        message: error.message || '获取用户信息失败',
+        message: errorMessage,
         data: undefined,
       };
     }
   }
 
   @GrpcMethod('AuthService', 'validateToken')
-  async validateToken(
-    request: ValidateTokenRequest,
-  ): Promise<ValidateTokenResponse> {
+  async validateToken(request: ValidateTokenRequest): Promise<ValidateTokenResponse> {
     try {
       const payload = this.jwtService.verify(request.token, {
         secret: process.env.JWT_SECRET,
@@ -238,7 +233,8 @@ export class AuthGrpcController {
         },
       };
     } catch (error) {
-      this.logger.error('Token验证失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Token验证失败';
+      this.logger.error('Token验证失败:', errorMessage);
       return {
         valid: false,
         user: undefined,
@@ -257,10 +253,11 @@ export class AuthGrpcController {
         message: '验证码发送成功',
       };
     } catch (error) {
-      this.logger.error('验证码发送失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : '验证码发送失败';
+      this.logger.error('验证码发送失败:', errorMessage);
       return {
         success: false,
-        message: error.message || '验证码发送失败',
+        message: errorMessage,
       };
     }
   }
@@ -268,10 +265,7 @@ export class AuthGrpcController {
   @GrpcMethod('AuthService', 'emailLogin')
   async emailLogin(request: EmailLoginRequest): Promise<EmailLoginResponse> {
     try {
-      const tokens = await this.authService.verifyEmailCodeAndLogin(
-        request.email,
-        request.code,
-      );
+      const tokens = await this.authService.verifyEmailCodeAndLogin(request.email, request.code);
 
       return {
         success: true,
@@ -282,10 +276,11 @@ export class AuthGrpcController {
         },
       };
     } catch (error) {
-      this.logger.error('邮箱登录失败:', error.message);
+      const errorMessage = error instanceof Error ? error.message : '登录失败';
+      this.logger.error('邮箱登录失败:', errorMessage);
       return {
         success: false,
-        message: error.message || '登录失败',
+        message: errorMessage,
         data: undefined,
       };
     }

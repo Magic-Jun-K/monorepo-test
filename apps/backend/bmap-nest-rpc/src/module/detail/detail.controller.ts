@@ -19,15 +19,12 @@ export class DetailController {
   @Get('/pg')
   async getHelloPg() {
     const res = await this.pgService.query('SELECT * FROM detail');
-    console.log(
-      'getHelloPg res',
-      'res.rows是数据',
-      res.rows,
-      'res.rowCount是数据条数',
-      res.rowCount,
-      'res.fields是字段信息',
-      res.fields,
-    );
+    // 可以使用logger替代console.log
+    return {
+      rows: res.rows, // 数据库返回的结果
+      rowCount: res.rowCount, // 数据库返回的结果数量
+      fields: res.fields, // 数据库返回的结果字段
+    };
   }
 
   // @Get()
@@ -46,8 +43,7 @@ export class DetailController {
   // id 假设是一个 string，但是我们需要接收的是一个 number，这时你就可以使用管道转换
   @UsePipes(new DetailPipe())
   @UseGuards(AuthGuard)
-  getHello(@Param('id') id): string {
-    console.log('测试Body id', id, typeof id);
+  getHello(@Param('id') _id: unknown): string {
     return this.detailService.getHello();
   }
 }

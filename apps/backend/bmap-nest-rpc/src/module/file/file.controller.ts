@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-  Get,
-  Param,
-  Res,
-} from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Get, Param, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -30,7 +22,6 @@ export class FileController {
   @Get('download/:id')
   async downloadFile(@Param('id') id: number, @Res() res: Response) {
     const file = await this.fileService.getFileById(id);
-    console.log('测试controller downloadFile file', file);
     if (!file) {
       return res.status(404).send('File not found');
     }

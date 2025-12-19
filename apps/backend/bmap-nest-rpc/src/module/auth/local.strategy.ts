@@ -1,25 +1,26 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Request } from 'express';
 
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
+import { AppLoggerService } from '@/common/services/logger.service';
+import { AdminEntity } from '@/entities/admin.entity';
+
+interface UserWithoutPassword extends Omit<AdminEntity, 'password'> {}
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
+    private readonly logger: AppLoggerService,
   ) {
     super({
       passReqToCallback: true, // 允许在validate方法中访问请求对象
     });
+    this.logger.setContext('LocalStrategy');
   }
 
   /**
@@ -32,7 +33,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     request: Request, // 使用 @Req() 装饰器获取请求对象
     username: string,
     password: string,
-  ): Promise<any> {
+  ): Promise<UserWithoutPassword> {
     // 获取客户端IP地址
     const clientIp = this.getClientIp(request);
 
@@ -43,7 +44,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
         : clientIp === '127.0.0.1'
           ? 'localhost (IPv4)'
           : clientIp;
-    console.log('客户端IP地址:', displayIp);
+    this.logger.log(`Client IP: ${displayIp}, User: ${username}`);
 
     // 检查是否被锁定（基于用户名）
     if (await this.loginAttemptsService.isBlocked(username)) {
@@ -58,10 +59,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 检查是否被锁定（基于IP地址）
-    if (
-      clientIp &&
-      (await this.loginAttemptsService.isBlocked(`ip:${clientIp}`))
-    ) {
+    if (clientIp && (await this.loginAttemptsService.isBlocked(`ip:${clientIp}`))) {
       throw new HttpException(
         {
           message: '登录尝试次数过多，请15分钟后重试',
@@ -73,7 +71,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     const user = await this.authService.validateUser(username);
-    console.log('测试local.strategy.ts validate user', user);
 
     if (!user) {
       // 记录失败尝试
@@ -83,8 +80,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       }
 
       // 获取剩余尝试次数并添加到错误信息中
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
       throw new UnauthorizedException({
         message: '认证失败',
         error: '无效凭证',
@@ -93,10 +89,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 验证密码
-    const isPasswordValid = await this.authService.verifyPassword(
-      user.password,
-      password,
-    );
+    const isPasswordValid = await this.authService.verifyPassword(user.password, password);
     if (!isPasswordValid) {
       // 记录失败尝试
       await this.loginAttemptsService.recordFailedAttempt(username);
@@ -105,8 +98,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       }
 
       // 获取剩余尝试次数并添加到错误信息中
-      const remainingAttempts =
-        await this.loginAttemptsService.getRemainingAttempts(username);
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
       throw new UnauthorizedException({
         message: '密码错误',
         error: '无效凭证',
@@ -122,7 +114,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
     // 只返回需要的用户信息，不包含密码
     const { password: _password, ...userWithoutPassword } = user;
-    console.log('测试local.strategy.ts _password', _password);
     return userWithoutPassword;
   }
 

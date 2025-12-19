@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Put,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { nanoid } from 'nanoid';
 
@@ -35,11 +26,7 @@ export class ApplicationController {
     const admin = new AdminEntity();
     admin.id = req.user.id;
     const application = new ApplicationEntity(body);
-    Reflect.set<ApplicationEntity, 'appId'>(
-      application,
-      'appId',
-      application.type + nanoid(6),
-    );
+    Reflect.set<ApplicationEntity, 'appId'>(application, 'appId', application.type + nanoid(6));
 
     const newUser = await this.applicationService.create({
       ...application,

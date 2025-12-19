@@ -13,7 +13,7 @@ import {
 
 import { UserProfileEntity } from './user_profile.entity';
 import { RoleEntity } from './user_role.entity';
-import { UserOauthEntity } from './user_oauth.entity';
+import { UserOAuthEntity } from './user_oauth.entity';
 import { PhotoEntity } from './photo.entity';
 
 @Entity({ name: 'user' })
@@ -33,8 +33,8 @@ export class UserEntity {
   @OneToOne(() => UserProfileEntity, (profile) => profile.user)
   profile: UserProfileEntity;
 
-  @OneToMany(() => UserOauthEntity, (oauth) => oauth.user)
-  oauths: UserOauthEntity[];
+  @OneToMany(() => UserOAuthEntity, (oauth) => oauth.user)
+  oAuths: UserOAuthEntity[];
 
   // 如果数据量较大，可以使用懒加载来优化性能 lazy: true
   // @OneToMany(() => PhotoEntity, (photo) => photo.user, { lazy: true })

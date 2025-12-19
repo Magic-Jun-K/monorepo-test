@@ -9,11 +9,7 @@ export interface RateLimiterConfig {
   windowMs?: number; // 时间窗口(毫秒)，用于固定窗口和滑动窗口算法
   maxRequests?: number; // 最大请求数
   keyPrefix?: string; // Redis键前缀
-  strategy?:
-    | 'fixed-window'
-    | 'sliding-window'
-    | 'token-bucket'
-    | 'leaky-bucket'; // 限流策略
+  strategy?: 'fixed-window' | 'sliding-window' | 'token-bucket' | 'leaky-bucket'; // 限流策略
 
   // 令牌桶算法配置
   bucketCapacity?: number; // 桶容量
@@ -41,10 +37,7 @@ export class RateLimiterService {
    * @param config 限流配置
    * @returns 是否超过限流阈值
    */
-  async checkRateLimit(
-    key: string,
-    config: RateLimiterConfig,
-  ): Promise<boolean> {
+  async checkRateLimit(key: string, config: RateLimiterConfig): Promise<boolean> {
     // 合并默认配置
     const mergedConfig = { ...DEFAULT_RATE_LIMITER_CONFIG, ...config };
 
@@ -95,10 +88,7 @@ export class RateLimiterService {
    * @param config 限流配置
    * @returns 是否超过限流阈值
    */
-  private async checkFixedWindow(
-    key: string,
-    config: RateLimiterConfig,
-  ): Promise<boolean> {
+  private async checkFixedWindow(key: string, config: RateLimiterConfig): Promise<boolean> {
     const redisKey = `${config.keyPrefix}:${key}:fixed`;
     const redis = this.redisService.getClient();
 
@@ -160,10 +150,7 @@ export class RateLimiterService {
    * @param config 限流配置
    * @returns 是否超过限流阈值
    */
-  private async checkSlidingWindow(
-    key: string,
-    config: RateLimiterConfig,
-  ): Promise<boolean> {
+  private async checkSlidingWindow(key: string, config: RateLimiterConfig): Promise<boolean> {
     const redisKey = `${config.keyPrefix}:${key}:sliding`;
     const redis = this.redisService.getClient();
 
@@ -225,10 +212,7 @@ export class RateLimiterService {
    * @param config 限流配置
    * @returns 是否超过限流阈值
    */
-  private async checkTokenBucket(
-    key: string,
-    config: RateLimiterConfig,
-  ): Promise<boolean> {
+  private async checkTokenBucket(key: string, config: RateLimiterConfig): Promise<boolean> {
     const redisKey = `${config.keyPrefix}:${key}:token`;
     const redis = this.redisService.getClient();
 
@@ -238,12 +222,8 @@ export class RateLimiterService {
 
     // 获取当前桶中的令牌数和上次更新时间
     const bucketData = await redis.hgetall(redisKey);
-    let tokens = bucketData.tokens
-      ? parseFloat(bucketData.tokens)
-      : bucketCapacity;
-    const lastRefill = bucketData.lastRefill
-      ? parseInt(bucketData.lastRefill)
-      : currentTime;
+    let tokens = bucketData.tokens ? Number.parseFloat(bucketData.tokens) : bucketCapacity;
+    const lastRefill = bucketData.lastRefill ? Number.parseInt(bucketData.lastRefill) : currentTime;
 
     // 计算需要补充的令牌数
     const timePassed = (currentTime - lastRefill) / 1000; // 转换为秒
@@ -290,12 +270,8 @@ export class RateLimiterService {
 
     // 获取当前桶中的令牌数和上次更新时间
     const bucketData = await redis.hgetall(redisKey);
-    let tokens = bucketData.tokens
-      ? parseFloat(bucketData.tokens)
-      : bucketCapacity;
-    const lastRefill = bucketData.lastRefill
-      ? parseInt(bucketData.lastRefill)
-      : currentTime;
+    let tokens = bucketData.tokens ? Number.parseFloat(bucketData.tokens) : bucketCapacity;
+    const lastRefill = bucketData.lastRefill ? Number.parseInt(bucketData.lastRefill) : currentTime;
 
     // 计算需要补充的令牌数
     const timePassed = (currentTime - lastRefill) / 1000; // 转换为秒
@@ -308,8 +284,7 @@ export class RateLimiterService {
       refillRate,
       lastRefill: currentTime,
       remaining: Math.floor(tokens),
-      resetTime:
-        currentTime + Math.ceil((bucketCapacity - tokens) / refillRate) * 1000,
+      resetTime: currentTime + Math.ceil((bucketCapacity - tokens) / refillRate) * 1000,
       strategy: 'token-bucket',
     };
   }
@@ -321,10 +296,7 @@ export class RateLimiterService {
    * @param config 限流配置
    * @returns 是否超过限流阈值
    */
-  private async checkLeakyBucket(
-    key: string,
-    config: RateLimiterConfig,
-  ): Promise<boolean> {
+  private async checkLeakyBucket(key: string, config: RateLimiterConfig): Promise<boolean> {
     const redisKey = `${config.keyPrefix}:${key}:leaky`;
     const redis = this.redisService.getClient();
 
@@ -333,12 +305,8 @@ export class RateLimiterService {
 
     // 获取桶中的请求数和上次漏水时间
     const bucketData = await redis.hgetall(redisKey);
-    let requestCount = bucketData.requestCount
-      ? parseInt(bucketData.requestCount)
-      : 0;
-    const lastLeak = bucketData.lastLeak
-      ? parseInt(bucketData.lastLeak)
-      : currentTime;
+    let requestCount = bucketData.requestCount ? Number.parseInt(bucketData.requestCount) : 0;
+    const lastLeak = bucketData.lastLeak ? Number.parseInt(bucketData.lastLeak) : currentTime;
 
     // 计算需要漏出的请求数
     const timePassed = (currentTime - lastLeak) / 1000; // 转换为秒
@@ -385,12 +353,8 @@ export class RateLimiterService {
 
     // 获取桶中的请求数和上次漏水时间
     const bucketData = await redis.hgetall(redisKey);
-    let requestCount = bucketData.requestCount
-      ? parseInt(bucketData.requestCount)
-      : 0;
-    const lastLeak = bucketData.lastLeak
-      ? parseInt(bucketData.lastLeak)
-      : currentTime;
+    let requestCount = bucketData.requestCount ? Number.parseInt(bucketData.requestCount) : 0;
+    const lastLeak = bucketData.lastLeak ? Number.parseInt(bucketData.lastLeak) : currentTime;
 
     // 计算需要漏出的请求数
     const timePassed = (currentTime - lastLeak) / 1000; // 转换为秒

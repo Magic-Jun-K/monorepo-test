@@ -23,10 +23,7 @@ export class AdminService {
       where: { username: body.username },
     });
     if (adminIsExist) {
-      throw new HttpException(
-        { message: '用户已存在', error: 'user is existed' },
-        400,
-      );
+      throw new HttpException({ message: '用户已存在', error: 'user is existed' }, 400);
     }
     // Hash password before saving(保存前对密码进行哈希)
     const hashedPassword = await this.authUtils.hashPassword(body.password);

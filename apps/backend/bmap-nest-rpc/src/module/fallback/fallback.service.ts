@@ -2,17 +2,18 @@
  * @description 降级服务
  */
 import { Injectable } from '@nestjs/common';
+import { AppLoggerService } from '@/common/services/logger.service';
 
 export interface FallbackConfig {
   timeout?: number; // 超时时间(毫秒)
-  defaultResponse?: any; // 默认响应
+  defaultResponse?: unknown; // 默认响应
   retryAttempts?: number; // 重试次数
   retryDelay?: number; // 重试延迟(毫秒)
   retryBackoff?: 'fixed' | 'exponential' | 'linear'; // 重试退避策略
   retryBackoffMultiplier?: number; // 退避乘数
   circuitBreaker?: boolean; // 是否启用熔断器
-  fallbackFunction?: () => Promise<any>; // 降级函数
-  errorTypeFallbacks?: Record<string, () => Promise<any>>; // 基于错误类型的降级函数
+  fallbackFunction?: () => Promise<unknown>; // 降级函数
+  errorTypeFallbacks?: Record<string, () => Promise<unknown>>; // 基于错误类型的降级函数
   fallbackTimeout?: number; // 降级函数超时时间
 }
 
@@ -29,16 +30,17 @@ export const DEFAULT_FALLBACK_CONFIG: FallbackConfig = {
 
 @Injectable()
 export class FallbackService {
+  constructor(private readonly logger: AppLoggerService) {
+    this.logger.setContext('FallbackService');
+  }
+
   /**
    * 执行带降级功能的异步操作
    * @param fn 要执行的异步函数
    * @param config 降级配置
    * @returns 函数执行结果
    */
-  async executeWithFallback<T>(
-    fn: () => Promise<T>,
-    config: FallbackConfig,
-  ): Promise<T> {
+  async executeWithFallback<T>(fn: () => Promise<T>, config: FallbackConfig): Promise<T> {
     // 合并默认配置
     const mergedConfig = { ...DEFAULT_FALLBACK_CONFIG, ...config };
 
@@ -51,7 +53,7 @@ export class FallbackService {
       if (mergedConfig.circuitBreaker) {
         // 这里应该集成熔断器逻辑
         // 为简化示例，我们只记录日志
-        console.log('Circuit breaker triggered');
+        this.logger.log('Circuit breaker triggered');
       }
 
       // 如果配置了重试，则尝试重试
@@ -68,7 +70,7 @@ export class FallbackService {
 
             return await this.executeWithTimeout(fn, mergedConfig.timeout!);
           } catch (retryError) {
-            console.error(`Retry attempt ${i + 1} failed:`, retryError);
+            this.logger.error(`Retry attempt ${i + 1} failed`, (retryError as Error).stack);
 
             // 如果是最后一次重试，跳出循环
             if (i === mergedConfig.retryAttempts - 1) {
@@ -85,15 +87,9 @@ export class FallbackService {
 
         if (fallbackFn) {
           try {
-            return await this.executeWithTimeout(
-              fallbackFn,
-              mergedConfig.fallbackTimeout!,
-            );
+            return await this.executeWithTimeout(fallbackFn, mergedConfig.fallbackTimeout!);
           } catch (fallbackError) {
-            console.error(
-              `Error type fallback function failed for ${errorType}:`,
-              fallbackError,
-            );
+            this.logger.error(`Error type fallback function failed for ${errorType}`, (fallbackError as Error).stack);
           }
         }
       }
@@ -106,7 +102,7 @@ export class FallbackService {
             mergedConfig.fallbackTimeout!,
           );
         } catch (fallbackError) {
-          console.error('Fallback function failed:', fallbackError);
+          this.logger.error('Fallback function failed', (fallbackError as Error).stack);
         }
       }
 
@@ -125,10 +121,7 @@ export class FallbackService {
    * @param timeout 超时时间(毫秒)
    * @returns 函数执行结果
    */
-  private async executeWithTimeout<T>(
-    fn: () => Promise<T>,
-    timeout: number,
-  ): Promise<T> {
+  private async executeWithTimeout<T>(fn: () => Promise<T>, timeout: number): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error('Execution timeout'));
@@ -167,9 +160,7 @@ export class FallbackService {
 
     switch (config.retryBackoff) {
       case 'exponential':
-        return (
-          baseDelay * Math.pow(config.retryBackoffMultiplier || 2, attempt)
-        );
+        return baseDelay * Math.pow(config.retryBackoffMultiplier || 2, attempt);
       case 'linear':
         return baseDelay * (1 + (config.retryBackoffMultiplier || 1) * attempt);
       case 'fixed':

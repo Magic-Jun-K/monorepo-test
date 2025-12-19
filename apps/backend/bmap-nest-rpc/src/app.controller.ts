@@ -8,9 +8,8 @@ import { Controller } from '@nestjs/common';
 // 路由拦截
 @Controller()
 export class AppController {
-  constructor(
-    // private readonly appService: AppService,
-  ) {}
+  // 构造函数已注释掉，暂时为空
+  // constructor(private readonly appService: AppService) {}
 
   // @Get()
   // getHello(): string {
