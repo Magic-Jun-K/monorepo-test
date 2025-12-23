@@ -3,9 +3,9 @@
   "extends": "./tsconfig.json", // 继承基础配置
   "compilerOptions": {
     /* 基本选项 */
-    "target": "ES2021", // 指定 ECMAScript 目标版本
+    "target": "ES2020", // 指定 ECMAScript 目标版本
     "module": "ESNext", // 指定生成的模块格式
-    "lib": ["ES2021", "DOM", "DOM.Iterable", "WebWorker"], // 指定要包含在编译中的库文件
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "WebWorker"], // 指定要包含在编译中的库文件
     "jsx": "react-jsx", // 指定 JSX 代码生成方案（React 17+）
     "noEmit": true, // 不生成输出文件（由打包工具处理）
     "allowJs": true, // 允许编译 JavaScript 文件

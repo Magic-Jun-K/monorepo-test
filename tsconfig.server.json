@@ -2,9 +2,9 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     /* 基本选项 */
-    "target": "ES2021", // 指定 ECMAScript 目标版本
+    "target": "ES2022", // 指定 ECMAScript 目标版本
     "module": "commonjs", // 指定生成的模块格式
-    "lib": ["ES2021"], // 指定要包含在编译中的库文件
+    "lib": ["ES2022"], // 指定要包含在编译中的库文件
     "noEmit": true, // 不生成输出文件（由构建工具处理）
     "allowJs": false, // 不允许编译 JavaScript 文件
     "removeComments": true, // 删除注释信息
