@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+coverage
+package-lock.json
+.next
+.turbo
+.webpack_temp_cache
