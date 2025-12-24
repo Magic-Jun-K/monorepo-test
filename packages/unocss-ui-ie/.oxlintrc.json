@@ -1,15 +1,15 @@
 {
   "extends": ["../../.oxlintrc.json"],
+  "ignorePatterns": [
+    "dist/**/*",
+    "lib/**/*",
+    "node_modules/**/*"
+  ],
   "rules": {
     "no-console": "warn",
     "typescript/no-unused-vars": "error",
     "react/prop-types": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn"
-  },
-  "ignore": [
-    "dist/**/*",
-    "lib/**/*",
-    "node_modules/**/*"
-  ]
+  }
 }

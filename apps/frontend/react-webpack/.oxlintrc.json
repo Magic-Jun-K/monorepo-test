@@ -3,7 +3,7 @@
   "env": {
     "browser": true
   },
-  "ignore": [
+  "ignorePatterns": [
     "dist/**/*",
     "build/**/*",
     "node_modules/**/*",
@@ -11,7 +11,7 @@
     "scripts/**/*"
   ],
   "rules": {
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-console": ["warn", { "allow": ["log", "warn", "error"] }],
     "no-debugger": "warn",
     "typescript/no-unused-vars": "error",
     "react/prop-types": "off",
