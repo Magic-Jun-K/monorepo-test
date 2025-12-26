@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function LazyImage({ src, alt }: { src: string; alt: string }) {
+export default function LazyImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
   const [isLoaded, setIsLoaded] = useState(false); // 图片是否加载完成
   const imgRef = useRef<HTMLImageElement>(null); // 图片元素的引用
 
@@ -14,7 +14,8 @@ export default function LazyImage({ src, alt }: { src: string; alt: string }) {
           // 设置图片源
           imgRef.current.src = src;
           // 图片加载完成
-          imgRef.current.onload = () => setIsLoaded(true);
+          const handleLoad = () => setIsLoaded(true);
+          imgRef.current.addEventListener('load', handleLoad);
           // 停止观察
           observer.unobserve(entry.target);
         }
@@ -30,5 +31,5 @@ export default function LazyImage({ src, alt }: { src: string; alt: string }) {
     return () => observer.disconnect();
   }, [src]);
 
-  return <img ref={imgRef} alt={alt} style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.3s' }} />;
+  return <img ref={imgRef} alt={alt} className={className} style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.3s' }} />;
 }

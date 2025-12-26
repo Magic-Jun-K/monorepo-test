@@ -1,21 +1,21 @@
-import { Input } from '@eggshell/unocss-ui';
+import { Input } from '@eggshell/tailwindcss-ui';
 import { MapCom, MapSearch, PlaceResult } from '@eggshell/core-business-components';
 
 import { BASE_URL } from '@/config';
 
 import styles from './index.module.scss';
 
+// 处理搜索结果
+const handleSearchResult = (results: PlaceResult[]) => {
+  console.log('搜索结果:', results);
+};
+
+// 处理选择地点
+const handlePlaceSelect = (place: PlaceResult) => {
+  console.log('选择地点:', place);
+};
+
 export default () => {
-  // 处理搜索结果
-  const handleSearchResult = (results: PlaceResult[]) => {
-    console.log('搜索结果:', results);
-  };
-
-  // 处理选择地点
-  const handlePlaceSelect = (place: PlaceResult) => {
-    console.log('选择地点:', place);
-  };
-
   return (
     <div className={styles.mapContainer}>
       <MapCom

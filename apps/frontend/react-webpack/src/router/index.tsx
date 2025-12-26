@@ -8,10 +8,6 @@ import Login from '../pages/Login';
 import { useUserStore } from '@/store/zustand/user.store';
 import { getRoutesFromMenu } from '../layout/Menu/constant';
 
-type PickRouter<T> = T extends (...args: any[]) => infer R ? R : never;
-
-type A = typeof createBrowserRouter;
-
 export const loadComponent = (path: string) => {
   return () =>
     import(`../pages/${path}/index`).then((module) => ({
@@ -78,4 +74,4 @@ const routes = [
 ];
 // console.log('完整路由配置:', JSON.stringify(routes, null, 2));
 
-export const router: PickRouter<A> = createBrowserRouter(routes);
+export const router = createBrowserRouter(routes);

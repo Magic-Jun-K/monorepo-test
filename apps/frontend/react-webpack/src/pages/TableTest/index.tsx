@@ -89,7 +89,7 @@ export default () => {
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column: any, newSize: number, colIndex: number) => {
+  const handleColumnResize = useCallback((column: unknown, newSize: number, colIndex: number) => {
     console.log('测试列宽调整', column, newSize, colIndex);
     setColumns(prevColumns => {
       const newColumns = [...prevColumns] as Column[];

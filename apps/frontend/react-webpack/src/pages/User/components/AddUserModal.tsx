@@ -3,6 +3,12 @@ import { Input } from '@eggshell/tailwindcss-ui';
 
 import { createUser } from '@/services/user';
 
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
 interface AddUserModalProps {
   visible: boolean;
   onOk: () => void;
@@ -17,7 +23,7 @@ export default function AddUserModal({ visible, onOk, onCancel, onSuccess }: Add
   const handleAddUser = async () => {
     try {
       const values = await form.validateFields();
-      const response = await createUser(values);
+      const response = (await createUser(values)) as ApiResponse;
       if (response.success) {
         messageApi.success('新增用户成功');
         form.resetFields();

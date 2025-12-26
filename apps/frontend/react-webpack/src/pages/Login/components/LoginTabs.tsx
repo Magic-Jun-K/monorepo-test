@@ -1,8 +1,6 @@
 import { memo } from 'react';
 import clsx from 'clsx';
 
-import styles from '../index.module.scss';
-
 interface LoginTabsProps {
   authType: 'login' | 'register';
   loginType: 'email' | 'account';
@@ -12,18 +10,34 @@ interface LoginTabsProps {
 export default memo(
   function LoginTabs({ authType, loginType, setLoginType }: LoginTabsProps) {
     return (
-      <div className={styles.tabs}>
+      <div className="flex pb-6">
         {authType === 'login' ? (
           <>
-            <div className={clsx(styles.tab, loginType === 'account' && styles.active)}>
-              <span onClick={() => setLoginType('account')}>账号登录</span>
-            </div>
-            <div className={`${styles.tab} ${loginType === 'email' ? styles.active : ''}`}>
-              <span onClick={() => setLoginType('email')}>邮箱登录</span>
-            </div>
+            <button
+              className={clsx(
+                'flex-1 text-center transition-all duration-200 text-2xl font-bold cursor-pointer',
+                'hover:text-[rgb(51,139,255)]',
+                loginType === 'account' ? 'text-[rgb(26,122,248)]' : 'text-slate-500',
+              )}
+              onClick={() => setLoginType('account')}
+              type="button"
+            >
+              账号登录
+            </button>
+            <button
+              className={clsx(
+                'flex-1 text-center transition-all duration-200 text-2xl font-bold cursor-pointer',
+                'hover:text-[rgb(51,139,255)]',
+                loginType === 'email' ? 'text-[rgb(26,122,248)]' : 'text-slate-500',
+              )}
+              onClick={() => setLoginType('email')}
+              type="button"
+            >
+              邮箱登录
+            </button>
           </>
         ) : (
-          <div className={`${styles.tab} ${styles.active}`}>
+          <div className="flex-1 text-center text-[rgb(26,122,248)] transition-all duration-200 text-2xl font-bold">
             <span>注册账号</span>
           </div>
         )}
@@ -31,5 +45,5 @@ export default memo(
     );
   },
   (prevProps, nextProps) =>
-    prevProps.authType === nextProps.authType && prevProps.loginType === nextProps.loginType
+    prevProps.authType === nextProps.authType && prevProps.loginType === nextProps.loginType,
 );

@@ -1,5 +1,5 @@
 // 错误监控和上报
-export const reportError = (error: Error, context?: any) => {
+export const reportError = (error: Error, context?: unknown) => {
   // 1. 错误分类
   const errorType = error.name;
   const errorMessage = error.message;

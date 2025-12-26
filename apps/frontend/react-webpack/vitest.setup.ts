@@ -22,6 +22,14 @@ Object.defineProperty(window, 'matchMedia', {
   })
 });
 
+// 声明全局类型以避免 TypeScript 错误
+declare const global: {
+  IntersectionObserver: typeof IntersectionObserver;
+  ResizeObserver: typeof ResizeObserver;
+  requestAnimationFrame: (callback: FrameRequestCallback) => number;
+  cancelAnimationFrame: (id: number) => void;
+};
+
 // 模拟 IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   root: Element | Document | null = null;
@@ -30,11 +38,7 @@ global.IntersectionObserver = class IntersectionObserver {
 
   constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
     void callback; // 明确标记参数被有意忽略
-    this.root = options?.root || null;
-    this.rootMargin = options?.rootMargin || '0px';
-    this.thresholds = options?.threshold ? 
-      (Array.isArray(options.threshold) ? options.threshold : [options.threshold]) : 
-      [0];
+    void options; // 明确标记参数被有意忽略
   }
 
   disconnect() {}
@@ -47,17 +51,17 @@ global.IntersectionObserver = class IntersectionObserver {
 
 // 模拟 ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() {}
+  // 移除空的构造函数
   disconnect() {}
   observe() {}
   unobserve() {}
 };
 
 // 模拟 requestAnimationFrame
-global.requestAnimationFrame = (callback: FrameRequestCallback) => {
-  return setTimeout(callback, 16);
+global.requestAnimationFrame = (callback: FrameRequestCallback): number => {
+  return setTimeout(callback, 16) as unknown as number;
 };
 
-global.cancelAnimationFrame = (id: number) => {
+global.cancelAnimationFrame = (id: number): void => {
   clearTimeout(id);
 };

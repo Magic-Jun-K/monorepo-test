@@ -1,12 +1,37 @@
 import { useState } from 'react';
-import { Modal, Upload, message } from '@eggshell/unocss-ui';
+// import { Upload } from '@eggshell/unocss-ui';
+import { Modal, message, Upload } from '@eggshell/antd-ui';
 import { Button } from '@eggshell/tailwindcss-ui';
-import { ImportOutlined, DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import type { UploadFile } from '@eggshell/unocss-ui/src/components/Upload/types';
+import { Import, Download, Info } from 'lucide-react';
+// import type { UploadFile } from '@eggshell/unocss-ui/src/components/Upload/types';
+
+// 定义 UploadFile 类型以解决 ts(2304) 错误
+interface UploadFile {
+  uid: string;
+  name: string;
+  size?: number;
+  type: string;
+  status?: 'uploading' | 'done' | 'error' | 'removed';
+  percent?: number;
+  response?: unknown;
+  error?: unknown;
+  url?: string;
+  thumbUrl?: string;
+  originFileObj?: File & {
+    lastModifiedDate: Date;
+    uid: string;
+  };
+}
 
 import { importUsers } from '@/services/user';
 
 import styles from './index.module.scss';
+
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
 
 const { Dragger } = Upload;
 
@@ -99,7 +124,12 @@ export default function ImportUserModal({
     setUploading(true);
 
     try {
-      const response = await importUsers(file);
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await importUsers(formData) as ApiResponse<{
+        successCount: number;
+        errors: string[];
+      }>;
       console.log('✅ 导入响应:', response);
 
       if (response.success) {
@@ -151,7 +181,7 @@ export default function ImportUserModal({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <InfoCircleOutlined style={{ color: '#1890ff', marginTop: '2px', flexShrink: 0 }} />
+            <Info size={16} style={{ color: '#1890ff', marginTop: '2px', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, marginBottom: '8px', color: '#1890ff' }}>
                 导入格式说明
@@ -172,7 +202,7 @@ export default function ImportUserModal({
                 </p>
                 <Button
                   type="link"
-                  icon={<DownloadOutlined />}
+                  icon={<Download size={16} />}
                   onClick={handleDownloadTemplate}
                   style={{ padding: 0, height: 'auto', marginTop: '4px' }}
                 >
@@ -205,13 +235,13 @@ export default function ImportUserModal({
               }
               const newFileList = info.fileList.slice(-1);
               console.log('📝 设置的fileList:', newFileList);
-              setFileList(newFileList);
+              setFileList(newFileList as unknown as UploadFile[]);
               console.log('📝 设置后的fileList状态:', newFileList);
             }}
             onDrop={(e: React.DragEvent) => {
               console.log('📝 文件拖放:', e.dataTransfer.files);
             }}
-            fileList={fileList}
+            fileList={fileList as UploadFile[]}
             accept=".xlsx,.xls"
             showUploadList={{
               showRemoveIcon: true,
@@ -221,7 +251,7 @@ export default function ImportUserModal({
           >
             <div className={styles.uploadContent}>
               <div className={styles.uploadIcon}>
-                <ImportOutlined />
+                <Import size={24} />
               </div>
               <div className={styles.uploadText}>点击选择或拖放 Excel 文件到此区域</div>
               <div className={styles.uploadHint}>支持 .xlsx 和 .xls 格式，文件大小不超过 10MB</div>
@@ -259,7 +289,7 @@ export default function ImportUserModal({
                     <div>
                       <div style={{ fontWeight: 500, color: '#262626' }}>{file.name}</div>
                       <div style={{ fontSize: '12px', color: '#8c8c8c' }}>
-                        大小: {(file.size / 1024).toFixed(1)} KB | 状态: {file.status || '待上传'} |
+                        大小: {file.size ? (file.size / 1024).toFixed(1) : '0'} KB | 状态: {file.status || '待上传'} |
                         originFileObj: {file.originFileObj ? '✓' : '✗'}
                       </div>
                     </div>

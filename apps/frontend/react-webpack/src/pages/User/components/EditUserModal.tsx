@@ -4,6 +4,12 @@ import { Input } from '@eggshell/tailwindcss-ui';
 
 import { updateUser } from '@/services/user';
 
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
 interface Role {
   id: number;
   name: string;
@@ -39,7 +45,7 @@ export default function EditUserModal({
   user,
   onOk,
   onCancel,
-  onSuccess
+  onSuccess,
 }: EditUserModalProps) {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -54,7 +60,7 @@ export default function EditUserModal({
         username: user.username,
         email: user.email ?? '',
         phone: user.phone ?? '',
-        status: user.status
+        status: user.status,
       };
       form.setFieldsValue(formData);
     }
@@ -68,12 +74,12 @@ export default function EditUserModal({
       const processedValues = {
         ...values,
         phone: values.phone === '' ? null : values.phone,
-        email: values.email === '' ? null : values.email
+        email: values.email === '' ? null : values.email,
       };
 
       if (!user) return;
 
-      const response = await updateUser(user.id, processedValues);
+      const response = (await updateUser(user.id, processedValues)) as ApiResponse;
       if (response.success) {
         messageApi.success('更新用户成功');
         form.resetFields();
@@ -139,20 +145,20 @@ export default function EditUserModal({
               options={[
                 {
                   label: '活跃',
-                  value: 'ACTIVE'
+                  value: 'ACTIVE',
                 },
                 {
                   label: '未激活',
-                  value: 'INACTIVE'
+                  value: 'INACTIVE',
                 },
                 {
                   label: '暂停',
-                  value: 'SUSPENDED'
+                  value: 'SUSPENDED',
                 },
                 {
                   label: '锁定',
-                  value: 'LOCKED'
-                }
+                  value: 'LOCKED',
+                },
               ]}
             ></Select>
           </Form.Item>

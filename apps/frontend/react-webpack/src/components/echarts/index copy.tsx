@@ -21,7 +21,7 @@ const EChartsCom: FC<{ options: echarts.EChartsCoreOption }> = ({ options }) => 
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const _echarts: any = echarts;
+    const _echarts = echarts as typeof echarts;
     const chart = _echarts.init(chartRef.current, null, { renderer: 'canvas' });
 
     chart.setOption(options); // 渲染图表

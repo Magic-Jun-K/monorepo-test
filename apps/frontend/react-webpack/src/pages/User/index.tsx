@@ -74,6 +74,17 @@ interface SearchParams {
   pageSize?: number;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+interface UserListResponse {
+  list: User[];
+  total: number;
+}
+
 export default function UserManagement() {
   const navigate = useNavigate();
 
@@ -105,7 +116,7 @@ export default function UserManagement() {
       // 处理搜索参数，特别是日期范围参数
       const processedParams = processDateRange(searchParams);
 
-      const response = await fetchUsers(processedParams);
+      const response = await fetchUsers(processedParams) as ApiResponse<UserListResponse>;
       if (response.success) {
         setUsers(response.data.list || []);
         setTotal(response.data.total || 0);
@@ -166,7 +177,8 @@ export default function UserManagement() {
   const handleExportUsers = async () => {
     try {
       const response = await exportUsers(searchParams);
-      const url = window.URL.createObjectURL(response);
+      const blobResponse = response as unknown as Blob;
+      const url = window.URL.createObjectURL(blobResponse);
       const link = document.createElement('a');
       link.href = url;
       link.download = '用户列表.xlsx';
@@ -191,7 +203,8 @@ export default function UserManagement() {
     try {
       const ids = selectedRows.map(row => row.id);
       const response = await batchExportUsers(ids);
-      const url = window.URL.createObjectURL(response);
+      const blobResponse = response as unknown as Blob;
+      const url = window.URL.createObjectURL(blobResponse);
       const link = document.createElement('a');
       link.href = url;
       link.download = '选中用户.xlsx';
@@ -222,7 +235,7 @@ export default function UserManagement() {
       okType: 'danger',
       onOk: async () => {
         try {
-          const response = await deleteUser(user.id);
+          const response = await deleteUser(user.id) as ApiResponse<unknown>;
           if (response.success) {
             messageApi.success('删除用户成功');
             loadUsers(); // 重新加载用户列表

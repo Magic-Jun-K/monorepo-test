@@ -110,13 +110,29 @@
   color: #94a3b8;
   text-align: center;
 
-  a {
+  .refreshButton {
     color: #3b82f6;
-    text-decoration: none;
+    background: none;
+    border: none;
     cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-decoration: underline;
+    margin-left: 4px;
 
     &:hover {
-      text-decoration: underline;
+      text-decoration: none;
+      color: #2563eb;
+    }
+
+    &:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    &:active {
+      color: #1d4ed8;
     }
   }
 }
