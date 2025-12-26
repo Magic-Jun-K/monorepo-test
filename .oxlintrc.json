@@ -120,7 +120,7 @@
     "unicorn/prefer-regexp-test": "warn",
     "unicorn/prefer-set-has": "warn",
     "unicorn/prefer-spread": "warn",
-    "unicorn/prefer-string-replace-all": "warn",
+    "unicorn/prefer-string-replace-all": "off",
     "unicorn/prefer-string-slice": "warn",
     "unicorn/prefer-string-starts-ends-with": "warn",
     "unicorn/prefer-string-trim-start-end": "warn",
