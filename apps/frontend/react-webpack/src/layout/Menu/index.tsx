@@ -1,49 +1,50 @@
 import { FC, useEffect, useState } from 'react';
-import { Menu } from '@eggshell/unocss-ui';
 
-import { currentUser } from '@/services/auth';
+import { Menu } from '@eggshell/antd-ui';
+import type { MenuProps } from '@eggshell/antd-ui';
+import { useUserStore } from '@/store/zustand/user.store';
 import { getMenuConfig } from './constant';
 
-interface LocalMenuItem {
-  path: string;
-  name: string;
-  children?: LocalMenuItem[];
-}
+// 过滤掉自定义属性的函数
+const filterCustomProps = (items: unknown[]): unknown[] => {
+  return items.map((item: unknown) => {
+    const itemObj = item as Record<string, unknown>;
+    // 创建一个不包含自定义属性的新对象
+    const filteredItem: Record<string, unknown> = { ...itemObj };
+    delete filteredItem.requireAdmin;
+    delete filteredItem.component;
 
-interface MenuProps {
-  items: LocalMenuItem[];
-}
+    // 如果有子菜单，递归处理子菜单
+    if (filteredItem.children) {
+      filteredItem.children = filterCustomProps(filteredItem.children as unknown[]);
+    }
 
-const MainMenu: FC<MenuProps> = ({ items }) => {
-  console.log('items', items);
+    return filteredItem;
+  });
+};
 
-  const [menuConfig, setMenuConfig] = useState(getMenuConfig());
+const MainMenu: FC = () => {
+  // 默认不显示任何需要权限的菜单项，等获取到用户信息后再根据权限显示
+  const [menuConfig, setMenuConfig] = useState<MenuProps['items']>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await currentUser();
-        const user = response.data as any;
-        // 根据用户角色过滤菜单
-        const isAdmin =
-          user.roles &&
-          user.roles.some(
-            (role: any) =>
-              role.code === 'SUPER_ADMIN' || role.code === 'ADMIN' || role.code === 'USER_MANAGER'
-          );
-        const filteredConfig = getMenuConfig(isAdmin ? 'admin' : 'user');
-        setMenuConfig(filteredConfig);
-      } catch (error) {
-        console.error('Failed to fetch current user:', error);
-        // 获取用户信息失败，默认显示普通用户菜单
-        setMenuConfig(getMenuConfig('user'));
-      } finally {
-        setLoading(false);
-      }
-    };
+    console.warn('updateMenuBasedOnUser 获取userStore信息:', useUserStore.getState().getIsAdmin());
 
-    fetchCurrentUser();
+    // 根据用户角色过滤菜单
+    const isAdmin = useUserStore.getState().getIsAdmin();
+    console.warn('最终是否是管理员:', isAdmin);
+
+    const userType = isAdmin ? 'admin' : 'user';
+    console.warn('用户类型字符串:', userType);
+
+    const filteredConfig = getMenuConfig(userType);
+    console.warn('过滤后的菜单配置:', filteredConfig);
+
+    // 过滤掉自定义属性后再设置状态
+    const antdCompatibleConfig = filterCustomProps(filteredConfig);
+    setMenuConfig(antdCompatibleConfig as MenuProps['items']);
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -54,11 +55,11 @@ const MainMenu: FC<MenuProps> = ({ items }) => {
     );
   }
 
-  console.log('Rendering menu items:', menuConfig);
+  console.warn('Rendering menu items:', menuConfig);
 
   return (
     <nav>
-      <Menu mode="horizontal" items={menuConfig} />
+      <Menu mode="horizontal" items={menuConfig || []} style={{ border: 0 }} />
     </nav>
   );
 };

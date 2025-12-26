@@ -2,18 +2,28 @@
  * 用户状态管理
  * 负责用户信息和权限管理
  */
+interface Role {
+  code: string;
+  [key: string]: unknown;
+}
+
+interface User {
+  roles?: Role[];
+  [key: string]: unknown;
+}
+
 class UserStore {
-  private currentUser: any = null; // 存储当前用户信息
+  private currentUser: User | null = null; // 存储当前用户信息
   private userRoles: string[] = []; // 存储用户角色
   private isAdmin: boolean = false; // 缓存是否是管理员
 
   /**
    * 设置用户信息
    */
-  setCurrentUser(user: any) {
+  setCurrentUser(user: User | null) {
     this.currentUser = user;
     if (user?.roles) {
-      this.userRoles = user.roles.map((role: any) => role.code);
+      this.userRoles = user.roles.map((role: Role) => role.code);
       this.isAdmin = this.userRoles.some(role => 
         role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'USER_MANAGER'
       );

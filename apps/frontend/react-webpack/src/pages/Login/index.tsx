@@ -17,9 +17,9 @@ import {
   RegisterFormData,
   EmailLoginFormData,
   isAccountOrRegister,
-  AuthResponse
+  AuthResponse,
 } from './types';
-import { authStore } from '@/store/auth.store';
+import { useAuthStore } from '@/store/zustand/auth.store';
 import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
 import { useLoginForm } from './hooks/useLoginForm';
@@ -28,6 +28,17 @@ import styles from './index.module.scss';
 
 const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
 const api = { login, register };
+
+interface ErrorResponse {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      detail?: string;
+    };
+  };
+  message?: string;
+}
 
 const LoginContent = () => {
   const [authType, setAuthType] = useState<AuthType>('login'); // 登录注册
@@ -42,7 +53,7 @@ const LoginContent = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = form;
 
   // 获取表单字段错误信息
@@ -60,7 +71,7 @@ const LoginContent = () => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown((prev) => prev - 1);
       }, 1000);
     } else if (countdown === 0 && isSending) {
       setIsSending(false);
@@ -91,26 +102,28 @@ const LoginContent = () => {
           if (!response.data) {
             throw new Error('Authentication data is missing');
           }
-          authStore.setToken(response.data);
+          useAuthStore.getState().setToken(response.data);
+
           navigate('/');
         }
       } else {
         addToast({ message: response.message || 'Login fail', type: 'error' });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      if (error.response) {
+      const err = error as ErrorResponse;
+      if (err.response) {
         // Handle structured error response(处理结构化错误响应)
-        const { status, data } = error.response;
+        const { status, data } = err.response;
         if (status === 403) {
           addToast({ message: '访问被拒绝，请检查您的权限', type: 'error' });
         } else {
           const { message, detail } = data || {};
           addToast({ message: message || detail || `请求失败，状态码：${status}`, type: 'error' });
         }
-      } else if (error.message) {
+      } else if (err.message) {
         // Handle generic error(处理一般错误)
-        addToast({ message: error.message, type: 'error' });
+        addToast({ message: err.message, type: 'error' });
       } else {
         addToast({ message: '登录失败，请稍后重试', type: 'error' });
       }
@@ -122,12 +135,12 @@ const LoginContent = () => {
   // 公共密码处理
   // 使用RSA加密替代之前的argon2哈希
   const handleAccountOrRegister = async (
-    data: LoginFormData | RegisterFormData
+    data: LoginFormData | RegisterFormData,
   ): Promise<AuthResponse> => {
     const encryptedPassword = await encrypt(data.password);
     return await api[authType]({
       username: data.username,
-      password: encryptedPassword
+      password: encryptedPassword,
     });
   };
 
@@ -171,15 +184,10 @@ const LoginContent = () => {
 
   return (
     <div
-      className={styles.loginContainer}
-      style={{
-        background: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover', // 根据需要添加其他背景样式
-        backgroundRepeat: 'no-repeat' // 根据需要添加其他背景样式
-        // background-position: 'left'; // 根据需要添加其他背景样式
-      }}
+      className="flex justify-end items-center min-h-screen pr-[18vw] bg-cover bg-no-repeat"
+      style={{ backgroundImage: `url(${backgroundImageUrl})` }}
     >
-      <div className={styles.loginBox}>
+      <div className='w-120 min-h-87 p-8 bg-white rounded-xl shadow-[0_4px_20px_rgba(94,91,91,0.1)]'>
         {/* {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />} */}
         <LoginTabs authType={authType} loginType={loginType} setLoginType={setLoginType} />
 
@@ -189,7 +197,7 @@ const LoginContent = () => {
             {loginType === 'account' ? (
               <form
                 key={`${authType}-${loginType}`} // 强制重新挂载
-                className={styles.form}
+                className='flex flex-col gap-4'
                 onSubmit={handleSubmit(onSubmit)}
               >
                 <FormInput
@@ -222,7 +230,7 @@ const LoginContent = () => {
               </form>
             ) : (
               /* 邮箱登录 */
-              <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+              <form className='flex flex-col gap-4' onSubmit={handleSubmit(onSubmit)}>
                 <FormInput
                   control={control}
                   name="email"
@@ -232,8 +240,8 @@ const LoginContent = () => {
                     required: '邮箱地址不能为空',
                     pattern: {
                       value: /^\S+@\S+\.\S+$/,
-                      message: '请输入有效的邮箱地址'
-                    }
+                      message: '请输入有效的邮箱地址',
+                    },
                   }}
                   error={getFieldError('email')}
                 />
@@ -246,8 +254,8 @@ const LoginContent = () => {
                       required: '验证码不能为空',
                       pattern: {
                         value: /^\d{6}$/,
-                        message: '验证码必须为6位数字'
-                      }
+                        message: '验证码必须为6位数字',
+                      },
                     }}
                     render={({ field }) => (
                       <div className={styles.codeInput}>
@@ -278,7 +286,7 @@ const LoginContent = () => {
           </>
         ) : (
           /* 账号注册 */
-          <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+          <form className='flex flex-col gap-4' onSubmit={handleSubmit(onSubmit)}>
             <FormInput
               control={control}
               name="username"
@@ -310,14 +318,14 @@ const LoginContent = () => {
 
 const FooterRecord = memo(() => {
   return (
-    <div
+    <a
       className={styles['footer-record']}
-      onClick={() => {
-        window.open('https://beian.miit.gov.cn');
-      }}
+      href="https://beian.miit.gov.cn"
+      target="_blank"
+      rel="noopener noreferrer"
     >
       <span>粤ICP备2025421349号-1</span>
-    </div>
+    </a>
   );
 });
 

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dropdown } from '@eggshell/antd-ui';
 import type { MenuProps } from '@eggshell/antd-ui';
 
-import { authStore } from '../../store/auth.store';
+import { useAuthStore } from '@/store/zustand/auth.store';
 import { logout } from '@/services';
 
 // 在检查前定义 menuConfig
@@ -25,14 +25,14 @@ export default () => {
       await logout();
 
       // 清除本地 token
-      authStore.clear();
+      useAuthStore.getState().clear();
 
       // 跳转到登录页
       navigate(`/account/login?redirect=${window.location.pathname}`);
     } catch (error) {
       console.error('退出登录失败:', error);
       // 即使接口调用失败，也清除本地状态并跳转
-      authStore.clear();
+      useAuthStore.getState().clear();
       navigate(`/account/login?redirect=${window.location.pathname}`);
     }
   };

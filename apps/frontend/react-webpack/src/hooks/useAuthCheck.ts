@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import { request } from '@/utils/httpClient';
-import { authStore } from '@/store/auth.store';
+import { currentUser } from '@/services/auth';
+import { useAuthStore } from '@/store/zustand/auth.store';
+import { useUserStore } from '@/store/zustand/user.store';
 
 // Define response type for better type safety
 interface AuthResponse {
@@ -20,14 +22,19 @@ export function useAuthCheck() {
         const authResponse = await request.post<AuthResponse>('/auth/refresh');
         if (authResponse.success && authResponse.data) {
           // console.log('checkAuth ✅ 刷新token成功');
-          authStore.setToken(authResponse.data);
+          useAuthStore.getState().setToken(authResponse.data);
         }
 
-        // Step 2: Verify authentication status
-        // await request.get('/auth/current-user');
+        // Step 2: Verify authentication status and get user info
+        const userResponse = await currentUser();
+        if (userResponse.data) {
+          useUserStore.getState().setCurrentUser(userResponse.data);
+          console.log('Auth check: 用户信息已更新:', userResponse.data);
+        }
+
         setIsAuthenticated(true);
-      } catch {
-        // console.log('测试checkAuth catch');
+      } catch (error) {
+        console.log('认证检查失败:', error);
         setIsAuthenticated(false);
       } finally {
         setLoading(false);

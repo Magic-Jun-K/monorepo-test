@@ -14,7 +14,7 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
   const { loading, isAuthenticated } = useAuthCheck();
   const [dots, setDots] = useState('.');
   const [showHelp, setShowHelp] = useState(false);
-
+  
   // 动态点动画
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -62,7 +62,19 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
         {showHelp && (
           <div className={styles.helpText}>
             验证时间较长，请检查网络连接或
-            <a onClick={() => window.location.reload()}>刷新页面</a>
+            <button 
+              onClick={() => window.location.reload()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  window.location.reload();
+                }
+              }}
+              className={styles.refreshButton}
+              type="button"
+            >
+              刷新页面
+            </button>
           </div>
         )}
       </div>
