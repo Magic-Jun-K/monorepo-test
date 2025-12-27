@@ -8,12 +8,10 @@ export function EnhancedDialogExample() {
   const [isCustomFooterOpen, setIsCustomFooterOpen] = useState(false);
 
   const handleOk = () => {
-    console.log('OK clicked');
     setIsOpen(false);
   };
 
   const handleCancel = () => {
-    console.log('Cancel clicked');
     setIsOpen(false);
   };
 

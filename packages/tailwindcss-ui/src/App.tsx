@@ -1,5 +1,5 @@
-import { ButtonExample, NavigationMenuExample, DialogExample } from './components/example/ui';
-import { EnhancedButtonExample, EnhancedInputExample, EnhancedDialogExample, EnhancedSwiperExample } from './components/example/enhanced';
+import { ButtonExample, NavigationMenuExample, DialogExample } from './example/ui';
+import { EnhancedButtonExample, EnhancedInputExample, EnhancedDialogExample, EnhancedSwiperExample } from './example/enhanced';
 
 function App() {
   return (

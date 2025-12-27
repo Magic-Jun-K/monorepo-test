@@ -1,4 +1,4 @@
-import { Input } from '../../enhanced/Input';
+import { Input } from '../../components/enhanced/Input';
 import { Search, User, Lock, Mail } from 'lucide-react';
 
 export function EnhancedInputExample() {

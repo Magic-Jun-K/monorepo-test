@@ -1,4 +1,4 @@
-import { Button } from '../../enhanced/Button';
+import { Button } from '../../components/enhanced/Button';
 
 export function EnhancedButtonExample() {
   return (

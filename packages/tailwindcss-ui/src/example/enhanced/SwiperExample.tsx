@@ -3,7 +3,7 @@
  * @description Swiper 组件使用示例
  */
 import { FC } from 'react';
-import { Swiper } from '../../enhanced/Swiper';
+import { Swiper } from '../../components/enhanced/Swiper';
 
 export const EnhancedSwiperExample: FC = () => {
   return (
