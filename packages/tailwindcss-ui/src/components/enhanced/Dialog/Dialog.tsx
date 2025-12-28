@@ -10,7 +10,7 @@ import {
   DialogDescription as ShadcnDialogDescription,
   DialogClose as ShadcnDialogClose,
   DialogPortal as ShadcnDialogPortal,
-  DialogOverlay as ShadcnDialogOverlay
+  DialogOverlay as ShadcnDialogOverlay,
 } from '@/components/ui/dialog';
 
 export const Dialog = ({
@@ -50,7 +50,7 @@ export const Dialog = ({
   // 处理可选属性
   const dialogProps = {
     ...(open !== undefined && { open }),
-    ...(onOpenChange !== undefined && { onOpenChange })
+    ...(onOpenChange !== undefined && { onOpenChange }),
   };
 
   return (
@@ -59,7 +59,7 @@ export const Dialog = ({
         <ShadcnDialogOverlay
           className={cn(
             'fixed inset-0 z-50 bg-black/30 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            className
+            className,
           )}
         />
         <ShadcnDialogContent

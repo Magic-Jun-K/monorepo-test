@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 
 import { Button as BaseButton } from '@/components/ui/button';
 import type { ButtonProps, ButtonColorType, ButtonVariantType } from './types';
-import { colorMap, typeMap, sizeMap, variantMap } from './constants';
+import { colorMap, typeMap, sizeMap, variantMap, styleOverrides } from './constants';
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -20,7 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     // 确定最终的颜色和变体
     let finalColor: ButtonColorType;
@@ -55,7 +55,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const linkClasses = type === 'link' ? 'underline-offset-4 hover:underline' : '';
 
     // 构建最终的类名
-    const finalClassName = `${classes} ${dashedClasses} ${linkClasses} ${className || ''}`.trim();
+    const finalClassName =
+      `${classes} ${dashedClasses} ${linkClasses} ${styleOverrides} ${className || ''}`.trim();
 
     return (
       <BaseButton
@@ -74,7 +75,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </BaseButton>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';

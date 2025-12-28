@@ -4,7 +4,7 @@ export interface ButtonProps {
   children?: ReactNode;
   onClick?: () => void;
   className?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DialogProps {
@@ -69,5 +69,5 @@ export interface DialogProps {
   /**
    * 其他属性
    */
-  [key: string]: any;
+  [key: string]: unknown;
 }

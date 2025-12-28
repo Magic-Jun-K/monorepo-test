@@ -21,22 +21,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       onChange,
       ...props
     },
-    ref
+    ref,
   ) => {
     // 内部状态管理输入框的值
     const [inputValue, setInputValue] = useState(value || defaultValue || '');
     const internalRef = useRef<HTMLInputElement>(null);
-    
+
     // 暴露内部ref给外部使用
     useImperativeHandle(ref, () => internalRef.current as unknown as HTMLInputElement);
-    
+
     // 当外部value变化时，更新内部状态
     useEffect(() => {
       if (value !== undefined) {
         setInputValue(value);
       }
     }, [value]);
-    
+
     // 处理输入变化
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
@@ -46,51 +46,53 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       }
       onChange?.(e);
     };
-    
+
     // 清除输入框内容
     const handleClear = () => {
       // 对于受控组件，只触发onChange事件
       const event = {
         target: {
           value: '',
-          name: props.name
-        }
+          name: props.name,
+        },
       } as React.ChangeEvent<HTMLInputElement>;
-      onChange?.(event as any);
-      
+      onChange?.(event);
+
       // 对于非受控组件，更新内部状态
       if (value === undefined) {
         setInputValue('');
       }
-      
+
       // 聚焦到输入框
       if (internalRef.current) {
         internalRef.current.focus();
       }
     };
-    
+
     // 判断是否显示清除图标
-    const showClearIcon = allowClear && !disabled && (value !== undefined ? value : inputValue) !== '';
-    
+    const showClearIcon =
+      allowClear && !disabled && (value !== undefined ? value : inputValue) !== '';
+
     // 获取基础样式类
     const baseClasses = defaultInputClasses;
-    
+
     // 获取变体样式类
     const variantClasses = variantMap[variant];
-    
+
     // 获取尺寸样式类
     const sizeClasses = sizeClassMap[size];
-    
+
     // 获取状态样式类
     const statusClasses = status ? statusMap[status] : '';
-    
+
     // 构建最终的类名
-    const finalClassName = `${baseClasses} ${variantClasses} ${sizeClasses} ${statusClasses} ${className || ''}`.trim();
+    const finalClassName =
+      `${baseClasses} ${variantClasses} ${sizeClasses} ${statusClasses} ${className || ''}`.trim();
 
     // 如果有前缀、后缀或清除图标，我们需要包裹输入框
     // 始终渲染容器，避免因showClearIcon变化导致的重新渲染
     return (
-      <div 
+      <div
         data-testid="input-container"
         className={`
           inline-flex items-center rounded-md transition-colors w-full max-w-full
@@ -102,7 +104,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         `.trim()}
       >
         {prefix && (
-          <span 
+          <span
             className={`
               pl-3 flex items-center flex-shrink-0
               ${size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-base' : 'text-sm'}
@@ -125,7 +127,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           disabled={disabled}
           {...props}
         />
-        <span 
+        <span
           className={`
             flex items-center flex-shrink-0
             ${size === 'sm' ? 'pr-2' : size === 'lg' ? 'pr-3' : 'pr-2'}
@@ -133,7 +135,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           `.trim()}
         >
           {showClearIcon && (
-            <X 
+            <X
               data-testid="clear-button"
               className={`
                 h-4 w-4 cursor-pointer text-gray-400 hover:text-gray-600
@@ -152,7 +154,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </span>
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input';

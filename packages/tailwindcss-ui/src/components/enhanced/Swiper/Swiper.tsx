@@ -5,7 +5,13 @@
 import { FC, useState, useRef, useEffect, Children, useCallback } from 'react';
 import { SwiperProps } from './types';
 
-export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, autoPlay = false, autoPlayInterval = 3000 }) => {
+export const Swiper: FC<SwiperProps> = ({
+  className,
+  children,
+  loop = false,
+  autoPlay = false,
+  autoPlayInterval = 3000,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,7 +38,7 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
       setCurrentIndex(targetIndex);
       return;
     },
-    [isTransitioning, loop, totalSlides]
+    [isTransitioning, loop, totalSlides],
   );
 
   const nextSlide = useCallback(() => goToSlide(currentIndex + 1), [currentIndex, goToSlide]);
@@ -81,7 +87,7 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
           onClick={prevSlide}
           type="button"
           aria-label="上一张"
-          className="relative ml-16 w-6 h-6 border-t-5 border-l-5 border-white rotate-[-45deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto bg-transparent"
+          className="relative ml-16 w-6 h-6 border-t-5 border-l-5 border-white -rotate-45 cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto bg-transparent"
         />
 
         {/* 下一张按钮 */}
@@ -89,7 +95,7 @@ export const Swiper: FC<SwiperProps> = ({ className, children, loop = false, aut
           onClick={nextSlide}
           type="button"
           aria-label="下一张"
-          className="relative mr-16 w-6 h-6 border-t-5 border-l-5 border-white rotate-[135deg] cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto bg-transparent"
+          className="relative mr-16 w-6 h-6 border-t-5 border-l-5 border-white rotate-135 cursor-pointer z-10 hover:border-[rgb(255,105,0)] before:content-[''] before:absolute before:w-16 before:h-16 before:block pointer-events-auto bg-transparent"
         />
       </div>
 
