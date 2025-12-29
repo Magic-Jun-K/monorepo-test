@@ -1,7 +1,3 @@
 packages:
-  - apps/frontend/*
-  - apps/backend/*
-  - apps/web/*
-  - packages/*
-ignoredBuiltDependencies:
-  - '@nestjs/core'
+  - 'apps/**'
+  - 'packages/**'
