@@ -64,12 +64,6 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
             验证时间较长，请检查网络连接或
             <button 
               onClick={() => window.location.reload()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  window.location.reload();
-                }
-              }}
               className={styles.refreshButton}
               type="button"
             >
