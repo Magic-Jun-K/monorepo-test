@@ -1,16 +1,17 @@
 import { useNavigate } from 'react-router-dom';
+
 import { Dropdown } from '@eggshell/antd-ui';
 import type { MenuProps } from '@eggshell/antd-ui';
 
-import { useAuthStore } from '@/store/zustand/auth.store';
+import { useAuthStore } from '@/stores/zustand/auth.store';
 import { logout } from '@/services';
 
 // 在检查前定义 menuConfig
 const userConfig: MenuProps['items'] = [
   {
     key: 'logout',
-    label: '退出登录'
-  }
+    label: '退出登录',
+  },
 ];
 
 export default () => {
@@ -36,9 +37,9 @@ export default () => {
       navigate(`/account/login?redirect=${window.location.pathname}`);
     }
   };
-  
+
   return (
-    <Dropdown menu={{ items: userConfig, onClick: handleLogout }} placement='bottom'>
+    <Dropdown menu={{ items: userConfig, onClick: handleLogout }} placement="bottom">
       <div className="w-9 h-9 rounded-full bg-black shadow-sm"></div>
     </Dropdown>
   );

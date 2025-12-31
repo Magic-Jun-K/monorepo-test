@@ -2,7 +2,7 @@ import { FC, memo, useMemo } from 'react';
 
 import { Menu } from '@eggshell/antd-ui';
 
-import { useUserStore } from '@/store/zustand/user.store';
+import { useUserStore } from '@/stores/zustand/user.store';
 import { getMenuConfig, filterCustomProps } from './constant';
 
 const MainMenu: FC = () => {

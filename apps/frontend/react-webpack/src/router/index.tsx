@@ -5,7 +5,7 @@ import AuthRoute from './AuthRoute';
 
 import Login from '../pages/Login';
 
-import { useUserStore } from '@/store/zustand/user.store';
+import { useUserStore } from '@/stores/zustand/user.store';
 import { getRoutesFromMenu } from '../layout/Menu/constant';
 
 export const loadComponent = (path: string) => {

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { request } from '@/utils/httpClient';
 import { currentUser } from '@/services/auth';
-import { useAuthStore } from '@/store/zustand/auth.store';
-import { useUserStore } from '@/store/zustand/user.store';
+import { useAuthStore } from '@/stores/zustand/auth.store';
+import { useUserStore } from '@/stores/zustand/user.store';
 
 // Define response type for better type safety
 interface AuthResponse {

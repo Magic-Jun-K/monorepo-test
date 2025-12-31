@@ -5,7 +5,7 @@ import axios, {
   CreateAxiosDefaults
 } from 'axios';
 
-import { useAuthStore } from '@/store/zustand/auth.store';
+import { useAuthStore } from '@/stores/zustand/auth.store';
 // import { reportError } from './monitor';
 
 interface CustomRequest extends AxiosInstance {

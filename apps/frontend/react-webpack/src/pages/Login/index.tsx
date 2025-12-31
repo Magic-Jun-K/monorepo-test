@@ -19,7 +19,7 @@ import {
   isAccountOrRegister,
   AuthResponse,
 } from './types';
-import { useAuthStore } from '@/store/zustand/auth.store';
+import { useAuthStore } from '@/stores/zustand/auth.store';
 import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
 import { useLoginForm } from './hooks/useLoginForm';
