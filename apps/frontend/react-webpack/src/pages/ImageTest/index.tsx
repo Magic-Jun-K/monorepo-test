@@ -8,9 +8,34 @@ import { BASE_URL } from '@/config';
 const swiperArray = [
   // <img src={`${BASE_URL}/images/robot1.webp`} key={uuidv4()} />,
   // <img src={`${BASE_URL}/image/compressed/robot1.webp`} key={uuidv4()} />,
-  <img className="w-full h-full" src={`${BASE_URL}/compressed/programmer1.webp`} key={uuidv4()} alt="Programmer 1" />,
-  <img className="w-full h-full" src={`${BASE_URL}/compressed/programmer2.webp`} key={uuidv4()} alt="Programmer 2" />,
-  <img className="w-full h-full" src={`${BASE_URL}/compressed/programmer3.webp`} key={uuidv4()} alt="Programmer 3" />
+  <img
+    className="w-full h-full"
+    src={`${BASE_URL}/compressed/programmer1.webp`}
+    key={uuidv4()}
+    alt="Programmer 1"
+  />,
+  <img
+    className="w-full h-full"
+    src={`${BASE_URL}/compressed/programmer2.webp`}
+    key={uuidv4()}
+    alt="Programmer 2"
+  />,
+  <img
+    className="w-full h-full"
+    src={`${BASE_URL}/compressed/programmer3.webp`}
+    key={uuidv4()}
+    alt="Programmer 3"
+  />
+];
+const imageList = [
+  `${BASE_URL}/compressed/programmer4.webp`,
+  `${BASE_URL}/compressed/programmer5.webp`,
+  `${BASE_URL}/compressed/programmer6.webp`,
+  `${BASE_URL}/compressed/programmer7.webp`,
+  `${BASE_URL}/compressed/programmer8.webp`,
+  `${BASE_URL}/compressed/programmer9.webp`,
+  `${BASE_URL}/compressed/programmer10.webp`,
+  `${BASE_URL}/compressed/programmer11.webp`
 ];
 const ImageTest: FC = () => {
   return (
@@ -27,46 +52,9 @@ const ImageTest: FC = () => {
         {/* <LazyImage src={`${BASE_URL}/image/compressed/robot1.webp`} alt="robot1" />
         <LazyImage src={`${BASE_URL}/image/compressed/robot8.webp`} alt="robot8" /> */}
 
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer4.webp`}
-          alt="robot1"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer5.webp`}
-          alt="robot2"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer6.webp`}
-          alt="robot3"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer7.webp`}
-          alt="robot4"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer8.webp`}
-          alt="robot5"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer9.webp`}
-          alt="robot6"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer10.webp`}
-          alt="robot7"
-          className="w-full h-full rounded-3xl mb-4"
-        />
-        <LazyImage
-          src={`${BASE_URL}/compressed/programmer11.webp`}
-          alt="robot8"
-          className="w-full h-full rounded-3xl mb-4"
-        />
+        {imageList.map((item, index) => (
+          <LazyImage src={item} alt={`robot${index + 1}`} key={item} className="w-full h-full rounded-3xl mb-4" />
+        ))}
       </section>
     </>
   );
