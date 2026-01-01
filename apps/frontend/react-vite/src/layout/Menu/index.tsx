@@ -1,28 +1,22 @@
-import { FC, PropsWithChildren } from 'react';
-import { Menu } from '@eggshell/unocss-ui';
+import { FC, memo, useMemo } from 'react';
 
-import { MENU_CONFIG } from './constant';
+import { Menu } from '@eggshell/antd-ui';
 
-import styles from './index.module.scss';
+import { useUserStore } from '@/stores/zustand/user.store';
+import { getMenuConfig, filterCustomProps } from './constant';
 
-interface LocalMenuItem {
-  path: string;
-  name: string;
-  children?: LocalMenuItem[];
-}
+const MainMenu: FC = () => {
+  const isAdmin = useUserStore((state) => state.isAdmin);
 
-interface MenuProps {
-  items: LocalMenuItem[];
-  className?: string;
-}
-
-const MainMenu: FC<PropsWithChildren<MenuProps>> = ({ items, className = '' }) => {
-  console.log('Rendering menu items:', items);
+  const menuItems = useMemo(() => {
+    const filteredConfig = getMenuConfig(isAdmin);
+    return filterCustomProps(filteredConfig) || [];
+  }, [isAdmin]);
 
   return (
-    <nav className={`${styles['menu-component']} ${className}`}>
-      <Menu mode="horizontal" items={MENU_CONFIG} />
+    <nav>
+      <Menu mode="horizontal" items={menuItems} style={{ border: 0 }} />
     </nav>
   );
 };
-export default MainMenu;
+export default memo(MainMenu);

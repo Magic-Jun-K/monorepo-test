@@ -1,17 +1,17 @@
 import { useNavigate } from 'react-router-dom';
-import { Dropdown, Menu, MenuItemType } from '@eggshell/unocss-ui';
 
+import { Dropdown } from '@eggshell/antd-ui';
+
+import { useAuthStore } from '@/stores/zustand/auth.store';
 import { logout } from '@/services';
 
 import styles from './index.module.scss';
-import './index.scss';
 
-// 在检查前定义 menuConfig
-const userConfig: MenuItemType[] = [
+const userConfig = [
   {
     key: 'logout',
-    label: '退出登录'
-  }
+    label: '退出登录',
+  },
 ];
 
 function Logout() {
@@ -25,17 +25,22 @@ function Logout() {
       // 调用退出登录接口
       await logout();
 
+      // 清除本地 token
+      useAuthStore.getState().clear();
+
       // 跳转到登录页
       navigate(`/account/login?redirect=${window.location.pathname}`);
     } catch (error) {
       console.error('退出登录失败:', error);
+      // 即使接口调用失败，也清除本地状态并跳转
+      useAuthStore.getState().clear();
       navigate(`/account/login?redirect=${window.location.pathname}`);
     }
   };
 
   return (
-    <Dropdown overlay={<Menu mode="vertical" items={userConfig} onSelect={handleLogout} />}>
-      <div className={styles['logo']}></div>
+    <Dropdown menu={{ items: userConfig, onClick: handleLogout }} placement="bottom">
+      <div className={styles.Logout}></div>
     </Dropdown>
   );
 }
