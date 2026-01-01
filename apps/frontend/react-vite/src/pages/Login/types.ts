@@ -1,4 +1,4 @@
-import { FieldError } from 'react-hook-form';
+import { FieldError, Control } from 'react-hook-form';
 import { z } from 'zod';
 
 export type AuthType = 'login' | 'register';
@@ -47,12 +47,12 @@ export const formDataSchemaWithDiscriminant = z.discriminatedUnion('mode', [
 export type FormData = z.infer<typeof formDataSchema>;
 
 // 表单组件属性
-export type FormInputProps = {
-  control: any;
+export type FormInputProps<T extends FormData = FormData> = {
+  control: Control<T>;
   name: string;
   type: string;
   placeholder: string;
-  rules?: Record<string, any>;
+  rules?: Record<string, unknown>;
   error?: { message: string };
 };
 

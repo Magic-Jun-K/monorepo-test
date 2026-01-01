@@ -1,16 +1,13 @@
 .loginContainer {
   display: flex;
-  // justify-content: center;
   justify-content: flex-end;
   align-items: center;
   min-height: 100vh;
-  // background: linear-gradient(189.16deg, #97abff 14%, #123597 98%);
   padding-right: 18vw;
 }
 
 .loginBox {
   width: 480px;
-  // min-height: 386px;
   min-height: 348px;
   padding: 2rem;
   background: #fff;

@@ -1,26 +1,47 @@
 import { request } from '@/utils/httpClient';
+import { authStore } from '@/stores/auth.store';
 
 export interface LoginPayload {
-  username?: string; // 账号登录时使用
-  password?: string; // 账号登录时使用
-  email?: string; // 邮箱登录时使用
-  code?: string; // 邮箱登录时使用
+  username?: string;
+  password?: string;
+  email?: string;
+  code?: string;
 }
 
 export interface LoginRes {
   success: boolean;
   message: string;
+  accessToken?: string | undefined;
 }
 
 export interface RefreshRes {
   success: boolean;
+  message: string;
+  accessToken?: string | undefined;
 }
 
 export interface CurrentUserRes {
   data: {
+    id: number;
     username: string;
-    email: string;
+    role: string;
   };
+}
+
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+interface LoginData {
+  accessToken: string;
+}
+
+interface CurrentUserData {
+  id: number;
+  username: string;
+  role: string;
 }
 
 /**
@@ -38,7 +59,27 @@ export const register = async (data: { username: string; password: string }): Pr
  * @returns
  */
 export const login = async (data: LoginPayload): Promise<LoginRes> => {
-  return await request.post('/auth/login', data);
+  const payload = {
+    username: data.username || '',
+    password: data.password || '',
+  };
+
+  try {
+    const response = await request.post<ApiResponse<LoginData>>('/grpc/auth/login', payload);
+    if (response.success && response.data) {
+      authStore.setToken(response.data.accessToken);
+    }
+    return {
+      success: response.success,
+      message: response.message,
+      accessToken: response.data?.accessToken,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };
 
 /**
@@ -46,8 +87,21 @@ export const login = async (data: LoginPayload): Promise<LoginRes> => {
  * @param email
  * @returns
  */
-export const sendCode = async (email: string) => {
-  return await request.post('/auth/send-code', { email });
+export const sendVerificationCode = async (email: string) => {
+  const payload = { email };
+
+  try {
+    const response = await request.post<ApiResponse>('/grpc/auth/send-code', payload);
+    return {
+      success: response.success,
+      message: response.message,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };
 
 /**
@@ -57,7 +111,27 @@ export const sendCode = async (email: string) => {
  * @returns
  */
 export const emailLogin = async (params: { email: string; code: string }): Promise<LoginRes> => {
-  return await request.post('/auth/email-login', params);
+  const payload = {
+    email: params.email,
+    code: params.code,
+  };
+
+  try {
+    const response = await request.post<ApiResponse<LoginData>>('/grpc/auth/email-login', payload);
+    if (response.success && response.data) {
+      authStore.setToken(response.data.accessToken);
+    }
+    return {
+      success: response.success,
+      message: response.message,
+      accessToken: response.data?.accessToken,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };
 
 /**
@@ -65,7 +139,19 @@ export const emailLogin = async (params: { email: string; code: string }): Promi
  * @returns
  */
 export const logout = async () => {
-  return await request.post('/auth/logout');
+  try {
+    const response = await request.post<ApiResponse>('/grpc/auth/logout');
+    authStore.clear();
+    return {
+      success: response.success,
+      message: response.message,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };
 
 /**
@@ -73,7 +159,22 @@ export const logout = async () => {
  * @returns
  */
 export const refreshToken = async (): Promise<RefreshRes> => {
-  return await request.post('/auth/refresh');
+  try {
+    const response = await request.post<ApiResponse<LoginData>>('/grpc/auth/refresh');
+    if (response.success && response.data) {
+      authStore.setToken(response.data.accessToken);
+    }
+    return {
+      success: response.success,
+      message: response.message,
+      accessToken: response.data?.accessToken,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };
 
 /**
@@ -81,5 +182,45 @@ export const refreshToken = async (): Promise<RefreshRes> => {
  * @returns
  */
 export const currentUser = async (): Promise<CurrentUserRes> => {
-  return await request.get('/current-user');
+  const accessToken = authStore.getAccessToken();
+  const payload = { accessToken };
+
+  try {
+    const response = await request.post<ApiResponse<CurrentUserData>>(
+      '/grpc/auth/current-user',
+      payload,
+    );
+    return {
+      data: response.data
+        ? {
+            id: response.data.id,
+            username: response.data.username,
+            role: response.data.role,
+          }
+        : { id: 0, username: '', role: '' },
+    };
+  } catch (error: unknown) {
+    throw new Error(error instanceof Error ? error.message : String(error));
+  }
+};
+
+/**
+ * 校验token
+ * @returns
+ */
+export const validateToken = async (): Promise<{ success: boolean; message: string }> => {
+  const payload = { token: authStore.getAccessToken() || '' };
+
+  try {
+    const response = await request.post<ApiResponse>('/grpc/auth/validate-token', payload);
+    return {
+      success: response.success,
+      message: response.message,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 };

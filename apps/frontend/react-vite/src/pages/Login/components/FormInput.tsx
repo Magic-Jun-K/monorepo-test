@@ -1,6 +1,5 @@
-import { Control, FieldError } from 'react-hook-form';
-import { Controller } from 'react-hook-form';
-import type { FieldValues, Path } from 'react-hook-form';
+import { Control, FieldError, Controller } from 'react-hook-form';
+import type { FieldValues, Path, RegisterOptions } from 'react-hook-form';
 
 import styles from '../index.module.scss';
 
@@ -9,8 +8,8 @@ interface FormInputProps<T extends FieldValues> {
   name: Path<T>;
   type: string;
   placeholder: string;
-  rules: any;
-  error?: FieldError;
+  rules?: Partial<RegisterOptions<T, Path<T>>>;
+  error: FieldError | undefined;
 }
 
 export default function FormInput<T extends FieldValues>({
@@ -19,14 +18,14 @@ export default function FormInput<T extends FieldValues>({
   type,
   placeholder,
   rules,
-  error
+  error,
 }: FormInputProps<T>) {
   return (
     <div className={styles.formGroup}>
       <Controller
         name={name}
         control={control}
-        rules={rules}
+        {...(rules !== undefined && { rules })}
         render={({ field: { value, onChange, ...field } }) => (
           <input
             {...field}

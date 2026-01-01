@@ -40,7 +40,7 @@ export const useLoginForm = (authType: AuthType, loginType: LoginType) => {
   // 重置表单
   useEffect(() => {
     form.reset(defaultValues);
-  }, [defaultValues]);
+  }, [defaultValues, form]);
 
   return form;
 };

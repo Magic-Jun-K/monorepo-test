@@ -9,20 +9,36 @@ interface RegisterTextProps {
   setAuthType: (type: AuthType) => void;
 }
 
+const handleForgotPassword = (e: React.MouseEvent) => {
+  e.preventDefault();
+};
+
 export default memo(function RegisterText({ authType, setAuthType }: RegisterTextProps) {
+  const handleToggleAuthType = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setAuthType(authType === 'login' ? 'register' : 'login');
+  };
+
   return (
     <div
       className={styles.registerText}
       style={{ justifyContent: authType === 'login' ? 'space-between' : 'center' }}
     >
       {authType === 'login' ? (
-        <a href="#" className={styles.forgot}>
+        <button
+          type="button"
+          className={styles.forgot}
+          onClick={handleForgotPassword}
+        >
           忘记密码
-        </a>
+        </button>
       ) : null}
-      <a href="#" onClick={() => setAuthType(authType === 'login' ? 'register' : 'login')}>
+      <button
+        type="button"
+        onClick={handleToggleAuthType}
+      >
         立即{authType === 'login' ? '注册' : '登录'}
-      </a>
+      </button>
     </div>
   );
 });

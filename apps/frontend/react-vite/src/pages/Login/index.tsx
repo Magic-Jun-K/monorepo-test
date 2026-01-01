@@ -2,13 +2,18 @@ import { memo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Controller, FieldError } from 'react-hook-form';
 
-import { useToast } from '@/components/Toast/useToast';
 import LoginTabs from './components/LoginTabs';
 import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
-import { encrypt } from '@/utils/hashWasm';
-import { emailLogin, login, register, sendCode } from '@/services/auth';
+
+import { useToast } from '@/components/Toast/useToast';
+import { ToastProvider } from '@/components/Toast';
+import { BASE_URL } from '@/config';
+import { register, login, emailLogin, sendVerificationCode } from '@/services';
+import { useAuthStore } from '@/stores/zustand/auth.store';
+import { encrypt } from '@/utils/rsaEncrypt';
+import { useLoginForm } from './hooks/useLoginForm';
 import {
   AuthType,
   LoginType,
@@ -17,19 +22,26 @@ import {
   RegisterFormData,
   EmailLoginFormData,
   isAccountOrRegister,
-  AuthResponse
+  AuthResponse,
 } from './types';
-import { ToastProvider } from '@/components/Toast';
-import { BASE_URL } from '@/config';
-import { useLoginForm } from './hooks/useLoginForm';
-import { authStore } from '@/store/auth.store';
 
 import styles from './index.module.scss';
 
 const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
 const api = { login, register };
 
-function LoginContent() {
+interface ErrorResponse {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      detail?: string;
+    };
+  };
+  message?: string;
+}
+
+const LoginContent = () => {
   const [authType, setAuthType] = useState<AuthType>('login'); // 登录注册
   const [loginType, setLoginType] = useState<LoginType>('account'); // 登录方式
   const [loading, setLoading] = useState<boolean>(false); // 登录中
@@ -42,11 +54,11 @@ function LoginContent() {
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = form;
 
   // 获取表单字段错误信息
-  const getFieldError = (fieldName: string) => {
+  const getFieldError = (fieldName: string): FieldError | undefined => {
     if (loginType === 'account' || authType === 'register') {
       return errors[fieldName as keyof typeof errors] as FieldError | undefined;
     } else if (loginType === 'email') {
@@ -60,7 +72,7 @@ function LoginContent() {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown((prev) => prev - 1);
       }, 1000);
     } else if (countdown === 0 && isSending) {
       setIsSending(false);
@@ -82,29 +94,37 @@ function LoginContent() {
 
       // Handle successful response(处理成功响应)
       if (response.success) {
-        // Add type guard for response.data(为response.data添加类型保护)
-        if (!response.data) {
-          throw new Error('Authentication data is missing');
+        // 注册成功后切换到登录模式并显示成功消息
+        if (authType === 'register') {
+          addToast({ message: response.message || '注册成功，请登录', type: 'success' });
+          setAuthType('login');
+        } else {
+          // 登录成功需要data字段作为token
+          if (!response.data) {
+            throw new Error('Authentication data is missing');
+          }
+          useAuthStore.getState().setToken(response.data);
+
+          navigate('/');
         }
-        authStore.setToken(response.data);
-        navigate('/');
       } else {
         addToast({ message: response.message || 'Login fail', type: 'error' });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      if (error.response) {
+      const err = error as ErrorResponse;
+      if (err.response) {
         // Handle structured error response(处理结构化错误响应)
-        const { status, data } = error.response;
+        const { status, data } = err.response;
         if (status === 403) {
           addToast({ message: '访问被拒绝，请检查您的权限', type: 'error' });
         } else {
           const { message, detail } = data || {};
           addToast({ message: message || detail || `请求失败，状态码：${status}`, type: 'error' });
         }
-      } else if (error.message) {
+      } else if (err.message) {
         // Handle generic error(处理一般错误)
-        addToast({ message: error.message, type: 'error' });
+        addToast({ message: err.message, type: 'error' });
       } else {
         addToast({ message: '登录失败，请稍后重试', type: 'error' });
       }
@@ -114,13 +134,14 @@ function LoginContent() {
   };
 
   // 公共密码处理
+  // 使用RSA加密替代之前的argon2哈希
   const handleAccountOrRegister = async (
-    data: LoginFormData | RegisterFormData
+    data: LoginFormData | RegisterFormData,
   ): Promise<AuthResponse> => {
     const encryptedPassword = await encrypt(data.password);
     return await api[authType]({
       username: data.username,
-      password: encryptedPassword
+      password: encryptedPassword,
     });
   };
 
@@ -152,7 +173,7 @@ function LoginContent() {
     //   setCountdown(0);
     // });
 
-    sendCode(email)
+    sendVerificationCode(email)
       .then(() => {
         addToast({ message: '验证码已发送，请查收邮箱', type: 'success' });
       })
@@ -166,10 +187,9 @@ function LoginContent() {
     <div
       className={styles.loginContainer}
       style={{
-        background: `url(${backgroundImageUrl})`,
-        backgroundSize: 'cover', // 根据需要添加其他背景样式
-        backgroundRepeat: 'no-repeat' // 根据需要添加其他背景样式
-        // background-position: 'left'; // 根据需要添加其他背景样式
+        backgroundImage: `url(${backgroundImageUrl})`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <div className={styles.loginBox}>
@@ -225,8 +245,8 @@ function LoginContent() {
                     required: '邮箱地址不能为空',
                     pattern: {
                       value: /^\S+@\S+\.\S+$/,
-                      message: '请输入有效的邮箱地址'
-                    }
+                      message: '请输入有效的邮箱地址',
+                    },
                   }}
                   error={getFieldError('email')}
                 />
@@ -239,8 +259,8 @@ function LoginContent() {
                       required: '验证码不能为空',
                       pattern: {
                         value: /^\d{6}$/,
-                        message: '验证码必须为6位数字'
-                      }
+                        message: '验证码必须为6位数字',
+                      },
                     }}
                     render={({ field }) => (
                       <div className={styles.codeInput}>
@@ -299,18 +319,18 @@ function LoginContent() {
       </div>
     </div>
   );
-}
+};
 
 const FooterRecord = memo(() => {
   return (
-    <div
+    <a
       className={styles['footer-record']}
-      onClick={() => {
-        window.open('https://beian.miit.gov.cn');
-      }}
+      href="https://beian.miit.gov.cn"
+      target="_blank"
+      rel="noopener noreferrer"
     >
       <span>粤ICP备2025421349号-1</span>
-    </div>
+    </a>
   );
 });
 
