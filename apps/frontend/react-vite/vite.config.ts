@@ -3,14 +3,17 @@ import react from '@vitejs/plugin-react-swc';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import vitePluginUnoCssAutoImport from './plugins/vite-plugin-unocss-auto-import';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   // const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
-  console.log('mode', mode);
+  // console.log('mode', mode);
   // console.log('env', env);
   return {
     plugins: [
