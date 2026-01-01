@@ -1,9 +1,9 @@
 // 后端地址 - 动态获取
 const getBaseURL = () => {
-  console.log('import.meta.env.MODE', import.meta.env.MODE);
+  // console.log('import.meta.env.MODE', import.meta.env.MODE);
   // 开发环境
   if (import.meta.env.MODE === 'development') {
-    return 'http://localhost:7000';
+    return 'http://localhost:7100';
   }
 
   // 生产环境 - 根据当前域名动态设置
