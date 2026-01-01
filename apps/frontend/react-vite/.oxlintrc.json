@@ -3,12 +3,27 @@
   "ignorePatterns": [
     "dist/**/*",
     "build/**/*",
-    "node_modules/**/*"
+    "node_modules/**/*",
+    "src/generated/**/*"
   ],
+  "overrides": [
+    {
+      "files": ["scripts/**/*"],
+      "rules": {
+        "no-console": "off",
+        "no-undef": "off"
+      }
+    }
+  ],
+  "env": {
+    "browser": true,
+    "node": true
+  },
   "rules": {
-    "no-console": "warn",
+    "no-console": "off",
     "typescript/no-unused-vars": "error",
     "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "typescript/no-explicit-any": "off"
