@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { useAuthCheck } from '@/hooks/useAuthCheck';
@@ -14,8 +14,8 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
   const { loading, isAuthenticated } = useAuthCheck();
   const [dots, setDots] = useState('.');
   const [showHelp, setShowHelp] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 动态点动画
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
@@ -30,22 +30,29 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
     };
   }, [loading]);
 
-  // 超时提示
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-
-    if (loading) {
-      timer = setTimeout(() => {
-        setShowHelp(true);
-      }, 8000);
-    } else {
-      setShowHelp(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
 
+    if (!loading) {
+      if (showHelp) {
+        setTimeout(() => setShowHelp(false), 0);
+      }
+      return;
+    }
+
+    timerRef.current = setTimeout(() => {
+      setShowHelp(true);
+    }, 8000);
+
     return () => {
-      if (timer) clearTimeout(timer);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [loading]);
+  }, [loading, showHelp]);
 
   if (loading) {
     return (
@@ -62,7 +69,12 @@ const AuthRoute: FC<AuthRouteProps> = ({ children }) => {
         {showHelp && (
           <div className={styles.helpText}>
             验证时间较长，请检查网络连接或
-            <a onClick={() => window.location.reload()}>刷新页面</a>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+            >
+              刷新页面
+            </button>
           </div>
         )}
       </div>

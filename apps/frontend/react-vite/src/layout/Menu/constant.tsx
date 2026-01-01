@@ -43,24 +43,9 @@ const BASE_MENU_CONFIG: MenuItemTypeWithComponent[] = [
         component: 'TableTest',
       },
       {
-        key: 'virtual-list-test',
-        label: <Link to="/virtual-list-test">虚拟列表测试</Link>,
-        component: 'VirtualListTest',
-      },
-      {
         key: 'baidu-map',
         label: <Link to="/baidu-map">百度地图测试</Link>,
         component: 'BMapGLCom',
-      },
-      {
-        key: 'tailwind-test',
-        label: <Link to="/tailwind-test">TailwindCSS测试</Link>,
-        component: 'TailwindTest',
-      },
-      {
-        key: 'handwriting-js-test',
-        label: <Link to="/handwriting-js-test">手写JS测试</Link>,
-        component: 'HandwritingJSTest',
       },
     ],
   },
