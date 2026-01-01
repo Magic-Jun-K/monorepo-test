@@ -4,7 +4,7 @@ interface Props {
   visible: boolean;
   onCancel: () => void;
 }
-export default (props: Props) => {
+export default function FormTestModal(props: Props) {
   const { visible, onCancel } = props;
 
   return (
@@ -19,7 +19,7 @@ export default (props: Props) => {
       <Select
         options={[
           { label: '选项1', value: '1' },
-          { label: '选项2', value: '2' }
+          { label: '选项2', value: '2' },
         ]}
       />
       <div className="mb-6">
@@ -28,18 +28,7 @@ export default (props: Props) => {
           accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx"
           multiple
           listType="picture-card"
-          onChange={info => {
-            console.log('上传状态变化:', info.file.status, info.fileList);
-
-            // 根据不同的上传状态显示不同的消息
-            if (info.file.status === 'uploading') {
-              console.log(`${info.file.name} 正在上传中...`);
-            } else if (info.file.status === 'done') {
-              console.log(`${info.file.name} 上传成功！`);
-            } else if (info.file.status === 'error') {
-              console.log(`${info.file.name} 上传失败！`);
-            }
-          }}
+          // onChange={}
         />
         <p className="mt-2 text-gray-500">支持上传图片、PDF和Word文档，可以多选或拖拽上传</p>
         <p className="text-blue-500 mt-1">
@@ -49,4 +38,4 @@ export default (props: Props) => {
       </div>
     </Modal>
   );
-};
+}
