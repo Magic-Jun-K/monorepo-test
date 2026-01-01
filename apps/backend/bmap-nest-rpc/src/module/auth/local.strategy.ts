@@ -5,8 +5,8 @@ import { Request } from 'express';
 
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
-import { AppLoggerService } from '@/common/services/logger.service';
-import { AdminEntity } from '@/entities/admin.entity';
+import { AppLoggerService } from '../../common/services/logger.service';
+import { AdminEntity } from '../../entities/admin.entity';
 
 interface UserWithoutPassword extends Omit<AdminEntity, 'password'> {}
 

@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 
 import { UserService } from './user.service';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
-import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe';
-import { AuthGuard } from '@nestjs/passport';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { AppLoggerService } from '../../common/services/logger.service';
 
 @Controller('users')
 export class UserController {

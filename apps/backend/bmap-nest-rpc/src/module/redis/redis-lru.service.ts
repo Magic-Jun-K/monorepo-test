@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis';
-import { AppLoggerService } from '@/common/services/logger.service';
+
+import { AppLoggerService } from '../../common/services/logger.service';
 
 /**
  * Redis LRU缓存服务

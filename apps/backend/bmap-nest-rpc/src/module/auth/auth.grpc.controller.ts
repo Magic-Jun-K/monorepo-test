@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { AdminEntity } from '../../entities/admin.entity';
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService } from '../../common/services/logger.service';
 import {
   LoginRequest,
   LoginResponse,

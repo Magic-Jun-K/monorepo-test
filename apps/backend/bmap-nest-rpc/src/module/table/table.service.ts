@@ -19,4 +19,9 @@ export class TableService {
     const entity = this.tableRepo.create(data as Record<string, unknown>);
     return this.tableRepo.save(entity);
   }
+
+  async search(_dto: unknown) {
+    // 实现搜索逻辑
+    return { data: [], total: 0 };
+  }
 }

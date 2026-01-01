@@ -1,6 +1,7 @@
 import * as argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
-import { AppLoggerService } from '@/common/services/logger.service';
+
+import { AppLoggerService } from '../services/logger.service';
 
 @Injectable()
 export class AuthUtils {

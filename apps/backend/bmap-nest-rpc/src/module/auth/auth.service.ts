@@ -10,7 +10,7 @@ import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
 import { AuthUser } from './types/user.interface';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService } from '../../common/services/logger.service';
 
 @Injectable()
 export class AuthService {

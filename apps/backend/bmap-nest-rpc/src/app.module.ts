@@ -33,7 +33,6 @@ import database from './config/database';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      // useFactory: (config: ConfigService) => config.get('database'),
       useFactory: database,
       inject: [ConfigService],
     }),

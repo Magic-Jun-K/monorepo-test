@@ -2,7 +2,8 @@
  * @description 降级服务
  */
 import { Injectable } from '@nestjs/common';
-import { AppLoggerService } from '@/common/services/logger.service';
+
+import { AppLoggerService } from '../../common/services/logger.service';
 
 export interface FallbackConfig {
   timeout?: number; // 超时时间(毫秒)
@@ -87,9 +88,13 @@ export class FallbackService {
 
         if (fallbackFn) {
           try {
-            return await this.executeWithTimeout(fallbackFn, mergedConfig.fallbackTimeout!);
+            const result = await this.executeWithTimeout(fallbackFn, mergedConfig.fallbackTimeout!);
+            return result as T;
           } catch (fallbackError) {
-            this.logger.error(`Error type fallback function failed for ${errorType}`, (fallbackError as Error).stack);
+            this.logger.error(
+              `Error type fallback function failed for ${errorType}`,
+              (fallbackError as Error).stack,
+            );
           }
         }
       }
@@ -97,10 +102,11 @@ export class FallbackService {
       // 尝试使用通用降级函数
       if (mergedConfig.fallbackFunction) {
         try {
-          return await this.executeWithTimeout(
+          const result = await this.executeWithTimeout(
             mergedConfig.fallbackFunction,
             mergedConfig.fallbackTimeout!,
           );
+          return result as T;
         } catch (fallbackError) {
           this.logger.error('Fallback function failed', (fallbackError as Error).stack);
         }

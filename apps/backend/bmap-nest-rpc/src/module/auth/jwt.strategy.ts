@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { AdminEntity } from '../../entities/admin.entity';
 import { RedisService } from '../redis/redis.service';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService } from '../../common/services/logger.service';
 
 interface JwtPayload {
   sub: number;

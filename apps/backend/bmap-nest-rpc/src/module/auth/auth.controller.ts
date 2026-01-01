@@ -16,10 +16,10 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
-import { Public } from '@/common/decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
 import { AuthRequest } from './types/auth-request.interface';
-import { AppLoggerService } from '@/common/services/logger.service';
+import { AppLoggerService } from '../../common/services/logger.service';
 
 // 路由拦截
 @Controller('auth')
