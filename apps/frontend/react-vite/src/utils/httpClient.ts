@@ -5,14 +5,14 @@ import axios, {
   CreateAxiosDefaults
 } from 'axios';
 
-import { authStore } from '@/store/auth.store';
+import { useAuthStore } from '@/stores/zustand/auth.store';
 // import { reportError } from './monitor';
 
 interface CustomRequest extends AxiosInstance {
-  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
-  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
-  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
-  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+  post<T = unknown, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T>;
+  put<T = unknown, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T>;
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
 }
 
 // 配置axios实例
@@ -38,7 +38,7 @@ function processQueue(token: string) {
 
 // 请求拦截器
 request.interceptors.request.use(config => {
-  const accessToken = authStore.getAccessToken();
+  const accessToken = useAuthStore.getState().getAccessToken();
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
@@ -87,7 +87,7 @@ request.interceptors.response.use(
     // 刷新接口本身出错 - 直接跳转登录
     if (originalRequest.url?.includes('/auth/refresh')) {
       console.error('刷新Token失败，跳转登录页');
-      authStore.clear();
+      useAuthStore.getState().clear();
       // window.location.href = '/account/login';
       window.location.href = `/account/login?redirect=${window.location.pathname}`;
       return Promise.reject(error);
@@ -96,7 +96,7 @@ request.interceptors.response.use(
     // 超过最大重试次数 - 跳转登录
     if (originalRequest._retryCount >= MAX_RETRY_COUNT) {
       console.error(`超过最大重试次数(${MAX_RETRY_COUNT})，跳转登录页`);
-      authStore.clear();
+      useAuthStore.getState().clear();
       window.location.href = `/account/login?redirect=${window.location.pathname}`;
       return Promise.reject(error);
     }
@@ -122,12 +122,15 @@ request.interceptors.response.use(
 
     try {
       // 发送刷新Token请求
-      const refreshResponse = await request.post('/auth/refresh');
+      const refreshResponse = await request.post('/auth/refresh') as {
+        success: boolean;
+        data: string;
+      };
       const newAccessToken = refreshResponse.data;
 
       if (newAccessToken) {
         // 更新存储中的Token
-        authStore.setToken(newAccessToken);
+        useAuthStore.getState().setToken(newAccessToken);
 
         // 处理队列中的请求
         processQueue(newAccessToken);
@@ -146,7 +149,7 @@ request.interceptors.response.use(
       processQueue(''); // 传递空token表示刷新失败
 
       // 跳转登录页
-      authStore.clear();
+      useAuthStore.getState().clear();
       window.location.href = `/account/login?redirect=${window.location.pathname}`;
       return Promise.reject(refreshError);
     } finally {
