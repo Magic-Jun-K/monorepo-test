@@ -10,6 +10,41 @@ interface Column {
   id: string;
 }
 
+const generatePhone = () => {
+  const prefix = ['133', '138', '135', '136', '137', '139', '150', '151', '152', '158'];
+  return (
+    prefix[Math.floor(Math.random() * prefix.length)] +
+    Array(8)
+      .fill(0)
+      .map(() => Math.floor(Math.random() * 10))
+      .join('')
+  );
+};
+
+const generateRandomData = (): string[][] => {
+  const firstNames = ['张', '李', '王', '刘', '陈', '杨', '黄', '赵', '吴', '周'];
+  const lastNames = ['伟', '芳', '娜', '秀英', '敏', '静', '丽', '强', '磊', '洋'];
+  const cities = ['北京', '上海', '广州', '深圳', '杭州', '南京', '成都', '武汉', '西安', '重庆'];
+  const districts = ['东区', '西区', '南区', '北区', '中区', '新区', '高新区', '开发区'];
+
+  const result: string[][] = [];
+  for (let i = 0; i < 1000000; i++) {
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const district = districts[Math.floor(Math.random() * districts.length)];
+
+    const row = [
+      firstName! + lastName!,
+      String(Math.floor(Math.random() * 40 + 20)),
+      `${city!}市${district!}`,
+      generatePhone()
+    ];
+    result.push(row);
+  }
+  return result;
+};
+
 export default function TableTest() {
   // 定义表格列状态
   const [columns, setColumns] = useState<Column[]>([
@@ -21,40 +56,7 @@ export default function TableTest() {
   ]);
 
   // 生成随机数据并存储
-  const data = useMemo(() => {
-    const firstNames = ['张', '李', '王', '刘', '陈', '杨', '黄', '赵', '吴', '周'];
-    const lastNames = ['伟', '芳', '娜', '秀英', '敏', '静', '丽', '强', '磊', '洋'];
-    const cities = ['北京', '上海', '广州', '深圳', '杭州', '南京', '成都', '武汉', '西安', '重庆'];
-    const districts = ['东区', '西区', '南区', '北区', '中区', '新区', '高新区', '开发区'];
-
-    const generatePhone = () => {
-      const prefix = ['133', '138', '135', '136', '137', '139', '150', '151', '152', '158'];
-      return (
-        prefix[Math.floor(Math.random() * prefix.length)] +
-        Array(8)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 10))
-          .join('')
-      );
-    };
-
-    const result: string[][] = [];
-    for (let i = 0; i < 1000000; i++) {
-      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const city = cities[Math.floor(Math.random() * cities.length)];
-      const district = districts[Math.floor(Math.random() * districts.length)];
-
-      const row = [
-        firstName! + lastName!,
-        String(Math.floor(Math.random() * 40 + 20)),
-        `${city!}市${district!}`,
-        generatePhone()
-      ];
-      result.push(row);
-    }
-    return result;
-  }, []);
+  const data = useMemo(() => generateRandomData(), []);
 
   // 修改获取单元格内容的函数
   const getCellContent = useCallback(
@@ -89,7 +91,7 @@ export default function TableTest() {
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column: any, newSize: number, colIndex: number) => {
+  const handleColumnResize = useCallback((column: unknown, newSize: number, colIndex: number) => {
     console.log('测试列宽调整', column, newSize, colIndex);
     setColumns(prevColumns => {
       const newColumns = [...prevColumns] as Column[];
@@ -138,4 +140,4 @@ export default function TableTest() {
       />
     </div>
   );
-}
+};
