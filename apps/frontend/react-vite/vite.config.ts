@@ -2,10 +2,9 @@ import { defineConfig /* loadEnv */ } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
-import wasm from 'vite-plugin-wasm';
 import { resolve } from 'node:path';
 
-import assemblyscriptPlugin from './plugins/vite-plugin-assemblyscript';
+import vitePluginUnoCssAutoImport from './plugins/vite-plugin-unocss-auto-import';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,8 +15,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      wasm(),
-      assemblyscriptPlugin(),
+      vitePluginUnoCssAutoImport({
+        debug: true,
+      }),
       ViteImageOptimizer({
         jpg: { quality: 80 },
         png: { quality: 85 },
@@ -25,22 +25,22 @@ export default defineConfig(({ mode }) => {
         avif: { quality: 70 },
         cache: true,
         includePublic: true,
-        cacheLocation: resolve(process.cwd(), 'node_modules/.cache/vite-plugin-image-optimizer')
+        cacheLocation: resolve(process.cwd(), 'node_modules/.cache/vite-plugin-image-optimizer'),
       }),
       isProd &&
         visualizer({
           open: true,
-          filename: 'build/stats.html'
-        })
+          filename: 'build/stats.html',
+        }),
     ],
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src')
+        '@': resolve(__dirname, 'src'),
       },
-      extensions: ['.ts', '.tsx', '.js', '.json']
+      extensions: ['.ts', '.tsx', '.js', '.json'],
     },
     worker: {
-      format: 'es' // 明确指定 worker 格式
+      format: 'es', // 明确指定 worker 格式
     },
     build: {
       outDir: 'build',
@@ -61,29 +61,28 @@ export default defineConfig(({ mode }) => {
             }
             return 'assets/[name].[hash][extname]';
           },
-          manualChunks: id => {
+          manualChunks: (id) => {
             const patterns = [
               { name: 'react-core', test: /[\\/](react-dom|scheduler)[\\/]/ },
               { name: 'data-grid', test: /@glideapps[\\/]/ },
               { name: 'echarts', test: /echarts[\\/]/ },
               { name: 'axios', test: /axios[\\/]/ },
               { name: 'core-js', test: /core-js[\\/]/ },
-              { name: 'lodash', test: /lodash[\\/]/ }
             ];
             if (id.includes('node_modules')) {
-              const matched = patterns.find(p => p.test.test(id));
+              const matched = patterns.find((p) => p.test.test(id));
               return matched ? matched.name : 'vendor';
             }
-          }
+          },
         },
-        external: ['BMapGL']
+        external: ['BMapGL'],
       },
       terserOptions: {
         compress: {
           drop_console: true,
-          drop_debugger: true
-        }
-      }
+          drop_debugger: true,
+        },
+      },
     },
     server: {
       host: true, // 启用所有地址，包括本地IP和localhost
@@ -93,14 +92,14 @@ export default defineConfig(({ mode }) => {
         '/api/grpc': {
           target: 'http://localhost:7100',
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/api\/grpc/, '/grpc')
+          rewrite: (path) => path.replace(/^\/api\/grpc/, '/grpc'),
         },
         '/api': {
           target: 'http://localhost:7100',
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/api/, '')
-        }
-      }
-    }
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+    },
   };
 });
