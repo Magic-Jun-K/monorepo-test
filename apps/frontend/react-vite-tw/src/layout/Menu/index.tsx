@@ -1,86 +1,22 @@
-import { FC, PropsWithChildren } from 'react';
-import { Link } from 'react-router-dom';
-import { Dropdown, Menu } from '@eggshell/unocss-ui';
-import type { MenuItemType } from '@eggshell/unocss-ui';
+import { FC, memo, useMemo } from 'react';
 
-// import styles from './index.module.scss';
+import { Menu } from '@eggshell/antd-ui';
 
-interface LocalMenuItem {
-  path: string;
-  name: string;
-  children?: LocalMenuItem[];
-}
+import { useUserStore } from '@/stores/zustand/user.store';
+import { getMenuConfig, filterCustomProps } from './constant';
 
-interface MenuProps {
-  items: LocalMenuItem[];
-  className?: string;
-}
+const MainMenu: FC = () => {
+  const isAdmin = useUserStore((state) => state.isAdmin);
 
-const menuConfig: MenuItemType[] = [
-  {
-    type: 'item',
-    itemKey: 'dashboard',
-    label: '仪表盘'
-  },
-  {
-    type: 'submenu',
-    itemKey: 'settings',
-    label: '系统设置',
-    children: [
-      {
-        type: 'item',
-        itemKey: 'account',
-        label: '账户管理'
-      },
-      {
-        type: 'submenu',
-        itemKey: 'security',
-        label: '安全设置',
-        children: [
-          {
-            type: 'item',
-            itemKey: 'password',
-            label: '密码修改'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    type: 'group',
-    itemKey: 'help',
-    label: '帮助中心',
-    children: [
-      {
-        type: 'item',
-        itemKey: 'help-docs',
-        label: '文档中心'
-      }
-    ]
-  }
-];
+  const menuItems = useMemo(() => {
+    const filteredConfig = getMenuConfig(isAdmin);
+    return filterCustomProps(filteredConfig) || [];
+  }, [isAdmin]);
 
-const MainMenu: FC<PropsWithChildren<MenuProps>> = ({ items, className = '' }) => {
   return (
-    <nav className={`${className}`}>
-      {/* 导航菜单 */}
-      <ul className="flex list-none p-0 gap-5">
-        {items.map((item, index) => (
-          <li key={index} className="inline-block">
-            <Link
-              to={item.path}
-              className="text-[#fff] text-[1.25rem] no-underline hover:text-[rgb(255,105,0)] transition-colors"
-            >
-              {item.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {/* 下拉菜单组件 */}
-      <Dropdown overlay={<Menu items={menuConfig} />}>
-        <span className="text-[1.25rem]">测试下拉菜单</span>
-      </Dropdown>
+    <nav>
+      <Menu mode="horizontal" items={menuItems} style={{ border: 0 }} />
     </nav>
   );
 };
-export default MainMenu;
+export default memo(MainMenu);
