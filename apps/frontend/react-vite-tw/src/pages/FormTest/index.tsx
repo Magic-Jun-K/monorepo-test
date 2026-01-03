@@ -1,161 +1,135 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Button } from '@eggshell/unocss-ui';
-import { DataEditor, GridCell, GridCellKind } from '@glideapps/glide-data-grid';
-import '@glideapps/glide-data-grid/dist/index.css';
+import { useCallback, useEffect, useState } from 'react';
+import { SearchCom, TableCom } from '@eggshell/antd-ui';
+import { Button } from '@eggshell/tailwindcss-ui';
 
+import ContainerBody from '@/layout/ContainerBody';
 import ImageTestModal from './components/ImageTestModal';
 import FormTestModal from './components/FormTestModal';
 import EChartsTestModal from './components/EChartsTestModal';
-
-import styles from './index.module.scss';
-
-interface Column {
-  title: string;
-  width: number;
-  id: string;
-}
+import { COLUMNS, SEARCH_ITEMS, PerformanceDataType } from './constant';
 
 export default function FormTest() {
-  const [isOpenImage, setIsOpenImage] = useState(false); // 是否打开ECharts模态框
+  const [isOpenImage, setIsOpenImage] = useState(false); // 是否打开图片模态框
   const [isOpenECharts, setIsOpenECharts] = useState(false); // 是否打开ECharts模态框
   const [isOpenForm, setIsOpenForm] = useState(false); // 是否打开表单模态框
+  const [performanceList, setPerformanceList] = useState<PerformanceDataType[]>([]); // 性能指标数据
+  const [loading, setLoading] = useState(false); // 表格加载状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  }); // 分页信息
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]); // 选中的行key
 
-  // 定义表格列状态
-  const [columns, setColumns] = useState<Column[]>([
-    { title: '序号', width: 120, id: 'index' },
-    { title: '姓名', width: 150, id: 'name' },
-    { title: '年龄', width: 100, id: 'age' },
-    { title: '地址', width: 300, id: 'address' },
-    { title: '电话', width: 200, id: 'phone' }
-  ]);
+  // 获取性能指标列表
+  const fetchPerformanceList = useCallback(
+    async (/* params: any = {} */) => {
+      setLoading(true);
+      try {
+        // 模拟性能指标数据
+        const mockData: PerformanceDataType[] = Array.from({ length: 20 }, (_, index) => ({
+          id: index + 1,
+          project: `project-${index + 1}`,
+          url: `https://example.com/page${index + 1}`,
+          browser: ['Chrome', 'Firefox', 'Safari', 'Edge'][Math.floor(Math.random() * 4)] as string,
+          fcp: Math.floor(Math.random() * 1000) + 500,
+          lcp: Math.floor(Math.random() * 2000) + 1000,
+          cls: Math.random() * 0.1,
+          inp: Math.random() * 100, // 将FID替换为INP
+          status: [200, 404, 500][Math.floor(Math.random() * 3)] as number,
+          timestamp: new Date(
+            Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000),
+          ).toISOString(),
+        }));
 
-  // 生成随机数据并存储
-  const data = useMemo(() => {
-    const firstNames = ['张', '李', '王', '刘', '陈', '杨', '黄', '赵', '吴', '周'];
-    const lastNames = ['伟', '芳', '娜', '秀英', '敏', '静', '丽', '强', '磊', '洋'];
-    const cities = ['北京', '上海', '广州', '深圳', '杭州', '南京', '成都', '武汉', '西安', '重庆'];
-    const districts = ['东区', '西区', '南区', '北区', '中区', '新区', '高新区', '开发区'];
-
-    const generatePhone = () => {
-      const prefix = ['133', '138', '135', '136', '137', '139', '150', '151', '152', '158'];
-      return (
-        prefix[Math.floor(Math.random() * prefix.length)] +
-        Array(8)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 10))
-          .join('')
-      );
-    };
-
-    const result: string[][] = [];
-    for (let i = 0; i < 1000000; i++) {
-      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const city = cities[Math.floor(Math.random() * cities.length)];
-      const district = districts[Math.floor(Math.random() * districts.length)];
-
-      const row = [firstName! + lastName!, String(Math.floor(Math.random() * 40 + 20)), `${city!}市${district!}`, generatePhone()];
-      result.push(row);
-    }
-    return result;
-  }, []);
-
-  // 修改获取单元格内容的函数
-  const getCellContent = useCallback(
-    (cell: readonly [number, number]): GridCell => {
-      const [row, col] = cell;
-      // console.log("测试col, row",col, row, data[0], data[col]);
-
-      if (row === 0) {
-        const dataValue = (col + 1).toString() ?? '';
-        // 第一列显示序号
-        return {
-          kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: true,
-          displayData: dataValue,
-          data: dataValue
-        };
-      } else {
-        // 按照列索引直接从数据数组中获取数据
-        const dataValue = data[col]?.[row - 1] ?? '';
-        return {
-          kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: false,
-          displayData: dataValue,
-          data: dataValue,
-          allowWrapping: true
-        };
+        setPerformanceList(mockData);
+        setPagination((prev) => ({
+          ...prev,
+          total: 100, // 模拟总数据量
+        }));
+      } catch (error) {
+        console.error('获取性能指标列表失败:', error);
+      } finally {
+        setLoading(false);
       }
     },
-    [data]
+    [],
   );
 
-  // 处理列宽调整
-  const handleColumnResize = useCallback((column: any, newSize: number, colIndex: number) => {
-    console.log('测试column', column);
-    setColumns(prevColumns => {
-      const newColumns = [...prevColumns] as Column[];
-      newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize } as Column;
-      return newColumns;
-    });
+  useEffect(() => {
+    fetchPerformanceList();
+  }, [fetchPerformanceList]);
+
+  // 处理搜索事件
+  const handleSearch = useCallback(async (values: Record<string, unknown>) => {
+    console.log('搜索参数:', values);
+    // await fetchPerformanceList(values);
   }, []);
 
-  const [sortableCols, setSortableCols] = useState(columns);
-
-  const onColMoved = useCallback((startIndex: number, endIndex: number): void => {
-    setSortableCols(old => {
-      const newCols = [...old];
-      const removed = newCols.splice(startIndex, 1);
-      if (removed.length === 0) return old;
-      newCols.splice(endIndex, 0, removed[0] as Column);
-      return newCols;
-    });
+  // 处理重置事件
+  const handleReset = useCallback(() => {
+    // 重置数据源或重新加载数据
+    console.log('重置搜索');
+    // fetchPerformanceList();
   }, []);
+
+  // 表格分页变化处理
+  const handleTableChange = (pagination: {
+    current?: number;
+    pageSize?: number;
+    total?: number;
+  }) => {
+    setPagination((prev) => ({
+      ...prev,
+      ...pagination,
+    }));
+    // fetchPerformanceList({
+    //   page: pagination.current,
+    //   pageSize: pagination.pageSize
+    // });
+  };
+
+  // 表格行选择处理
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys: React.Key[]) => {
+      setSelectedRowKeys(selectedKeys);
+    },
+  };
 
   return (
-    <div className={styles.container}>
-      <div style={{ paddingBottom: '20px' }}>
-        <Button type="primary" onClick={() => setIsOpenImage(true)}>
+    <ContainerBody className="flex flex-col">
+      <SearchCom items={SEARCH_ITEMS} onSearch={handleSearch} onReset={handleReset} />
+      <div className="flex pb-5">
+        <Button type="primary" className="mr-3" onClick={() => setIsOpenImage(true)}>
           图片测试按钮
         </Button>
-        <Button type="primary" onClick={() => setIsOpenECharts(true)}>
+        <Button type="primary" className="mr-3" onClick={() => setIsOpenECharts(true)}>
           ECharts测试按钮
         </Button>
         <Button type="primary" onClick={() => setIsOpenForm(true)}>
           表单测试按钮
         </Button>
       </div>
-      <div style={{ height: '774px' }}>
-        <DataEditor
-          width="100%"
-          rows={data.length}
-          // columns={columns}
-          columns={sortableCols}
-          getCellContent={getCellContent}
-          headerHeight={42} // 表头高度
-          rowHeight={42} // 行高
-          rowMarkers="both" // 显示行号
-          freezeColumns={1} // 冻结第一列
-          theme={{
-            bgIconHeader: '#7D5DFF',
-            accentColor: '#7D5DFF',
-            accentLight: '#7D5DFF20',
-            fgIconHeader: '#FFF',
-            baseFontStyle: '24px',
-            headerFontStyle: '600 24px',
-            fontFamily: 'SmileySans-Oblique'
-          }}
-          fillHandle={false} // 不显示填充手柄
-          verticalBorder={true} // 显示垂直边框
-          onColumnResize={handleColumnResize} // 列宽调整
-          onColumnMoved={onColMoved} // 列移动
-        />
-      </div>
+      <TableCom
+        rowKey="id"
+        columns={COLUMNS}
+        dataSource={performanceList}
+        loading={loading}
+        pagination={{
+          ...pagination,
+          showTotal: (total) => `共 ${total} 条`,
+          style: { marginBottom: 0 },
+        }}
+        onChange={handleTableChange}
+        rowSelection={rowSelection}
+      />
+      {/* 图片测试模态框 */}
       <ImageTestModal visible={isOpenImage} onCancel={() => setIsOpenImage(false)} />
+      {/* 表单测试模态框 */}
       <FormTestModal visible={isOpenForm} onCancel={() => setIsOpenForm(false)} />
+      {/* ECharts测试模态框 */}
       <EChartsTestModal visible={isOpenECharts} onCancel={() => setIsOpenECharts(false)} />
-    </div>
+    </ContainerBody>
   );
-};
+}

@@ -1,13 +1,14 @@
-import { Modal } from '@eggshell/unocss-ui';
+import { Modal } from '@eggshell/antd-ui';
 
 import treeIcon from '@/assets/images/test/car_jf.svg';
+// import TreeIcon from '@/assets/images/test/car_jf.svg?react';
 import One from '@/assets/images/test/one.png';
 
 interface Props {
   visible: boolean;
   onCancel: () => void;
 }
-export default function ImageTestModal(props: Props) {
+export default (props: Props) => {
   const { visible, onCancel } = props;
 
   return (
@@ -19,7 +20,8 @@ export default function ImageTestModal(props: Props) {
       styles={{ body: { height: 600 } }}
     >
       <img src={treeIcon} alt="" />
+      {/* <TreeIcon /> */}
       <img src={One} alt="" />
     </Modal>
   );
-}
+};
