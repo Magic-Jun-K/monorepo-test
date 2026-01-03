@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 
-import { RootState } from '@/reduxStore/toast.store';
+import { RootState } from '@/stores/redux/toast.store';
 
 import styles from './index.module.scss';
 

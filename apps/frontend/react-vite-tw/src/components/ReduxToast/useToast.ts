@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 
 export interface ToastProps {
+  id: string;
   message: string;
   type: 'success' | 'error' | 'info';
   duration?: number;
@@ -8,7 +9,7 @@ export interface ToastProps {
 }
 
 interface ToastContextType {
-  addToast: (toast: ToastProps) => void;
+  addToast: (toast: Omit<ToastProps, 'id'>) => void;
 }
 
 export const ToastContext = createContext<ToastContextType>({

@@ -1,1 +1,1 @@
-export * as echarts from './echarts';
+export * as echarts from './ECharts';
