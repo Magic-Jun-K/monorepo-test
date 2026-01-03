@@ -1,24 +1,19 @@
 import { FC, useEffect, useRef } from 'react';
 
+import { BASE_URL } from '@/config';
 import { loadScript, loadCSS } from '@/utils/index';
+import type { MapInstance } from '@/types/baiduMap';
 import { generateRandomCoordinates } from './utils';
-// import wenhuaguji from '@/assets/images/test/wenhuaguji.png';
+
+// 图标资源URL
+const ICON_CLUSTER = `${BASE_URL}/images/iconCluster.png`;
+const ICON_IMAGE = `${BASE_URL}/images/image.png`;
 
 interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
-declare global {
-  interface Window {
-    BMapGL: any;
-    BMapLib: any;
-    onBMapCallback: any;
-    // BMAP_SATELLITE_MAP: any;
-    mapv: any;
-  }
-}
-
-let scriptPromise: Promise<any> | null = null;
+let scriptPromise: Promise<unknown> | null = null;
 const loadBMapScript = () => {
   const AK = 'VyYLcISnIl9Pkivq8WD8TmNMjzkP76mZ';
   // const BMap_URL = `//api.map.baidu.com/api?v=3.0&type=webgl&ak=${AK}&libraries=DrawingManager,Heatmap&callback=onBMapCallback`;
@@ -47,13 +42,20 @@ const loadBMapScript = () => {
             reject(new Error('BMapGL is not defined after script load'));
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error('百度地图加载失败', err);
         });
+      /* BMapLib */
+      // loadCSS('https://huiyan-fe.github.io/BMap-JavaScript-library/src/DrawingManager/DrawingManager.min.css');
+      // loadScript('https://huiyan-fe.github.io/BMap-JavaScript-library/src/DrawingManager/DrawingManager.min.js');
       /* BMapGLLib */
       setTimeout(() => {
-        loadCSS('https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.css');
-        loadScript('https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.js');
+        loadCSS(
+          'https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.css',
+        );
+        loadScript(
+          'https://mapopen.bj.bcebos.com/github/BMapGLLib/DrawingManager/src/DrawingManager.min.js',
+        );
       }, 3000);
     });
   }
@@ -63,56 +65,155 @@ const loadBMapScript = () => {
 const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
-  const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
-  const map = useRef<typeof window.BMapGL | null>(null);
-  const BMapLibRef = useRef<typeof window.BMapLib | null>(null);
+  const map = useRef<MapInstance | null>(null);
+  const mapViewRef = useRef<mapvgl.View | null>(null);
 
   useEffect(() => {
-    console.log('测试mapv', window.mapv);
+    console.log('测试mapvgl', window.mapvgl);
     const init = async () => {
       const BMapGL = await loadBMapScript();
       console.log('测试BMapGL', BMapGL);
       console.log('测试window.BMapGL999', window.BMapGL);
       // 检查百度地图API是否加载完成
       if (!window.BMapGL) return;
-      BMapGLRef.current = window.BMapGL;
-
-      // if (!window.BMapLib) return;
-      // console.log('测试BMapLib', window.BMapLib);
-      // BMapLibRef.current = window.BMapLib;
 
       // 初始化地图
-      map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
+      if (!mapRef.current) return;
+      map.current = new window.BMapGL.Map(mapRef.current as HTMLElement); // 1.创建地图实例
       console.log('测试map', map.current);
-      const centerPoint = new BMapGLRef.current.Point(center.lng, center.lat); // 2.设置中心点坐标
+      const centerPoint = new window.BMapGL.Point(center.lng, center.lat); // 2.设置中心点坐标
       map.current.centerAndZoom(centerPoint, zoom); // 3.设置中心点和缩放级别
       map.current.enableScrollWheelZoom(true); // 4.启用滚轮缩放
       // map.current.setMapType(window.BMAP_SATELLITE_MAP); // 设置地图类型为卫星模式
 
-      const scaleCtrl = new BMapGLRef.current.ScaleControl(); // 比例尺控件
+      const scaleCtrl = new window.BMapGL.ScaleControl(); // 比例尺控件
       map.current.addControl(scaleCtrl); // 5.添加比例尺控件
 
-      // const marker = new BMapGLRef.current.Marker({ lng: 113.32769, lat: 23.12522 }); // 创建标注
-      // map.current.addOverlay(marker); // 将标注添加到地图中
-      // marker.addEventListener('click', function () {
-      //   alert('点击了标注');
-      // });
+      // await loadScript('https://unpkg.com/mapvgl/dist/mapvgl.min.js');
+      await loadScript('https://unpkg.com/mapvgl@1.0.0-beta.191/dist/mapvgl.min.js');
+      mapViewRef.current = new window.mapvgl.View({
+        map: map.current,
+      })!;
 
-      const markers: any = [];
       // 生成随机落点
-      const randomPoints = generateRandomCoordinates(113.25167, 113.42317, 23.10791, 23.09372, 10000); // 生成100个随机坐标
+      const randomPoints = generateRandomCoordinates(
+        113.25167,
+        113.42317,
+        23.10791,
+        23.09372,
+        100000,
+      ); // 生成10000个随机坐标
+      // console.log('测试randomPoints', randomPoints);
 
-      randomPoints.forEach(({ lng, lat }) => {
-        const point = new BMapGLRef.current.Point(lng, lat);
-        const marker = new BMapGLRef.current.Marker(point);
-        markers.push(marker);
-        map.current.addOverlay(marker); // 将标记添加到地图上
+      // 构造数据
+      const data = randomPoints.map((item: { lng: number; lat: number }) => {
+        return {
+          geometry: {
+            type: 'Point',
+            coordinates: [item.lng, item.lat],
+          },
+          properties: {
+            icon: ICON_IMAGE,
+            width: 100 / 6,
+            height: 153 / 6,
+          },
+        };
       });
 
-      // 使用 Canvas Overlay 来渲染标注
-      // const canvasOverlay = new CanvasOverlay(randomPoints);
-      // map.current.addOverlay(canvasOverlay); // 添加Canvas图层
-      console.log('测试BMapLibRef.current', BMapLibRef.current);
+      // const clusterLayer = new window.mapvgl.ClusterLayer({
+      //   minSize: 30, // 聚合点显示的最小直径
+      //   maxSize: 50, // 聚合点显示的最大直径
+      //   clusterRadius: 150, // 聚合范围半径
+      //   gradient: { 0: 'blue', 0.5: 'green', 1.0: 'red' }, // 聚合点颜色梯度
+      //   maxZoom: 15, // 聚合的最大级别，当地图放大级别高于此值将不再聚合
+      //   minZoom: 5, // 聚合的最小级别，当地图放大级别低于此值将不再聚合
+      //   // 是否显示文字
+      //   showText: true,
+      //   // 开始聚合的最少点数，点数多于此值才会被聚合
+      //   minPoints: 5,
+      //   // 设置文字样式
+      //   textOptions: {
+      //     fontSize: 12,
+      //     color: 'white',
+      //     // 格式化数字显示
+      //     format: function (count: number) {
+      //       return count >= 10000 ? Math.round(count / 1000) + 'k' : count >= 1000 ? Math.round(count / 100) / 10 + 'k' : count;
+      //     }
+      //   },
+      //   // 设置非聚合的点的icon
+      //   // iconOptions: {
+      //   //   width: 100 / 4,
+      //   //   height: 153 / 4,
+      //   //   icon: 'images/marker.png',
+      //   // },
+      //   enablePicked: true,
+      //   onClick(e: any) {
+      //     if (e.dataItem) {
+      //       // 可通过dataItem下面的children属性拿到被聚合的所有点
+      //       console.log(e.dataItem);
+      //     }
+      //   }
+      // });
+
+      // mapViewRef.current.addLayer(clusterLayer);
+      // clusterLayer.setData(data);
+
+      const iconClusterLayer = new window.mapvgl.IconClusterLayer({
+        minSize: 25,
+        maxSize: 40,
+        clusterRadius: 200,
+        showText: true,
+        maxZoom: 19,
+        minZoom: 4,
+        textOptions: {
+          fontSize: 12,
+          color: '#fff',
+          // format: function (count: number) {
+          //   return count;
+          // },
+          // 格式化数字显示
+          format: function (count: number) {
+            return count >= 10000
+              ? Math.round(count / 1000) + 'k'
+              : count >= 1000
+                ? Math.round(count / 100) / 10 + 'k'
+                : count;
+          },
+          offset: [0, 0],
+        },
+        iconOptions: {
+          width: 100,
+          height: 100,
+        },
+        enablePicked: true,
+        iconExtent: {
+          0: ICON_CLUSTER,
+          // 1000: 'http://localhost:7000/iconCluster.png',
+          // 10000: 'http://localhost:7000/iconCluster.png',
+        },
+        onClick(e) {
+          if (e.dataItem) {
+            // 可通过dataItem下面的children属性拿到被聚合的所有点
+            console.log('测试iconClusterLayer click', e.dataItem);
+            const _point = e.dataItem.geometry.coordinates;
+            const _pointObj = new window.BMapGL.Point(_point[0], _point[1]);
+            if (map.current) {
+              map.current.panTo(_pointObj);
+            }
+          }
+        },
+        // data: [
+        //   {
+        //     geometry: {
+        //       type: 'Point',
+        //       coordinates: [116.403748, 39.915055]
+        //     }
+        //   }
+        // ]
+      });
+
+      mapViewRef.current.addLayer(iconClusterLayer);
+      iconClusterLayer.setData(data);
 
       // 在地图上创建一个聚合器实例
       // const markerClusterer = new BMapLibRef.current.MarkerClusterer(map.current, {});
@@ -126,7 +227,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
     return () => {
       map.current = null;
     };
-  }, []);
+  }, [center.lat, center.lng, zoom]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
 };

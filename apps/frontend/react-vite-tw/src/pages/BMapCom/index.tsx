@@ -4,9 +4,22 @@ interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
+interface BMapPoint {
+  lng: number;
+  lat: number;
+}
+
+interface BMapMap {
+  centerAndZoom(point: BMapPoint, zoom: number): void;
+  enableScrollWheelZoom(enabled: boolean): void;
+}
+
 declare global {
   interface Window {
-    BMap: any;
+    BMap: {
+      Map: new (element: HTMLElement) => BMapMap;
+      Point: new (lng: number, lat: number) => BMapPoint;
+    };
   }
 }
 
@@ -14,19 +27,18 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
   // console.log('测试mapParams', mapParams);
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
-  const BMapRef = useRef<typeof window.BMap | null>(null);
-  const map = useRef<typeof window.BMap | null>(null);
+  const map = useRef<BMapMap | null>(null);
 
   useEffect(() => {
     console.log('测试BMap', window.BMap);
     // 检查百度地图API是否加载完成
     if (!window.BMap) return;
-    BMapRef.current = window.BMap;
 
     // 初始化地图
-    map.current = new BMapRef.current.Map(mapRef.current);
+    if (!mapRef.current) return;
+    map.current = new window.BMap.Map(mapRef.current as HTMLElement);
     console.log('测试map', map.current);
-    const centerPoint = new BMapRef.current.Point(center.lng, center.lat);
+    const centerPoint = new window.BMap.Point(center.lng, center.lat);
     map.current.centerAndZoom(centerPoint, zoom); // 设置缩放级别
     map.current.enableScrollWheelZoom(true); // 启用滚轮缩放
 
@@ -34,7 +46,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
     return () => {
       map.current = null;
     };
-  }, [mapParams]);
+  }, [center.lat, center.lng, zoom]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
 };
