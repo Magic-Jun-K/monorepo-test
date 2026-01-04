@@ -15,21 +15,24 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml* ./
 COPY tsconfig* ./
-COPY packages/unocss-ui/ ./packages/unocss-ui/
+COPY packages/tailwindcss-ui/ ./packages/tailwindcss-ui/
 COPY packages/antd-ui/ ./packages/antd-ui/
+COPY packages/core-business-components/ ./packages/core-business-components/
 COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     # pnpm install --frozen-lockfile \
     pnpm install \
-    --filter="@eggshell/unocss-ui..." \
+    --filter="@eggshell/tailwindcss-ui..." \
     --filter="@eggshell/antd-ui..." \
+    --filter="@eggshell/core-business-components"\
     --filter="@frontend/react-webpack..."
 
 # 阶段3：构建应用
 FROM deps AS fe-build
-RUN pnpm --filter @eggshell/unocss-ui build
+RUN pnpm --filter @eggshell/tailwindcss-ui build
 RUN pnpm --filter @eggshell/antd-ui build
+RUN pnpm --filter @eggshell/core-business-components build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack
 RUN pnpm build --stats=detailed
