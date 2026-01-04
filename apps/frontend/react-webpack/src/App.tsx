@@ -1,37 +1,39 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
-// import { init, browserTracingIntegration } from '@sentry/react';
+import { captureMessage } from '@sentry/react';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+import { initWebVitals, initPerformanceChecker, measurePageLoad, measureResourceLoad } from '@/utils/performance';
 import { router } from './router/index';
-// import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
-// import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
 import { setupErrorHandlers } from './utils/errorHandler';
 
 import '@/styles/index.scss';
 import '@/styles/font.scss';
-// import '@eggshell/unocss-ui/lib/es/index.css'; // 直接引入样式
+// import '@eggshell/unocss-ui/lib/index.css'; // 直接引入样式
 import '@eggshell/antd-ui/es/index.css';
+import '@eggshell/tailwindcss-ui/lib/index.css';
 
 setupErrorHandlers(); // 设置错误处理器
 
 const App: FC = () => {
-  // useEffect(() => {
-  //   init({
-  //     dsn: 'https://89f7621f48c7fa98c40d0027ef411518@o4508624159244288.ingest.de.sentry.io/4508624202104912',
-  //     // integrations集成
-  //     integrations: [browserTracingIntegration()], // browserTracingIntegration是Sentry的一个跟踪集成，它会捕获浏览器的资源加载时间，Ajax请求，用户行为等信息，从而帮助开发者更好地理解应用的性能状况和用户行为模式。
-  //     tracesSampleRate: 1.0 // 设置跟踪采样率
-  //   });
-
-  //   // if (process.env.NODE_ENV === 'production') {
-  //   // initWebVitals();
-  //   // initPerformanceChecker();
-  //   // }
-  // }, []);
-
-  // 检查token是否过期
-  // useTokenExpirationCheck();
+  useEffect(() => {
+    // 初始化 Web Vitals 监控
+    initWebVitals();
+    initPerformanceChecker();
+    
+    // 测量页面加载性能
+    measurePageLoad();
+    measureResourceLoad();
+    
+    // 测试 Sentry 是否正常工作
+    captureMessage('Sentry 集成测试');
+    
+    // 测试错误捕获
+    // setTimeout(() => {
+    //   captureException(new Error('测试错误捕获'));
+    // }, 5000);
+  }, []);
 
   return (
     <ErrorBoundary>

@@ -1,9 +1,16 @@
 // 性能监控模块示例
 import { Metric, onCLS, onFCP, onINP, onLCP } from 'web-vitals';
-import { startInactiveSpan } from '@sentry/react';
+import { startInactiveSpan, setTag } from '@sentry/react';
+
+// 声明 process 类型以避免 TypeScript 错误
+declare const process: {
+  env: {
+    NODE_ENV?: 'development' | 'production' | 'test';
+  };
+};
 
 // 采样率配置（生产环境10%）
-const SAMPLING_RATE = process.env.NODE_ENV === 'production' ? 0.1 : 1;
+const SAMPLING_RATE = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production' ? 0.1 : 1;
 
 // 采样率判断
 const shouldSample = () => Math.random() < SAMPLING_RATE;
@@ -43,6 +50,9 @@ const sendToAnalytics = (metric: Metric) => {
 
   // 结束span
   span?.end();
+  
+  // 在Sentry中添加标签
+  setTag(`web-vital-${metric.name}`, metric.rating);
 };
 
 // 2. 核心指标监控
@@ -69,6 +79,8 @@ const checkPerformance = (metric: Metric) => {
   const threshold = PERFORMANCE_THRESHOLDS[metric.name];
   if (threshold && metric.value > threshold) {
     console.warn(`[性能告警] ${metric.name}: ${metric.value} (阈值: ${threshold})`);
+    // 在Sentry中设置性能问题标签
+    setTag('perf-issue', `${metric.name}-slow`);
     // 实际项目中这里调用告警服务
   }
 };
@@ -79,4 +91,52 @@ export const initPerformanceChecker = () => {
   [onFCP, onLCP, onCLS, onINP].forEach(metric => {
     metric(checkPerformance);
   });
+};
+
+// 5. 自定义性能监控 - 页面加载时间
+export const measurePageLoad = () => {
+  if ('performance' in window) {
+    const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (perfData) {
+      const span = startInactiveSpan({
+        name: 'Page Load',
+        op: 'pageload'
+      });
+      
+      span?.setAttributes({
+        'measurement.ttfb': perfData.responseStart - perfData.requestStart,
+        'measurement.domContentLoaded': perfData.domContentLoadedEventEnd - perfData.fetchStart,
+        'measurement.windowLoad': perfData.loadEventEnd - perfData.fetchStart,
+        'measurement.resourceCount': performance.getEntriesByType('resource').length
+      });
+      
+      span?.end();
+    }
+  }
+};
+
+// 6. 自定义性能监控 - 资源加载时间
+export const measureResourceLoad = () => {
+  if ('performance' in window) {
+    const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+    resources.forEach(resource => {
+      // 只监控重要的资源类型
+      if (resource.initiatorType === 'script' || resource.initiatorType === 'link' || resource.initiatorType === 'img') {
+        const span = startInactiveSpan({
+          name: `Resource Load: ${resource.name}`,
+          op: `resource.${resource.initiatorType}`
+        });
+        
+        span?.setAttributes({
+          'resource.name': resource.name,
+          'resource.type': resource.initiatorType,
+          'measurement.duration': resource.duration,
+          'measurement.transferSize': resource.transferSize,
+          'measurement.encodedBodySize': resource.encodedBodySize
+        });
+        
+        span?.end();
+      }
+    });
+  }
 };
