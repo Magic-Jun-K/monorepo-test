@@ -2,13 +2,17 @@ import { memo, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Controller, FieldError } from 'react-hook-form';
 
-import { useToast } from '@/components/Toast';
 import LoginTabs from './components/LoginTabs';
 import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
-import { encrypt } from '@/utils/rsaEncrypt';
+
+import { useToast, ToastProvider } from '@/components/Toast';
+import { BASE_URL } from '@/config';
 import { emailLogin, login, register, sendCode } from '@/services';
+import { useAuthStore } from '@/stores/zustand/auth.store';
+import { encrypt } from '@/utils/rsaEncrypt';
+import { useLoginForm } from './hooks/useLoginForm';
 import {
   AuthType,
   LoginType,
@@ -19,10 +23,6 @@ import {
   isAccountOrRegister,
   AuthResponse,
 } from './types';
-import { useAuthStore } from '@/stores/zustand/auth.store';
-import { ToastProvider } from '@/components/Toast';
-import { BASE_URL } from '@/config';
-import { useLoginForm } from './hooks/useLoginForm';
 
 import styles from './index.module.scss';
 
@@ -187,7 +187,7 @@ const LoginContent = () => {
       className="flex justify-end items-center min-h-screen pr-[18vw] bg-cover bg-no-repeat"
       style={{ backgroundImage: `url(${backgroundImageUrl})` }}
     >
-      <div className='w-120 min-h-87 p-8 bg-white rounded-xl shadow-[0_4px_20px_rgba(94,91,91,0.1)]'>
+      <div className="w-120 min-h-87 p-8 bg-white rounded-xl shadow-[0_4px_20px_rgba(94,91,91,0.1)]">
         {/* {authType === 'login' && <LoginTabs loginType={loginType} setLoginType={setLoginType} />} */}
         <LoginTabs authType={authType} loginType={loginType} setLoginType={setLoginType} />
 
@@ -197,7 +197,7 @@ const LoginContent = () => {
             {loginType === 'account' ? (
               <form
                 key={`${authType}-${loginType}`} // 强制重新挂载
-                className='flex flex-col gap-4'
+                className="flex flex-col gap-4"
                 onSubmit={handleSubmit(onSubmit)}
               >
                 <FormInput
@@ -230,7 +230,7 @@ const LoginContent = () => {
               </form>
             ) : (
               /* 邮箱登录 */
-              <form className='flex flex-col gap-4' onSubmit={handleSubmit(onSubmit)}>
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
                 <FormInput
                   control={control}
                   name="email"
@@ -286,7 +286,7 @@ const LoginContent = () => {
           </>
         ) : (
           /* 账号注册 */
-          <form className='flex flex-col gap-4' onSubmit={handleSubmit(onSubmit)}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
             <FormInput
               control={control}
               name="username"

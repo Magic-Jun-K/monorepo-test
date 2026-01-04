@@ -1,6 +1,5 @@
-.loginContainer {
+/* .loginContainer {
   display: flex;
-  // justify-content: center;
   justify-content: flex-end;
   align-items: center;
   min-height: 100vh;
@@ -10,17 +9,20 @@
 
 .loginBox {
   width: 480px;
-  // min-height: 386px;
   min-height: 348px;
   padding: 2rem;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(94, 91, 91, 0.1);
-}
+} */
 
-.tabs {
+/* .tabs {
   display: flex;
   padding-bottom: 1.5rem;
+
+  button {
+    cursor: pointer;
+  }
 }
 
 .tab {
@@ -31,9 +33,6 @@
   font-size: 1.5rem;
   font-weight: 700;
 
-  span {
-    cursor: pointer;
-  }
   &:hover {
     color: rgb(51, 139, 255);
   }
@@ -41,13 +40,13 @@
   &.active {
     color: rgb(26, 122, 248);
   }
-}
+} */
 
-.form {
+/* .form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
+} */
 
 .formGroup {
   display: flex;
@@ -87,14 +86,14 @@
   }
 }
 
-.forgot {
+/* .forgot {
   color: #3b82f6;
   text-decoration: none;
 
   &:hover {
     text-decoration: underline;
   }
-}
+} */
 
 .submitButton {
   height: 3rem !important;
