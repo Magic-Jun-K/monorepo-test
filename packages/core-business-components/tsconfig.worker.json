@@ -1,9 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "include": ["src/**/*.worker.ts"],
-  "exclude": ["node_modules", "dist"],
+  "exclude": ["node_modules", "lib"],
   "compilerOptions": {
-    "outDir": "src/components/MapCom/worker",
+    // "outDir": "src/components/MapCom/worker",
+    "outDir": "lib/worker",
     "declaration": false,
     "module": "ESNext",
     "lib": ["ESNext", "WebWorker"], // 关键：只包含 WebWorker 类型
