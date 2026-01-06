@@ -1,9 +1,10 @@
-import { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef, useCallback } from 'react';
 
 import { loadScript } from '@/utils/loadScript';
 import { loadBMapScript, loadBMapGLLib } from './utils/bmap';
-import { MapProps, WorkerPoint, ClusterClickEvent } from './types';
-import mapWorkerCode from './worker/map.worker.js?raw';
+import { MapProps, WorkerPoint, MapVGLPoint, ClusterClickEvent } from './types';
+// import mapWorkerCode from './worker/map.worker.js?raw';
+import mapWorkerCode from '../../../lib/worker/map.worker.js?raw';
 
 // 配置常量
 const MAP_CONFIG = {
@@ -24,16 +25,45 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
   > | null>(null);
   const workerRef = useRef<Worker | null>(null);
   // 在组件中添加状态跟踪已加载的数据
-  const allMapData = useRef<any[]>([]);
+  const allMapData = useRef<MapVGLPoint[]>([]);
   // 添加状态跟踪渲染定时器
   const renderTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // 添加主线程数据生成函数作为降级方案
+  const generateDataInMainThread = useCallback(() => {
+    const points = [];
+    const {
+      count,
+      bounds: [minLng, maxLng, minLat, maxLat]
+    } = {
+      count: MAP_CONFIG.POINT_COUNT,
+      bounds: MAP_CONFIG.DATA_BOUNDS
+    };
+
+    for (let i = 0; i < count; i++) {
+      points.push({
+        lng: minLng + Math.random() * (maxLng - minLng),
+        lat: minLat + Math.random() * (maxLat - minLat)
+      });
+    }
+
+    iconClusterLayerInstance.current?.setData(
+      points.map(p => ({
+        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+        properties: { icon: iconImageUrl, width: 100 / 6, height: 153 / 6 }
+      }))
+    );
+  }, [iconImageUrl]);
 
   // 初始化 Web Worker
   useEffect(() => {
     try {
-      // 使用更简单的Worker创建方式
+      // 使用 Blob 方式创建 Worker（最可靠）
       const blob = new Blob([mapWorkerCode], { type: 'application/javascript' });
       workerRef.current = new Worker(URL.createObjectURL(blob));
+
+      // 使用 Vite 导入的 worker
+      // workerRef.current = new MapWorker();
 
       // 传递 wasm 路径给 worker
       // 使用完整的URL路径
@@ -41,7 +71,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       workerRef.current.postMessage({ type: 'initWasm', wasmUrl });
 
       // 修改Worker消息处理
-      workerRef.current.onmessage = e => {
+      workerRef.current.addEventListener('message', e => {
         if (e.data.type === 'pointsComplete') {
           // 原有的处理逻辑
           iconClusterLayerInstance.current?.setData(
@@ -56,12 +86,12 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
           const pointsArray = new Float64Array(buffer);
 
           // 构建当前批次的地图数据
-          const batchData = [];
+          const batchData: MapVGLPoint[] = [];
           for (let i = 0; i < count; i++) {
-            const lng = pointsArray[i * 2];
-            const lat = pointsArray[i * 2 + 1];
+            const lng = pointsArray[i * 2]!;
+            const lat = pointsArray[i * 2 + 1]!;
             batchData.push({
-              geometry: { type: 'Point', coordinates: [lng, lat] },
+              geometry: { type: 'Point' as const, coordinates: [lng, lat] },
               properties: { icon: iconImageUrl, width: 100 / 6, height: 153 / 6 }
             });
           }
@@ -108,7 +138,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
             );
           }
         }
-      };
+      });
     } catch (error) {
       console.error('Worker初始化失败:', error);
       // 降级处理：不使用Worker，直接在主线程生成数据
@@ -121,33 +151,7 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
       }
       workerRef.current?.terminate();
     };
-  }, []);
-
-  // 添加主线程数据生成函数作为降级方案
-  const generateDataInMainThread = () => {
-    const points = [];
-    const {
-      count,
-      bounds: [minLng, maxLng, minLat, maxLat]
-    } = {
-      count: MAP_CONFIG.POINT_COUNT,
-      bounds: MAP_CONFIG.DATA_BOUNDS
-    };
-
-    for (let i = 0; i < count; i++) {
-      points.push({
-        lng: minLng + Math.random() * (maxLng - minLng),
-        lat: minLat + Math.random() * (maxLat - minLat)
-      });
-    }
-
-    iconClusterLayerInstance.current?.setData(
-      points.map(p => ({
-        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-        properties: { icon: iconImageUrl, width: 100 / 6, height: 153 / 6 }
-      }))
-    );
-  };
+  }, [generateDataInMainThread, iconImageUrl]);
 
   // 初始化地图
   useEffect(() => {
@@ -174,11 +178,11 @@ export const MapCom: FC<MapProps> = ({ mapParams, iconClusterUrl, iconImageUrl }
         // 初始化地图实例
         mapInstance.current = new window.BMapGL.Map(mapRef.current, {
           maxBounds: new window.BMapGL.Bounds(
-            new window.BMapGL.Point(113.2, 23.0),
+            new window.BMapGL.Point(113.2, 23),
             new window.BMapGL.Point(113.5, 23.2)
           ),
           enableAutoResize: true
-        }); // 创建地图实例
+        }) as MapInstance; // 创建地图实例
         mapInstance.current.centerAndZoom(new window.BMapGL.Point(center.lng, center.lat), zoom); // 设置中心点和缩放级别
         mapInstance.current.enableScrollWheelZoom(true); // 启用滚轮缩放
         mapInstance.current.addControl(new window.BMapGL.ScaleControl()); // 添加比例尺控件
