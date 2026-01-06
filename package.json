@@ -1,23 +1,116 @@
 {
-  "name": "canvaskit-react-test",
-  "version": "0.0.1",
+  "name": "monorepo-test",
+  "version": "0.0.0",
+  "description": "monorepo-test",
+  "keywords": [],
+  "author": "Magic-Jun-K",
+  "license": "ISC",
   "main": "index.js",
   "scripts": {
     "dev": "turbo dev",
     "dev:react-webpack": "turbo dev:react-webpack",
     "dev:react-webpack2": "pnpm --filter @frontend/react-webpack dev",
-    "build": "turbo build:react-webpack",
-    "docker:start": "docker compose -f .devcontainer/docker-compose.yml up -d",
-    "docker:stop": "docker compose -f .devcontainer/docker-compose.yml down",
-    "docker:deploy": "docker compose -f .devcontainer/docker-compose.deploy.yml up -d",
+    "build": "turbo build",
+    "build:react-webpack": "turbo build:react-webpack",
+    "test": "turbo test",
+    "test:watch": "turbo test:watch",
+    "test:coverage": "turbo test:coverage",
+    "test:unit": "turbo test:unit",
+    "test:e2e": "turbo test:e2e",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest",
+    "test:frontend:coverage": "vitest run --coverage",
+    "test:backend": "jest --projects apps/backend",
+    "test:backend:watch": "jest --projects apps/backend --watch",
+    "test:backend:coverage": "jest --projects apps/backend --coverage",
+    "test:packages": "vitest run packages",
+    "test:react-vite": "pnpm --filter @frontend/react-vite test",
+    "test:react-webpack": "pnpm --filter @frontend/react-webpack test",
+    "test:bmap-nest": "pnpm --filter @backend/bmap-nest test",
+    "test:ui": "pnpm --filter @eggshell/ui test",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean && rimraf node_modules/.cache",
+    "docker:start": "docker compose -f .devcontainer/react-webpack_nest/docker-compose.yml up -d",
+    "docker:stop": "docker compose -f .devcontainer/react-webpack_nest/docker-compose.yml down",
+    "docker:deploy": "docker compose -f .devcontainer/react-webpack_nest/docker-compose.deploy.yml up -d",
     "docker:build-deploy": "pnpm build && pnpm docker:deploy",
-    "docker:deploy:stop": "docker compose -f .devcontainer/docker-compose.deploy.yml down",
-    "lint:es": "eslint packages/**/*.ts",
-    "lint:style": "stylelint \"(packages|apps)/**/*.css\"",
-    "lint": "pnpm lint:es && pnpm lint:style",
+    "docker:deploy:stop": "docker compose -f .devcontainer/react-webpack_nest/docker-compose.deploy.yml down",
+    "lint": "turbo lint",
+    "lint:es": "eslint packages/**/*.ts apps/**/*.ts",
+    "lint:fix": "turbo lint:ox -- --fix && turbo lint:style -- --fix",
+    "lint:ox": "turbo lint:ox",
+    "lint:ox:fix": "turbo lint:ox -- --fix",
+    "lint:style": "turbo lint:style",
     "spellcheck": "cspell lint --dot --gitignore --color --cache --show-suggestions \"(packages|apps)/**/*.@(html|js|cjs|mjs|ts|tsx|css|scss|md)\"",
+    "changeset": "changeset",
+    "changeset:add": "changeset add",
+    "changeset:status": "changeset status",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "release:dry": "pnpm build && changeset publish --dry-run",
+    "release:private": "pnpm build && changeset publish --registry https://npm.pkg.github.com",
+    "release:npm": "pnpm build && changeset publish --registry https://registry.npmjs.org",
+    "setup:github-packages": "echo '@eggshell:registry=https://npm.pkg.github.com' > .npmrc && echo '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' >> .npmrc",
     "prepare": "husky",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "format:check": "turbo format",
+    "format": "prettier --check \"apps/**/*.{js,ts,jsx,tsx,css,scss,md,json}\" \"packages/**/*.{js,ts,jsx,tsx,css,scss,md,json}\" \"*.{js,ts,jsx,tsx,css,scss,md,json}\" .prettierrc* prettier.config.*"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8",
+    "@commitlint/config-conventional": "^20.3.0",
+    "@eslint/js": "^9",
+    "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25",
+    "@vitest/coverage-v8": "^4.0.16",
+    "commitizen": "^4.3.1",
+    "commitlint": "^20.3.0",
+    "cspell": "^9.4.0",
+    "cz-git": "^1.12.0",
+    "eslint": "^9",
+    "fast-glob": "3.3.3",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "jest-transform-stub": "^2.0.0",
+    "jsdom": "^27.4.0",
+    "lint-staged": "^16.2.7",
+    "oxlint": "^1.38.0",
+    "prettier": "^3.7.4",
+    "rimraf": "^6.1.2",
+    "stylelint": "^16.26.1",
+    "turbo": "^2.7.3",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "vitest": "^4.0.16"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.15.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@nestjs/core",
+        "react",
+        "react-dom"
+      ],
+      "allowedVersions": {
+        "react": "17 || 18 || 19",
+        "react-dom": "17 || 18 || 19"
+      }
+    },
+    "overrides": {
+      "typescript": "5.9.2"
+    },
+    "ignoredBuiltDependencies": [
+      "@nestjs/core"
+    ]
   },
   "config": {
     "commitizen": {
@@ -26,31 +119,10 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix"
+      "oxlint --fix"
     ],
     "*.css": [
       "stylelint --fix"
     ]
-  },
-  "devDependencies": {
-    "eslint": "9.33.0",
-    "@eslint/js": "9.33.0",
-    "typescript": "5.9.2",
-    "typescript-eslint": "8.39.1",
-    "cspell": "9.2.0",
-    "stylelint": "16.23.1",
-    "husky": "9.1.7",
-    "commitlint": "19.8.1",
-    "cz-git": "1.12.0",
-    "commitizen": "4.3.1",
-    "@commitlint/config-conventional": "19.8.1",
-    "lint-staged": "16.1.5",
-    "turbo": "2.5.5",
-    "fast-glob": "3.3.3"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "packageManager": "pnpm@10.14.0"
+  }
 }
