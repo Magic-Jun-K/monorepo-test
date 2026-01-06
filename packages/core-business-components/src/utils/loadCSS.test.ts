@@ -65,7 +65,7 @@ describe('loadCSS', () => {
     
     // Mock appendChild
     vi.spyOn(document.head, 'appendChild').mockImplementation((element) => {
-      return element as any;
+      return element as unknown as Node;
     });
     
     // 调用loadCSS

@@ -1,5 +1,3 @@
-/// <reference path="./types.d.ts" />
-
 // 生成随机坐标点的函数 - 最简化版本
 export function generateRandomPoints(
   count: i32,
@@ -14,7 +12,7 @@ export function generateRandomPoints(
   for (let i = 0; i < count; i++) {
     // 使用简单的确定性算法生成坐标
     const lng = minLng + (f64(i) / f64(count)) * (maxLng - minLng);
-    const lat = minLat + (f64(i % 100) / 100.0) * (maxLat - minLat);
+    const lat = minLat + (f64(i % 100) / 100) * (maxLat - minLat);
 
     // 存储到结果数组
     result[i * 2] = lng;

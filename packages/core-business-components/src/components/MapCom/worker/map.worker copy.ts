@@ -6,7 +6,15 @@ type WorkerMessage =
 
 // 导入WebAssembly模块
 // 注意：这里使用相对路径，Worker的基础路径是项目根目录
-let wasmModule: any = null;
+type WasmExports = {
+  generateRandomPoints?: (count: number, minLng: number, maxLng: number, minLat: number, maxLat: number) => number | Float64Array;
+  generatePoints?: (count: number, minLng: number, maxLng: number, minLat: number, maxLat: number) => number | Float64Array;
+  __getFloat64Array?: (ptr: number) => Float64Array;
+  __getArray?: (ptr: number) => Float64Array;
+  memory?: WebAssembly.Memory;
+};
+
+let wasmModule: WasmExports | null = null;
 
 // 加载WebAssembly模块
 async function loadWasm() {
@@ -102,6 +110,12 @@ const generateRandomCoordinatesWasm = (minLng: number, maxLng: number, minLat: n
     const safeMinLat = Number.isFinite(minLat) ? minLat : 0;
     const safeMaxLat = Number.isFinite(maxLat) ? maxLat : 90;
 
+    // 检查函数是否可用
+    if (!generatePointsFunc) {
+      console.error('WASM生成函数不可用');
+      return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
+    }
+
     // 获取内存指针
     const ptrOrArray = generatePointsFunc(safeCount, safeMinLng, safeMaxLng, safeMinLat, safeMaxLat);
     console.log('WASM返回值:', ptrOrArray);
@@ -122,7 +136,7 @@ const generateRandomCoordinatesWasm = (minLng: number, maxLng: number, minLat: n
           pointsArray = wasmModule.__getArray(ptrOrArray);
         } else {
           // 手动从内存中读取Float64Array
-          const memory = wasmModule.memory.buffer;
+          const memory = wasmModule.memory!.buffer;
           // 添加边界检查
           if (ptrOrArray < 0 || ptrOrArray >= memory.byteLength) {
             throw new Error(`内存指针超出范围: ${ptrOrArray}, 内存大小: ${memory.byteLength}`);
@@ -154,7 +168,7 @@ const generateRandomCoordinatesWasm = (minLng: number, maxLng: number, minLat: n
       const lat = pointsArray[i * 2 + 1];
 
       // 检查坐标值是否有效
-      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+      if (typeof lng !== 'number' || typeof lat !== 'number' || Number.isNaN(lng) || Number.isNaN(lat)) {
         console.warn(`无效的坐标点 [${i}]: (${lng}, ${lat})`);
         // 使用有效的随机值替代
         points.push({
@@ -184,14 +198,15 @@ const generateRandomCoordinatesWasm = (minLng: number, maxLng: number, minLat: n
 let currentViewport: [number, number, number, number] | null = null;
 
 // 在onmessage中处理视口更新
-self.onmessage = (e: MessageEvent<WorkerMessage>) => {
-  if (e.data.type === 'generatePoints') {
+self.addEventListener('message', (e: MessageEvent) => {
+  const data = e.data as WorkerMessage;
+  if (data.type === 'generatePoints') {
     // 现有的处理逻辑...
     const {
       count,
       bounds: [minLng, maxLng, minLat, maxLat],
       batchSize = 100000 // 默认批次大小
-    } = e.data;
+    } = data;
 
     // 计算需要的批次数
     const batchCount = Math.ceil(count / batchSize);
@@ -241,16 +256,16 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
     })();
   }
 
-  if (e.data.type === 'updateViewport') {
-    currentViewport = e.data.viewport;
+  if (data.type === 'updateViewport') {
+    currentViewport = data.viewport;
     // 视口更新时不需要重新生成数据，只是记录当前视口
     // 下一批数据生成时会优先考虑这个视口
   }
 
-  if (e.data.type === 'destroy') {
+  if (data.type === 'destroy') {
     self.close();
   }
-};
+});
 
 // 修改点生成函数，优先生成视口内的点
 const generatePointsWithViewportPriority = (

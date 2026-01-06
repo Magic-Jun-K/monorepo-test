@@ -17,18 +17,7 @@ const isBrowser = typeof window !== 'undefined';
 export async function getWasmUrl(fileName: string): Promise<string> {
   // 在浏览器环境中
   if (isBrowser) {
-    // 首先尝试从 core-business-components 包中加载
-    try {
-      // 尝试通过模块系统导入
-      const module = await import(`@eggshell/core-business-components/wasm/${fileName}`);
-      if (module.default) {
-        return module.default;
-      }
-    } catch (e) {
-      console.warn(`通过模块系统加载 ${fileName} 失败:`, e);
-    }
-
-    // 如果模块导入失败，尝试直接从 public 目录加载
+    // 直接从 public 目录加载，避免Webpack解析问题
     const pathsToTry = [
       `/wasm/${fileName}`, // 默认路径
       `/core-business-components/wasm/${fileName}`, // 包路径

@@ -9,8 +9,8 @@ export const loadCSS = (href: string): Promise<void> => {
     const link = document.createElement('link');
     link.href = href;
     link.rel = 'stylesheet';
-    link.onload = () => resolve();
-    link.onerror = (err) => reject(err);
+    link.addEventListener('load', () => resolve());
+    link.addEventListener('error', (err) => reject(err));
     document.head.appendChild(link);
   });
 };

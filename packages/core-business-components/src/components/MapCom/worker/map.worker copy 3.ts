@@ -1,4 +1,3 @@
-console.log('Worker started!');
 // 消息类型
 type WorkerMessage =
   | {
@@ -8,10 +7,12 @@ type WorkerMessage =
       batchSize?: number;
     }
   | { type: 'updateViewport'; viewport: [number, number, number, number] }
-  | { type: 'destroy' };
+  | { type: 'destroy' }
+  | { type: 'initWasm'; wasmUrl: string };
+
+console.log('Worker started!');
 
 // 导入WebAssembly模块
-// 注意：这里使用相对路径，Worker的基础路径是项目根目录
 type WasmExports = {
   generateRandomPoints?: (count: number, minLng: number, maxLng: number, minLat: number, maxLat: number) => number | Float64Array;
   generatePoints?: (count: number, minLng: number, maxLng: number, minLat: number, maxLat: number) => number | Float64Array;
@@ -23,57 +24,63 @@ type WasmExports = {
 let wasmModule: WasmExports | null = null;
 
 // 加载WebAssembly模块
-async function loadWasm() {
+async function loadWasm(wasmUrl?: string) {
   try {
-    // 创建WebAssembly导入对象
     const importObject = {
       env: {
-        // 提供abort函数用于错误处理
         abort: (msg: number, file: number, line: number, column: number) => {
           console.error('AssemblyScript中止:', { msg, file, line, column });
         }
       }
     };
 
-    // 尝试加载WASM - 简化路径处理逻辑
-    const wasmPaths = [
-      '/wasm/release.wasm',
-      location.origin + '/wasm/release.wasm',
-      './wasm/release.wasm'
-    ];
+    // 如果提供了URL，直接使用
+    if (wasmUrl) {
+      console.log('尝试加载WASM文件:', wasmUrl);
+      const response = await fetch(wasmUrl);
+      if (!response.ok) {
+        throw new Error(`fetch failed with status ${response.status}: ${response.statusText}`);
+      }
 
-    let loaded = false;
+      const buffer = await response.arrayBuffer();
+      const module = await WebAssembly.compile(buffer);
+      const instance = await WebAssembly.instantiate(module, importObject);
+      wasmModule = instance.exports;
+      console.log(`WebAssembly模块加载成功: ${wasmUrl}`);
+      return;
+    }
+
+    // 如果没有提供URL，尝试多种加载方式
+    const wasmPaths = [
+      '/wasm/release.wasm', // 默认路径
+      './wasm/release.wasm', // 相对路径
+      '/release.wasm' // 根路径
+    ];
 
     for (const path of wasmPaths) {
       try {
-        // 动态导入AssemblyScript生成的模块
+        console.log('尝试加载WASM文件:', path);
         const response = await fetch(path);
-        if (!response.ok) continue;
-
-        const buffer = await response.arrayBuffer();
-        const module = await WebAssembly.compile(buffer);
-        const instance = await WebAssembly.instantiate(module, importObject);
-
-        wasmModule = instance.exports;
-        console.log(`WebAssembly模块加载成功: ${path}`);
-        loaded = true;
-        break;
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          const module = await WebAssembly.compile(buffer);
+          const instance = await WebAssembly.instantiate(module, importObject);
+          wasmModule = instance.exports;
+          console.log(`WebAssembly模块加载成功: ${path}`);
+          return;
+        }
       } catch (error) {
         console.warn(`路径 ${path} 加载失败:`, error);
       }
     }
 
-    if (!loaded) {
-      throw new Error('所有WebAssembly加载路径都失败');
-    }
+    throw new Error('所有WebAssembly加载路径都失败');
   } catch (error) {
-    console.error('WebAssembly加载失败:', error);
+    console.warn('WebAssembly加载失败，将使用JavaScript实现:', error);
     // 如果WASM加载失败，使用备用的JS实现
+    wasmModule = null;
   }
 }
-
-// 加载WASM模块
-loadWasm();
 
 // 备用的JS实现，当WASM加载失败时使用
 const generateRandomCoordinatesJS = (
@@ -101,8 +108,6 @@ const generateRandomCoordinatesWasm = (
   maxLat: number,
   count: number
 ) => {
-  // console.log('测试generateRandomCoordinatesWasm count', count);
-
   if (count <= 0) return []; // ← 就加在这里
 
   // 检查WASM是否可用且稳定
@@ -112,26 +117,18 @@ const generateRandomCoordinatesWasm = (
   }
 
   // 对于小数量，直接使用JS实现（更稳定）
-  if (count <= 1000) {
+  if (count <= 500) {
+    // 降低阈值到500
     return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
   }
 
   try {
     // 参数验证和限制
-    const safeCount = Math.min(count, 100000); // 单次WASM调用限制
+    const safeCount = Math.min(count, 50000); // 降低单次WASM调用限制到5万
     const safeMinLng = Number.isFinite(minLng) ? minLng : 0;
     const safeMaxLng = Number.isFinite(maxLng) ? maxLng : 180;
     const safeMinLat = Number.isFinite(minLat) ? minLat : 0;
     const safeMaxLat = Number.isFinite(maxLat) ? maxLat : 90;
-
-    // 调用WASM函数生成点
-    // console.log('调用WASM函数，参数:', {
-    //   safeCount,
-    //   safeMinLng,
-    //   safeMaxLng,
-    //   safeMinLat,
-    //   safeMaxLat
-    // });
 
     // 调用WASM函数，返回内存指针
     const ptr = wasmModule.generateRandomPoints(
@@ -141,8 +138,6 @@ const generateRandomCoordinatesWasm = (
       safeMinLat,
       safeMaxLat
     );
-
-    // console.log('WASM函数返回指针:', ptr);
 
     if (typeof ptr !== 'number' || ptr === 0) {
       console.error('WASM函数返回无效指针');
@@ -245,9 +240,17 @@ const generateRandomCoordinatesWasm = (
 // 存储当前视口
 let currentViewport: [number, number, number, number] | null = null;
 
+let wasmUrlFromMain: string | null = null;
+
 // 在onmessage中处理视口更新
 self.addEventListener('message', (e: MessageEvent) => {
   const data = e.data as WorkerMessage;
+  if (data.type === 'initWasm' && data.wasmUrl) {
+    wasmUrlFromMain = data.wasmUrl;
+    loadWasm(wasmUrlFromMain); // 加载WASM模块
+    return;
+  }
+
   console.log('Worker received:', data);
   if (data.type === 'generatePoints') {
     // 现有的处理逻辑...
@@ -262,6 +265,7 @@ self.addEventListener('message', (e: MessageEvent) => {
 
     // 异步处理每个批次
     (async () => {
+      const totalStart = performance.now();
       for (let batch = 0; batch < batchCount; batch++) {
         // 计算当前批次的起始索引和实际大小
         const startIdx = batch * batchSize;
@@ -269,6 +273,9 @@ self.addEventListener('message', (e: MessageEvent) => {
 
         // 防御：如果本批次需要生成的点数 <= 0，直接跳过
         if (currentBatchSize <= 0) continue;
+
+        // 记录批次生成开始时间
+        const batchStart = performance.now();
 
         // 生成当前批次的点，考虑视口优先
         const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
@@ -279,6 +286,10 @@ self.addEventListener('message', (e: MessageEvent) => {
           currentBatchSize,
           currentViewport
         );
+
+        // 记录批次生成结束时间
+        const batchEnd = performance.now();
+        console.log(`批次 ${batch + 1} 数据生成耗时: ${batchEnd - batchStart}ms`);
 
         // 创建TypedArray用于传输
         const pointsBuffer = new Float64Array(currentBatchSize * 2);
@@ -293,28 +304,30 @@ self.addEventListener('message', (e: MessageEvent) => {
             type: 'pointsBatch',
             buffer: pointsBuffer.buffer,
             count: currentBatchSize,
-            batch,
-            totalBatches: batchCount,
             isLastBatch: batch === batchCount - 1
           },
           { transfer: [pointsBuffer.buffer] }
         );
 
-        // 如果不是最后一批，等待一小段时间让主线程有机会处理
+        // 使用更智能的等待策略
         if (batch < batchCount - 1) {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          // 前10个批次快速处理，之后适当等待
+          const delay = batch < 10 ? 0 : 1;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
+      const totalEnd = performance.now();
+      console.log(`所有批次数据生成完成，总耗时: ${totalEnd - totalStart}ms`);
     })();
   }
 
-  if (data.type === 'updateViewport') {
-    currentViewport = data.viewport;
+  if (e.data.type === 'updateViewport') {
+    currentViewport = e.data.viewport;
     // 视口更新时不需要重新生成数据，只是记录当前视口
     // 下一批数据生成时会优先考虑这个视口
   }
 
-  if (data.type === 'destroy') {
+  if (e.data.type === 'destroy') {
     self.close();
   }
 });
@@ -350,10 +363,10 @@ const generatePointsWithViewportPriority = (
   const totalArea = (maxLng - minLng) * (maxLat - minLat);
   const viewportArea =
     (effectiveViewMaxLng - effectiveViewMinLng) * (effectiveViewMaxLat - effectiveViewMinLat);
-  const viewportRatio = viewportArea / totalArea;
+  const viewportRatio = totalArea > 0 ? viewportArea / totalArea : 0;
 
   // 视口内点数，至少生成一些点在视口内
-  let viewportPointCount = Math.max(Math.round(count * viewportRatio * 2), Math.min(1000, count));
+  let viewportPointCount = Math.max(Math.round(count * viewportRatio * 3), Math.min(2000, count)); // 恢复原来的视口内点数比例
   viewportPointCount = Math.min(viewportPointCount, count); // 防止超出总数
   const outsidePointCount = count - viewportPointCount;
 

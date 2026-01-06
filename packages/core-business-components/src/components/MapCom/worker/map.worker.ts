@@ -10,10 +10,67 @@ type WorkerMessage =
   | { type: 'destroy' }
   | { type: 'initWasm'; wasmUrl: string };
 
-console.log('Worker started!');
-
 // 导入WebAssembly模块
-let wasmModule: any = null;
+type WasmExports = {
+  generateRandomPoints?: (
+    count: number,
+    minLng: number,
+    maxLng: number,
+    minLat: number,
+    maxLat: number,
+  ) => number | Float64Array;
+  generatePoints?: (
+    count: number,
+    minLng: number,
+    maxLng: number,
+    minLat: number,
+    maxLat: number,
+  ) => number | Float64Array;
+  __getFloat64Array?: (ptr: number) => Float64Array;
+  __getArray?: (ptr: number) => Float64Array;
+  memory?: WebAssembly.Memory;
+};
+
+let wasmModule: WasmExports | null = null;
+
+// 智能获取WASM URL的函数
+async function getWasmUrl(fileName: string): Promise<string> {
+  // 尝试多种路径加载WASM文件
+  const pathsToTry = [
+    `/wasm/${fileName}`, // 默认路径
+    `/core-business-components/wasm/${fileName}`, // 包路径
+    `./wasm/${fileName}`, // 相对路径
+    fileName, // 相对路径
+  ];
+
+  for (const path of pathsToTry) {
+    try {
+      // 对于绝对路径，构造完整URL
+      let url: string;
+      if (path.startsWith('/')) {
+        // 在Worker中，我们可以通过location获取origin
+        // 注意：Worker中的location与主窗口不同，需要特殊处理
+        // url = `http://localhost:3000${path}`; // 默认开发服务器地址
+        url = `${self.location.origin}${path}`;
+      } else {
+        url = path;
+      }
+
+      // 检查文件是否存在
+      const response = await fetch(url, { method: 'HEAD' });
+      if (response.ok) {
+        console.log(`找到WASM文件: ${url}`);
+        return url.startsWith('http') ? url : `http://localhost:3000${path}`;
+        // return url;
+      }
+    } catch (e) {
+      console.warn(`尝试路径 ${path} 失败:`, e);
+    }
+  }
+
+  // 如果所有路径都失败，抛出错误
+  throw new Error(`无法找到 WASM 文件: ${fileName}`);
+}
 
 // 加载WebAssembly模块
 async function loadWasm(wasmUrl?: string) {
@@ -22,8 +79,8 @@ async function loadWasm(wasmUrl?: string) {
       env: {
         abort: (msg: number, file: number, line: number, column: number) => {
           console.error('AssemblyScript中止:', { msg, file, line, column });
-        }
-      }
+        },
+      },
     };
 
     // 如果提供了URL，直接使用
@@ -42,28 +99,21 @@ async function loadWasm(wasmUrl?: string) {
       return;
     }
 
-    // 如果没有提供URL，尝试多种加载方式
-    const wasmPaths = [
-      '/wasm/release.wasm', // 默认路径
-      './wasm/release.wasm', // 相对路径
-      '/release.wasm' // 根路径
-    ];
-
-    for (const path of wasmPaths) {
-      try {
-        console.log('尝试加载WASM文件:', path);
-        const response = await fetch(path);
-        if (response.ok) {
-          const buffer = await response.arrayBuffer();
-          const module = await WebAssembly.compile(buffer);
-          const instance = await WebAssembly.instantiate(module, importObject);
-          wasmModule = instance.exports;
-          console.log(`WebAssembly模块加载成功: ${path}`);
-          return;
-        }
-      } catch (error) {
-        console.warn(`路径 ${path} 加载失败:`, error);
+    // 如果没有提供URL，尝试智能加载
+    try {
+      const url = await getWasmUrl('release.wasm');
+      console.log('尝试加载WASM文件:', url);
+      const response = await fetch(url);
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        const module = await WebAssembly.compile(buffer);
+        const instance = await WebAssembly.instantiate(module, importObject);
+        wasmModule = instance.exports;
+        console.log(`WebAssembly模块加载成功: ${url}`);
+        return;
       }
+    } catch (error) {
+      console.warn('智能加载WASM失败:', error);
     }
 
     throw new Error('所有WebAssembly加载路径都失败');
@@ -80,13 +130,13 @@ const generateRandomCoordinatesJS = (
   maxLng: number,
   minLat: number,
   maxLat: number,
-  count: number
+  count: number,
 ) => {
   const points = [];
   for (let i = 0; i < count; i++) {
     points.push({
       lng: minLng + Math.random() * (maxLng - minLng),
-      lat: minLat + Math.random() * (maxLat - minLat)
+      lat: minLat + Math.random() * (maxLat - minLat),
     });
   }
   return points;
@@ -98,7 +148,7 @@ const generateRandomCoordinatesWasm = (
   maxLng: number,
   minLat: number,
   maxLat: number,
-  count: number
+  count: number,
 ) => {
   if (count <= 0) return []; // ← 就加在这里
 
@@ -128,7 +178,7 @@ const generateRandomCoordinatesWasm = (
       safeMinLng,
       safeMaxLng,
       safeMinLat,
-      safeMaxLat
+      safeMaxLat,
     );
 
     if (typeof ptr !== 'number' || ptr === 0) {
@@ -137,6 +187,11 @@ const generateRandomCoordinatesWasm = (
     }
 
     // 从内存中读取Float64Array
+    if (!wasmModule.memory) {
+      console.error('WASM内存不可用');
+      return generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, count);
+    }
+
     const memory = wasmModule.memory.buffer;
 
     // 检查内存边界
@@ -175,8 +230,8 @@ const generateRandomCoordinatesWasm = (
       if (
         typeof lng !== 'number' ||
         typeof lat !== 'number' ||
-        isNaN(lng) ||
-        isNaN(lat) ||
+        Number.isNaN(lng) ||
+        Number.isNaN(lat) ||
         lng < -180 ||
         lng > 180 ||
         lat < -90 ||
@@ -185,7 +240,7 @@ const generateRandomCoordinatesWasm = (
         console.warn(`无效的坐标点 [${i}]: (${lng}, ${lat})`);
         points.push({
           lng: safeMinLng + Math.random() * (safeMaxLng - safeMinLng),
-          lat: safeMinLat + Math.random() * (safeMaxLat - safeMinLat)
+          lat: safeMinLat + Math.random() * (safeMaxLat - safeMinLat),
         });
       } else {
         points.push({ lng, lat });
@@ -203,13 +258,13 @@ const generateRandomCoordinatesWasm = (
         maxLng,
         minLat,
         maxLat,
-        remaining
+        remaining,
       );
       points.push(...remainingPoints);
     } else if (remaining > 0) {
       // 只要递归参数异常，直接用JS补齐
       console.error(
-        `WASM递归出口防御触发：count=${count}, actualCount=${actualCount}, remaining=${remaining}，回退到JS实现`
+        `WASM递归出口防御触发：count=${count}, actualCount=${actualCount}, remaining=${remaining}，回退到JS实现`,
       );
       const jsPoints = generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, remaining);
       points.push(...jsPoints);
@@ -229,95 +284,6 @@ let currentViewport: [number, number, number, number] | null = null;
 
 let wasmUrlFromMain: string | null = null;
 
-// 在onmessage中处理视口更新
-self.onmessage = (e: MessageEvent<WorkerMessage>) => {
-  if (e.data.type === 'initWasm' && e.data.wasmUrl) {
-    wasmUrlFromMain = e.data.wasmUrl;
-    loadWasm(wasmUrlFromMain); // 加载WASM模块
-    return;
-  }
-
-  console.log('Worker received:', e.data);
-  if (e.data.type === 'generatePoints') {
-    // 现有的处理逻辑...
-    const {
-      count,
-      bounds: [minLng, maxLng, minLat, maxLat],
-      batchSize = 50000 // 默认批次大小
-    } = e.data;
-
-    // 计算需要的批次数
-    const batchCount = Math.ceil(count / batchSize);
-
-    // 异步处理每个批次
-    (async () => {
-      const totalStart = performance.now();
-      for (let batch = 0; batch < batchCount; batch++) {
-        // 计算当前批次的起始索引和实际大小
-        const startIdx = batch * batchSize;
-        const currentBatchSize = Math.min(batchSize, count - startIdx);
-
-        // 防御：如果本批次需要生成的点数 <= 0，直接跳过
-        if (currentBatchSize <= 0) continue;
-
-        // 记录批次生成开始时间
-        const batchStart = performance.now();
-
-        // 生成当前批次的点，考虑视口优先
-        const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
-          minLng,
-          maxLng,
-          minLat,
-          maxLat,
-          currentBatchSize,
-          currentViewport
-        );
-
-        // 记录批次生成结束时间
-        const batchEnd = performance.now();
-        console.log(`批次 ${batch + 1} 数据生成耗时: ${batchEnd - batchStart}ms`);
-
-        // 创建TypedArray用于传输
-        const pointsBuffer = new Float64Array(currentBatchSize * 2);
-        for (let i = 0; i < currentBatchSize; i++) {
-          pointsBuffer[i * 2] = batchPoints[i]?.lng ?? 0;
-          pointsBuffer[i * 2 + 1] = batchPoints[i]?.lat ?? 0;
-        }
-
-        // 发送当前批次
-        self.postMessage(
-          {
-            type: 'pointsBatch',
-            buffer: pointsBuffer.buffer,
-            count: currentBatchSize,
-            isLastBatch: batch === batchCount - 1
-          },
-          { transfer: [pointsBuffer.buffer] }
-        );
-
-        // 使用更智能的等待策略
-        if (batch < batchCount - 1) {
-          // 前10个批次快速处理，之后适当等待
-          const delay = batch < 10 ? 0 : 1;
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-      const totalEnd = performance.now();
-      console.log(`所有批次数据生成完成，总耗时: ${totalEnd - totalStart}ms`);
-    })();
-  }
-
-  if (e.data.type === 'updateViewport') {
-    currentViewport = e.data.viewport;
-    // 视口更新时不需要重新生成数据，只是记录当前视口
-    // 下一批数据生成时会优先考虑这个视口
-  }
-
-  if (e.data.type === 'destroy') {
-    self.close();
-  }
-};
-
 // 修改点生成函数，优先生成视口内的点 - 以WASM为主
 const generatePointsWithViewportPriority = (
   minLng: number,
@@ -325,7 +291,7 @@ const generatePointsWithViewportPriority = (
   minLat: number,
   maxLat: number,
   count: number,
-  viewport: [number, number, number, number] | null
+  viewport: [number, number, number, number] | null,
 ) => {
   if (count <= 0) return [];
 
@@ -363,14 +329,14 @@ const generatePointsWithViewportPriority = (
         effectiveViewMaxLng,
         effectiveViewMinLat,
         effectiveViewMaxLat,
-        viewportPointCount
+        viewportPointCount,
       )
     : generateRandomCoordinatesJS(
         effectiveViewMinLng,
         effectiveViewMaxLng,
         effectiveViewMinLat,
         effectiveViewMaxLat,
-        viewportPointCount
+        viewportPointCount,
       );
 
   // 生成视口外的点 - 优先使用WASM
@@ -381,3 +347,83 @@ const generatePointsWithViewportPriority = (
   // 合并结果
   return [...viewportPoints, ...outsidePoints];
 };
+
+// ESM Worker 导出方式
+// export default function worker(self: DedicatedWorkerGlobalScope) {
+console.log('Worker started!');
+
+self.addEventListener('message', (e: MessageEvent) => {
+  const data = e.data as WorkerMessage;
+  if (data.type === 'initWasm' && data.wasmUrl) {
+    wasmUrlFromMain = data.wasmUrl;
+    loadWasm(wasmUrlFromMain);
+    return;
+  }
+
+  console.log('Worker received:', data);
+  if (data.type === 'generatePoints') {
+    const {
+      count,
+      bounds: [minLng, maxLng, minLat, maxLat],
+      batchSize = 50000,
+    } = data;
+
+    const batchCount = Math.ceil(count / batchSize);
+
+    (async () => {
+      const totalStart = performance.now();
+      for (let batch = 0; batch < batchCount; batch++) {
+        const startIdx = batch * batchSize;
+        const currentBatchSize = Math.min(batchSize, count - startIdx);
+
+        if (currentBatchSize <= 0) continue;
+
+        const batchStart = performance.now();
+
+        const batchPoints: { lng: number; lat: number }[] = generatePointsWithViewportPriority(
+          minLng,
+          maxLng,
+          minLat,
+          maxLat,
+          currentBatchSize,
+          currentViewport,
+        );
+
+        const batchEnd = performance.now();
+        console.log(`批次 ${batch + 1} 数据生成耗时: ${batchEnd - batchStart}ms`);
+
+        const pointsBuffer = new Float64Array(currentBatchSize * 2);
+        for (let i = 0; i < currentBatchSize; i++) {
+          pointsBuffer[i * 2] = batchPoints[i]?.lng ?? 0;
+          pointsBuffer[i * 2 + 1] = batchPoints[i]?.lat ?? 0;
+        }
+
+        self.postMessage(
+          {
+            type: 'pointsBatch',
+            buffer: pointsBuffer.buffer,
+            count: currentBatchSize,
+            isLastBatch: batch === batchCount - 1,
+          },
+          { transfer: [pointsBuffer.buffer] },
+        );
+
+        if (batch < batchCount - 1) {
+          const delay = batch < 10 ? 0 : 1;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+      const totalEnd = performance.now();
+      console.log(`所有批次数据生成完成，总耗时: ${totalEnd - totalStart}ms`);
+    })();
+  }
+
+  if (data.type === 'updateViewport') {
+    currentViewport = data.viewport;
+  }
+
+  if (data.type === 'destroy') {
+    self.close();
+  }
+});
+// }

@@ -38,8 +38,6 @@ class MockWorker {
   onmessage: ((e: MessageEvent) => void) | null = null;
   onerror: ((e: ErrorEvent) => void) | null = null;
   
-  constructor() {}
-  
   postMessage() {
     // 模拟Worker消息处理
   }
@@ -47,17 +45,18 @@ class MockWorker {
   terminate() {}
 }
 
-global.Worker = MockWorker as any;
+global.Worker = MockWorker as unknown as typeof Worker;
 
 // Mock BMapGL and mapvgl globals
-global.window = global.window || ({} as any);
-global.window.BMapGL = {
+global.window = global.window || ({} as Window & typeof globalThis & { BMapGL: unknown; mapvgl: unknown });
+
+const mockBMapGL = {
   Map: vi.fn().mockImplementation(() => ({
     centerAndZoom: vi.fn(),
     enableScrollWheelZoom: vi.fn(),
     addControl: vi.fn(),
     getBounds: vi.fn().mockReturnValue({
-      getSouthWest: vi.fn().mockReturnValue({ lng: 113.2, lat: 23.0 }),
+      getSouthWest: vi.fn().mockReturnValue({ lng: 113.2, lat: 23 }),
       getNorthEast: vi.fn().mockReturnValue({ lng: 113.5, lat: 23.2 })
     }),
     addEventListener: vi.fn(),
@@ -70,9 +69,11 @@ global.window.BMapGL = {
   Point: vi.fn(),
   Bounds: vi.fn(),
   ScaleControl: vi.fn()
-} as any;
+};
 
-global.window.mapvgl = {
+Reflect.set(global.window, 'BMapGL', mockBMapGL);
+
+const mockMapvgl = {
   View: vi.fn().mockImplementation(() => ({
     addLayer: vi.fn(),
     destroy: vi.fn()
@@ -81,7 +82,9 @@ global.window.mapvgl = {
     setData: vi.fn(),
     destroy: vi.fn()
   }))
-} as any;
+};
+
+Reflect.set(global.window, 'mapvgl', mockMapvgl);
 
 // Mock fetch
 global.fetch = vi.fn(() =>
@@ -90,7 +93,7 @@ global.fetch = vi.fn(() =>
     status: 200,
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
   })
-) as any;
+) as unknown as typeof fetch;
 
 // Mock URL.createObjectURL
 global.URL.createObjectURL = vi.fn(() => 'mocked-blob-url');

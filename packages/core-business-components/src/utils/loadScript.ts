@@ -20,16 +20,16 @@ export const loadScript = (src: string): Promise<void> => {
     script.type = 'text/javascript';
     script.src = src;
     script.async = true;
-    script.onload = () => {
+    script.addEventListener('load', () => {
       console.log('脚本加载完成');
       resolve();
-    };
-    script.onerror = (err) => {
+    });
+    script.addEventListener('error', (err) => {
       console.error('脚本加载失败:', src, err);
       // 从缓存中删除失败的脚本
       scriptCache.delete(src);
       reject(err);
-    };
+    });
     document.head.appendChild(script);
   });
 

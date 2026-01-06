@@ -10,8 +10,9 @@ vi.mock('@/utils/loadCSS');
 describe('bmap utils', () => {
   beforeEach(() => {
     // 清理全局状态
-    (window as any).onBMapCallback = undefined;
-    (window as any).BMapGL = undefined;
+    const win = window as unknown as Window & { onBMapCallback?: (() => void) | undefined; BMapGL?: unknown };
+    Reflect.deleteProperty(win, 'onBMapCallback');
+    Reflect.deleteProperty(win, 'BMapGL');
     
     // 重置模块缓存，确保每次测试都重新导入模块
     vi.resetModules();
@@ -22,8 +23,9 @@ describe('bmap utils', () => {
 
   afterEach(() => {
     // 清理全局状态
-    (window as any).onBMapCallback = undefined;
-    (window as any).BMapGL = undefined;
+    const win = window as unknown as Window & { onBMapCallback?: (() => void) | undefined; BMapGL?: unknown };
+    Reflect.deleteProperty(win, 'onBMapCallback');
+    Reflect.deleteProperty(win, 'BMapGL');
     
     // 重置模块缓存
     vi.resetModules();
@@ -35,15 +37,16 @@ describe('bmap utils', () => {
       const { loadBMapScript } = await import('./bmap');
       
       // Mock loadScript返回成功的Promise
-      (loadScript as any).mockResolvedValue(undefined);
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
       
       // 创建一个Promise来模拟异步回调
       const loadPromise = loadBMapScript();
       
       // 模拟百度地图回调
-      (window as any).BMapGL = { version: '3.0' };
-      if ((window as any).onBMapCallback) {
-        (window as any).onBMapCallback();
+      const mockBMapGL = { version: '3.0' } as unknown;
+      Reflect.set(window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }, 'BMapGL', mockBMapGL);
+      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
+        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
       }
       
       // 等待加载完成
@@ -60,14 +63,14 @@ describe('bmap utils', () => {
       const { loadBMapScript } = await import('./bmap');
       
       // Mock loadScript返回成功的Promise
-      (loadScript as any).mockResolvedValue(undefined);
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
       
       // 创建一个Promise来模拟异步回调
       const loadPromise = loadBMapScript();
       
       // 模拟百度地图回调但不设置BMapGL
-      if ((window as any).onBMapCallback) {
-        (window as any).onBMapCallback();
+      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
+        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
       }
       
       // 等待加载完成
@@ -79,7 +82,7 @@ describe('bmap utils', () => {
       const { loadBMapScript } = await import('./bmap');
       
       // Mock loadScript返回失败的Promise
-      (loadScript as any).mockRejectedValue(new Error('加载失败'));
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('加载失败'));
       
       // 创建一个Promise来模拟异步回调
       const loadPromise = loadBMapScript();
@@ -93,15 +96,16 @@ describe('bmap utils', () => {
       const { loadBMapScript } = await import('./bmap');
       
       // Mock loadScript返回成功的Promise
-      (loadScript as any).mockResolvedValue(undefined);
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
       
       // 第一次调用
       const firstPromise = loadBMapScript();
       
       // 模拟百度地图回调
-      (window as any).BMapGL = { version: '3.0' };
-      if ((window as any).onBMapCallback) {
-        (window as any).onBMapCallback();
+      const mockBMapGL = { version: '3.0' } as unknown;
+      Reflect.set(window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }, 'BMapGL', mockBMapGL);
+      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
+        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
       }
       
       await firstPromise;
@@ -119,8 +123,8 @@ describe('bmap utils', () => {
       const { loadBMapGLLib } = await import('./bmap');
       
       // Mock loadScript和loadCSS返回成功的Promise
-      (loadScript as any).mockResolvedValue(undefined);
-      (loadCSS as any).mockResolvedValue(undefined);
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+      (loadCSS as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
       
       // 调用loadBMapGLLib
       await loadBMapGLLib();
@@ -139,8 +143,8 @@ describe('bmap utils', () => {
       const { loadBMapGLLib } = await import('./bmap');
       
       // Mock loadScript返回失败的Promise
-      (loadScript as any).mockRejectedValue(new Error('加载失败'));
-      (loadCSS as any).mockResolvedValue(undefined);
+      (loadScript as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('加载失败'));
+      (loadCSS as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
       
       // 调用loadBMapGLLib
       await expect(loadBMapGLLib()).rejects.toThrow('加载失败');

@@ -23,13 +23,13 @@ describe('MapCom', () => {
     vi.clearAllMocks();
 
     // 重置全局对象
-    global.window.BMapGL = {
+    (global.window as unknown as { BMapGL: unknown }).BMapGL = {
       Map: vi.fn().mockImplementation(() => ({
         centerAndZoom: vi.fn(),
         enableScrollWheelZoom: vi.fn(),
         addControl: vi.fn(),
         getBounds: vi.fn().mockReturnValue({
-          getSouthWest: vi.fn().mockReturnValue({ lng: 113.2, lat: 23.0 }),
+          getSouthWest: vi.fn().mockReturnValue({ lng: 113.2, lat: 23 }),
           getNorthEast: vi.fn().mockReturnValue({ lng: 113.5, lat: 23.2 })
         }),
         addEventListener: vi.fn(),
@@ -41,10 +41,11 @@ describe('MapCom', () => {
       })),
       Point: vi.fn(),
       Bounds: vi.fn(),
-      ScaleControl: vi.fn()
-    } as any;
+      ScaleControl: vi.fn(),
+      LocalSearch: vi.fn()
+    };
 
-    global.window.mapvgl = {
+    (global.window as unknown as { mapvgl: unknown }).mapvgl = {
       View: vi.fn().mockImplementation(() => ({
         addLayer: vi.fn(),
         destroy: vi.fn()
@@ -53,7 +54,7 @@ describe('MapCom', () => {
         setData: vi.fn(),
         destroy: vi.fn()
       }))
-    } as any;
+    };
   });
 
   afterEach(() => {
@@ -83,7 +84,7 @@ describe('MapCom', () => {
   });
 
   it('应该使用传入的地图参数', async () => {
-    const customCenter = { lng: 120.0, lat: 30.0 };
+    const customCenter = { lng: 120, lat: 30 };
     const customZoom = 16;
 
     render(
@@ -110,7 +111,7 @@ describe('MapCom', () => {
     };
 
     const originalWorker = global.Worker;
-    global.Worker = vi.fn().mockImplementation(() => mockWorker) as any;
+    (global as unknown as { Worker: unknown }).Worker = vi.fn().mockImplementation(() => mockWorker);
 
     render(<MapCom iconClusterUrl={mockIconClusterUrl} iconImageUrl={mockIconImageUrl} />);
 

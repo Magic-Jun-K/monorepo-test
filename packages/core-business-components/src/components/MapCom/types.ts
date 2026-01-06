@@ -9,6 +9,18 @@ export interface WorkerPoint {
   lat: number;
 }
 
+export interface MapVGLPoint {
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  properties: {
+    icon: string;
+    width: number;
+    height: number;
+  };
+}
+
 export interface ClusterClickEvent {
   dataItem?: {
     geometry: {

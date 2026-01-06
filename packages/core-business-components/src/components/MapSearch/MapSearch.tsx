@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AutoComplete } from '@eggshell/unocss-ui';
-import type { SuggestionItem } from '@eggshell/unocss-ui/src/components/AutoComplete/types';
+
+import { AutoComplete } from '@eggshell/antd-ui';
+
+import type { MapInstance, LocalSearch, LocalResult, Marker } from '../../types/baiduMap';
 
 import styles from './MapSearch.module.scss';
 
@@ -14,6 +16,17 @@ export interface PlaceResult {
   };
 }
 
+interface AutoCompleteOption {
+  title: string;
+  address?: string;
+  point?: {
+    lng: number;
+    lat: number;
+  };
+  label: string;
+  value: string;
+}
+
 interface MapSearchProps {
   onSearchResult?: (results: PlaceResult[]) => void;
   onPlaceSelect?: (place: PlaceResult) => void;
@@ -23,15 +36,15 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
   // 搜索文本状态
   const [searchText, setSearchText] = useState('');
   // 自动完成选项
-  const [autoCompleteOptions, setAutoCompleteOptions] = useState<any[]>([]);
+  const [autoCompleteOptions, setAutoCompleteOptions] = useState<AutoCompleteOption[]>([]);
   // 自动完成加载状态
   const [isLoading, setIsLoading] = useState(false);
   // 地图实例引用
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<MapInstance | null>(null);
   // 标记数组引用
-  const markersRef = useRef<any[]>([]);
+  const markersRef = useRef<Marker[]>([]);
   // 搜索服务引用
-  const localSearchRef = useRef<any>(null);
+  const localSearchRef = useRef<LocalSearch | null>(null);
   // 搜索超时引用
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   // 上一次搜索文本引用
@@ -40,6 +53,16 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
   const isUserSelectingPlaceRef = useRef<boolean>(false);
   // 控制下拉框是否显示
   const [keepDropdownOpen, setKeepDropdownOpen] = useState<boolean>(false);
+
+  // 清除地图上的标记
+  const clearMarkers = () => {
+    if (mapInstanceRef.current && markersRef.current.length > 0) {
+      markersRef.current.forEach((marker) => {
+        mapInstanceRef.current!.removeOverlay(marker);
+      });
+      markersRef.current = [];
+    }
+  };
 
   // 获取地图实例
   useEffect(() => {
@@ -63,7 +86,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
         // 初始化LocalSearch用于地点搜索
         try {
           localSearchRef.current = new window.BMapGL.LocalSearch(mapInstanceRef.current, {
-            onSearchComplete: (results: any) => {
+            onSearchComplete: (results: LocalResult) => {
               console.log('🔍 地点搜索完成回调');
               setIsLoading(false);
 
@@ -79,21 +102,21 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
                   console.log('🔍 测试每个poi详情', poi);
 
                   if (poi) {
-                    const newAddress = poi?.address ? `(${poi.address})` : '';
-                    const newTitle = `${poi?.title || ''}${newAddress}`;
+                    const newAddress = poi.address ? `(${poi.address})` : '';
+                    const newTitle = `${poi.title || ''}${newAddress}`;
                     options.push({
                       ...poi,
                       title: newTitle,
                       label: newTitle,
-                      value: newTitle
+                      value: newTitle,
                     });
                     places.push({
                       title: newTitle,
                       address: newTitle,
                       point: {
                         lng: poi.point ? poi.point.lng : 0,
-                        lat: poi.point ? poi.point.lat : 0
-                      }
+                        lat: poi.point ? poi.point.lat : 0,
+                      },
                     });
                   }
                 }
@@ -103,7 +126,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
               } else {
                 console.log('🔍 未搜索到结果');
               }
-            }
+            },
           });
           console.log('🔍 LocalSearch初始化成功');
         } catch (error) {
@@ -140,16 +163,6 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
     };
   }, [onSearchResult]);
 
-  // 清除地图上的标记
-  const clearMarkers = () => {
-    if (mapInstanceRef.current && markersRef.current.length > 0) {
-      markersRef.current.forEach(marker => {
-        mapInstanceRef.current.removeOverlay(marker);
-      });
-      markersRef.current = [];
-    }
-  };
-
   // 处理地点搜索
   const handlePlaceSearch = useCallback(
     (value: string) => {
@@ -169,9 +182,9 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
               address: '广东省广州市黄埔区',
               point: {
                 lng: 113.456,
-                lat: 23.123
-              }
-            }
+                lat: 23.123,
+              },
+            },
           ];
           onSearchResult?.(mockResults);
         }
@@ -185,15 +198,15 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
               address: '广东省广州市黄埔区',
               point: {
                 lng: 113.456,
-                lat: 23.123
-              }
-            }
+                lat: 23.123,
+              },
+            },
           ];
           onSearchResult?.(mockResults);
         }
       }
     },
-    [localSearchRef, onSearchResult]
+    [localSearchRef, onSearchResult],
   );
 
   // 获取自动完成建议 - 使用useCallback优化避免不必要的重新创建
@@ -238,7 +251,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
         setKeepDropdownOpen(false);
       }
     },
-    [handlePlaceSearch]
+    [handlePlaceSearch],
   );
 
   // 提供降级建议
@@ -259,21 +272,21 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
   // };
 
   // 处理自动完成选择
-  const handleAutoCompleteSelect = (item: SuggestionItem) => {
-    console.log('自动完成选择:', item);
+  const handleAutoCompleteSelect = (value: string, option: AutoCompleteOption) => {
+    console.log('自动完成选择:', value, option);
     // 设置用户正在主动选择地点的标志
     isUserSelectingPlaceRef.current = true;
     // 直接处理地点选择，而不是执行搜索
     handleSelectPlace({
-      title: String(item.label || item.value),
-      address: (item as any).address || '',
-      point: (item as any).point || {
+      title: String(option.label || option.value),
+      address: option.address || '',
+      point: option.point || {
         lng: 113.456,
-        lat: 23.123
-      }
+        lat: 23.123,
+      },
     });
     // 更新搜索文本
-    setSearchText(String(item.label || item.value));
+    setSearchText(String(option.label || option.value));
     // 不再清空自动完成选项，保持下拉框显示
     // setAutoCompleteOptions([]);
     // 设置保持下拉框打开状态
@@ -324,12 +337,12 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
         {
           width: 200,
           height: 80,
-          title: '选中位置'
-        }
+          title: '选中位置',
+        },
       );
 
       marker.addEventListener('click', () => {
-        mapInstanceRef.current.openInfoWindow(infoWindow, point);
+        mapInstanceRef.current!.openInfoWindow(infoWindow, point);
       });
 
       mapInstanceRef.current.addOverlay(marker);
@@ -339,10 +352,8 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
 
       // 立即打开信息窗口，确保用户能看到标记
       setTimeout(() => {
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.openInfoWindow(infoWindow, point);
-          console.log('信息窗口已打开');
-        }
+        mapInstanceRef.current!.openInfoWindow(infoWindow, point);
+        console.log('信息窗口已打开');
       }, 500); // 增加延迟时间，确保地图移动完成后再打开信息窗口
     }
   };
@@ -358,7 +369,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({ onSearchResult, onPlaceSel
         style={{ width: '100%' }}
         onSearch={fetchAutoCompleteOptions}
         onSelect={handleAutoCompleteSelect}
-        onChange={value => {
+        onChange={(value) => {
           setSearchText(value);
           // 当输入框内容变化时，重置下拉框状态
           if (value.trim() === '') {
