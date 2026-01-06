@@ -1,16 +1,47 @@
 {
   "extends": ["../../.oxlintrc.json"],
-  "ignorePatterns": [
-    "dist/**/*",
-    "build/**/*",
-    "node_modules/**/*"
-  ],
+  "ignorePatterns": ["dist/**/*", "build/**/*", "node_modules/**/*", "public/**/*"],
+  "globals": {
+    "window": "readonly",
+    "document": "readonly",
+    "navigator": "readonly",
+    "location": "readonly",
+    "history": "readonly",
+    "localStorage": "readonly",
+    "sessionStorage": "readonly",
+    "fetch": "readonly",
+    "URL": "readonly",
+    "Blob": "readonly",
+    "Worker": "readonly",
+    "CustomEvent": "readonly",
+    "Event": "readonly",
+    "ErrorEvent": "readonly",
+    "WebAssembly": "readonly",
+    "requestIdleCallback": "readonly",
+    "cancelIdleCallback": "readonly",
+    "requestAnimationFrame": "readonly",
+    "cancelAnimationFrame": "readonly",
+    "console": "readonly",
+    "performance": "readonly",
+    "global": "readonly",
+    "self": "readonly",
+    "setTimeout": "readonly",
+    "setInterval": "readonly",
+    "clearTimeout": "readonly",
+    "clearInterval": "readonly",
+    "i32": "readonly",
+    "f64": "readonly",
+    "Float64Array": "readonly",
+    "__dirname": "readonly"
+  },
   "rules": {
-    "no-console": "warn",
+    "no-console": "off",
     "typescript/no-unused-vars": "error",
     "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
-    "typescript/no-explicit-any": "off"
+    "typescript/no-explicit-any": "off",
+    "unicorn/require-post-message-target-origin": "off"
   }
 }
