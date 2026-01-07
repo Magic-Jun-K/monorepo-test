@@ -26,7 +26,7 @@ import { RolePermissionEntity } from './entities/role-permission.entity';
 import { UserEntity } from './entities/user.entity';
 import { PermissionModule } from './module/permission/permission.module';
 import { RoleModule } from './module/role/role.module';
-import { AnalyticsModule } from './module/analytics/analytics.module';
+// import { AnalyticsModule } from './module/analytics/analytics.module';
 import database from './config/database';
 
 @Module({
@@ -79,7 +79,7 @@ import database from './config/database';
     ExampleModule,
     PermissionModule,
     RoleModule,
-    AnalyticsModule,
+    // AnalyticsModule,
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
