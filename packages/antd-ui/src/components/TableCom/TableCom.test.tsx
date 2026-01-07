@@ -2,6 +2,7 @@ import { createRef } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import type { TableRef } from 'antd/es/table';
 
 import { TableCom } from './TableCom';
 import { heightManager } from '../../utils/heightManager';
@@ -15,8 +16,7 @@ vi.mock('../../utils/heightManager', () => ({
   }
 }));
 
-// Mock window dimensions
-Object.defineProperty(window, 'innerHeight', {
+Object.defineProperty(globalThis.window, 'innerHeight', {
   writable: true,
   configurable: true,
   value: 1024
@@ -31,8 +31,7 @@ describe('TableCom', () => {
     user = userEvent.setup();
     vi.clearAllMocks();
 
-    // Reset window dimensions
-    Object.defineProperty(window, 'innerHeight', {
+    Object.defineProperty(globalThis.window, 'innerHeight', {
       writable: true,
       configurable: true,
       value: 1024
@@ -74,7 +73,7 @@ describe('TableCom', () => {
       title: '年龄',
       dataIndex: 'age',
       key: 'age',
-      sorter: (a: any, b: any) => a.age - b.age
+      sorter: (a: unknown, b: unknown) => (a as { age: number }).age - (b as { age: number }).age
     },
     {
       title: '住址',
@@ -228,8 +227,11 @@ describe('TableCom', () => {
       const { rerender } = render(<TableCom columns={mockColumns} dataSource={mockData} />);
 
       // 模拟高度管理器回调
-      const subscribeCallback = (heightManager.subscribe as any).mock.calls[0][0];
-      subscribeCallback(100);
+      const mockCalls = (heightManager.subscribe as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+      const subscribeCallback = mockCalls[0]?.[0] as (height: number) => void;
+      if (subscribeCallback) {
+        subscribeCallback(100);
+      }
 
       rerender(<TableCom columns={mockColumns} dataSource={mockData} />);
 
@@ -240,13 +242,13 @@ describe('TableCom', () => {
       render(<TableCom columns={mockColumns} dataSource={mockData} />);
 
       // 改变窗口大小
-      Object.defineProperty(window, 'innerHeight', {
+      Object.defineProperty(globalThis.window, 'innerHeight', {
         writable: true,
         configurable: true,
         value: 800
       });
 
-      fireEvent(window, new Event('resize'));
+      fireEvent(globalThis.window, new globalThis.Event('resize'));
 
       await waitFor(() => {
         expect(heightManager.updateHeight).toHaveBeenCalled();
@@ -276,7 +278,7 @@ describe('TableCom', () => {
 
   describe('引用测试', () => {
     it('应该正确转发ref', () => {
-      const ref = createRef<any>();
+      const ref = createRef<TableRef>();
 
       render(<TableCom ref={ref} columns={mockColumns} dataSource={mockData} />);
 
@@ -296,7 +298,7 @@ describe('TableCom', () => {
 
   describe('边界情况测试', () => {
     it('应该处理极小窗口高度', () => {
-      Object.defineProperty(window, 'innerHeight', {
+      Object.defineProperty(globalThis.window, 'innerHeight', {
         writable: true,
         configurable: true,
         value: 300

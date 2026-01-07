@@ -9,7 +9,7 @@ import { heightManager } from '../../utils/heightManager';
 
 import styles from './index.module.css';
 
-export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) => {
+export const TableCom = forwardRef<TableRef, TableComProps<unknown>>((props, ref) => {
   const {
     className,
     pagination,
@@ -43,7 +43,7 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
       onChange: (page: number, pageSize: number) => {
         onPageChange?.(page, pageSize);
         pagination?.onChange?.(page, pageSize);
-      }
+      },
     };
   }, [pagination, showPagination, defaultPageSize, onPageChange]);
 
@@ -51,8 +51,8 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
   const handleTableChange = (
     pagination: PaginationProps,
     filters: Record<string, FilterValue | null>,
-    sorter: SorterResult<any> | SorterResult<any>[],
-    extra: TableCurrentDataSource<any>
+    sorter: SorterResult<unknown> | SorterResult<unknown>[],
+    extra: TableCurrentDataSource<unknown>,
   ) => {
     onChange?.(pagination, filters, sorter, extra);
   };
@@ -65,7 +65,8 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
     const buttonAreaHeight = 60; // 按钮区域高度（包含padding-bottom）
     // 计算可用高度
     // 可用高度 = 窗口高度(window.innerHeight) - 顶部导航(68) - 搜索栏(currentHeight) - 按钮区域(buttonAreaHeight) - 容器padding(32) - 安全边距(32)
-    const availableHeight = window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32; // 减去导航、搜索、按钮、padding、边距
+    const availableHeight =
+      globalThis.window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32; // 减去导航、搜索、按钮、padding、边距
     // 计算内容高度
     // 内容高度 = 可用高度 - 表头高度(55) - 分页器高度(64)
     const contentHeight = availableHeight - 55 - 64; // 减去表头和分页器高度
@@ -85,15 +86,16 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
       // 触发重新计算高度
       const buttonAreaHeight = 60; // 按钮区域高度（包含padding-bottom）
       // 计算新的可用高度
-      const availableHeight = window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32;
+      const availableHeight =
+        globalThis.window.innerHeight - 68 - currentHeight - buttonAreaHeight - 32 - 32;
       const contentHeight = availableHeight - 55 - 64;
       // console.log('[TableCom]窗口大小变化，重新计算高度:', contentHeight);
       // 发布新高度
       heightManager.updateHeight(contentHeight);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    globalThis.window.addEventListener('resize', handleResize);
+    return () => globalThis.window.removeEventListener('resize', handleResize);
   }, [currentHeight]);
 
   // console.log('测试restProps', restProps);
@@ -108,7 +110,7 @@ export const TableCom = forwardRef<TableRef, TableComProps<any>>((props, ref) =>
         scroll={{
           ...restProps.scroll,
           x: restProps.scroll?.x || 'max-content',
-          y: tableHeight
+          y: tableHeight,
         }}
       />
     </div>

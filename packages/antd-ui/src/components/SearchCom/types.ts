@@ -2,13 +2,14 @@ import type { SelectProps } from 'antd/es/select';
 import type { TreeSelectProps } from 'antd/es/tree-select';
 import type { DatePickerProps, RangePickerProps } from 'antd/es/date-picker';
 import type { InputProps } from 'antd/es/input';
-import type { FormInstance } from 'antd/es/form';
+import type { FormInstance, Rule } from 'antd/es/form';
+import type { DataNode } from 'antd/es/tree';
 
 // 组件Props属性定义
 export interface SearchComProps {
   items: SearchItem[];
-  initialValues?: Record<string, any>;
-  onSearch?: (values: Record<string, any>) => void;
+  initialValues?: Record<string, unknown>;
+  onSearch?: (values: Record<string, unknown>) => void;
   onReset?: () => void;
   form?: FormInstance;
   className?: string;
@@ -39,7 +40,7 @@ interface BaseSearchItem {
   type: SearchItemType;
   placeholder?: string;
   required?: boolean;
-  rules?: any[];
+  rules?: Rule[];
   colSpan?: number; // 栅格列数，默认为6（总共24列）
   hidden?: boolean;
   disabled?: boolean;
@@ -53,26 +54,33 @@ interface InputSearchItem extends BaseSearchItem {
 
 interface SelectSearchItem extends BaseSearchItem {
   type: 'select';
-  options: { label: string; value: any }[];
+  options: { label: string; value: string | number }[];
   selectProps?: SelectProps;
 }
 
-interface DatePickerSearchItem extends BaseSearchItem {
+export interface DatePickerSearchItem extends BaseSearchItem {
   type: 'datePicker';
   datePickerProps?: DatePickerProps;
+  format?: string;
 }
 
-interface RangePickerSearchItem extends Omit<BaseSearchItem, 'placeholder'> {
+export interface RangePickerSearchItem extends Omit<BaseSearchItem, 'placeholder'> {
   type: 'rangePicker';
   placeholder?: [string, string]; // 元组类型
   rangePickerProps?: RangePickerProps;
+  format?: string;
 }
 
 interface TreeSelectSearchItem extends BaseSearchItem {
   type: 'treeSelect';
-  treeData: any[];
+  treeData: DataNode[];
   treeSelectProps?: TreeSelectProps;
 }
 
 // 搜索项联合类型
-export type SearchItem = InputSearchItem | SelectSearchItem | DatePickerSearchItem | RangePickerSearchItem | TreeSelectSearchItem;
+export type SearchItem =
+  | InputSearchItem
+  | SelectSearchItem
+  | DatePickerSearchItem
+  | RangePickerSearchItem
+  | TreeSelectSearchItem;

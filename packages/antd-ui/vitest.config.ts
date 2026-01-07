@@ -1,7 +1,11 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'node:path';
 import type { ViteUserConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   test: {
@@ -27,9 +31,9 @@ export default defineConfig({
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
+          statements: 80,
+        },
+      },
     },
     // 测试超时
     testTimeout: 10000,
@@ -38,7 +42,7 @@ export default defineConfig({
     pool: 'threads',
     maxConcurrency: 2,
     silent: false,
-    reporters: ['verbose']
+    reporters: ['verbose'],
   },
   // 路径解析
   resolve: {
@@ -46,7 +50,7 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
       '@/components': resolve(__dirname, './src/components'),
       '@/utils': resolve(__dirname, './src/utils'),
-      '@/types': resolve(__dirname, './src/types')
-    }
-  }
+      '@/types': resolve(__dirname, './src/types'),
+    },
+  },
 } as ViteUserConfig);

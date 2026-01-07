@@ -3,12 +3,69 @@ import { Form, Input, Select, DatePicker, TreeSelect, Button, Row, Col, Space } 
 import { SearchOutlined, ReloadOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 
-import { SearchComProps, SearchItem } from './types';
+import { SearchComProps, SearchItem, DatePickerSearchItem, RangePickerSearchItem } from './types';
 import { heightManager } from '../../utils/heightManager';
 
 import styles from './index.module.css';
 
 const { RangePicker } = DatePicker;
+
+// 渲染搜索项
+const renderSearchItem = (item: SearchItem) => {
+  if (item.hidden) return null;
+
+  const commonProps = {
+    disabled: item.disabled,
+  };
+
+  switch (item.type) {
+    case 'input':
+      return <Input {...commonProps} placeholder={item.placeholder} {...item.inputProps} />;
+    case 'select':
+      return (
+        <Select
+          {...commonProps}
+          placeholder={item.placeholder}
+          options={item.options}
+          allowClear
+          {...item.selectProps}
+        />
+      );
+    case 'datePicker':
+      return (
+        <DatePicker
+          {...commonProps}
+          placeholder={item.placeholder}
+          style={{ width: '100%' }}
+          {...item.datePickerProps}
+          format={(item as DatePickerSearchItem).format || item.datePickerProps?.format}
+        />
+      );
+    case 'rangePicker':
+      return (
+        <RangePicker
+          {...commonProps}
+          style={{ width: '100%' }}
+          placeholder={item.placeholder || ['开始日期', '结束日期']}
+          {...item.rangePickerProps}
+          format={(item as RangePickerSearchItem).format || item.rangePickerProps?.format}
+        />
+      );
+    case 'treeSelect':
+      return (
+        <TreeSelect
+          {...commonProps}
+          placeholder={item.placeholder}
+          treeData={item.treeData}
+          allowClear
+          style={{ width: '100%' }}
+          {...item.treeSelectProps}
+        />
+      );
+    default:
+      return null;
+  }
+};
 
 export const SearchCom: React.FC<SearchComProps> = ({
   items,
@@ -24,7 +81,7 @@ export const SearchCom: React.FC<SearchComProps> = ({
   searchLoading = false,
   resetLoading = false,
   colConfig = { xs: 24, sm: 12, md: 8, lg: 8, xl: 6, xxl: 6 },
-  rowGutter = [8, 8]
+  rowGutter = [8, 8],
 }) => {
   // 使用外部传入的form或创建内部form
   const [form] = Form.useForm(externalForm);
@@ -46,9 +103,9 @@ export const SearchCom: React.FC<SearchComProps> = ({
     // console.log('[SearchCom] 发布初始高度:', initHeight);
     updateSearchHeight(initHeight);
 
-    const observer = new ResizeObserver(entries => {
+    const observer = new globalThis.ResizeObserver((entries) => {
       // 防抖处理
-      requestAnimationFrame(() => {
+      globalThis.requestAnimationFrame(() => {
         const newHeight = entries[0]?.contentRect.height ?? 0;
         // console.log('ResizeObserver检测到新高度:', newHeight);
         updateSearchHeight(newHeight);
@@ -84,7 +141,7 @@ export const SearchCom: React.FC<SearchComProps> = ({
 
   // 处理搜索事件
   const handleSearch = () => {
-    form.validateFields().then(values => {
+    form.validateFields().then((values) => {
       onSearch?.(values);
     });
   };
@@ -93,61 +150,6 @@ export const SearchCom: React.FC<SearchComProps> = ({
   const handleReset = () => {
     form.resetFields();
     onReset?.();
-  };
-
-  // 渲染搜索项
-  const renderSearchItem = (item: SearchItem) => {
-    if (item.hidden) return null;
-
-    const commonProps = {
-      disabled: item.disabled
-    };
-
-    switch (item.type) {
-      case 'input':
-        return <Input {...commonProps} placeholder={item.placeholder} {...item.inputProps} />;
-      case 'select':
-        return (
-          <Select
-            {...commonProps}
-            placeholder={item.placeholder}
-            options={item.options}
-            allowClear
-            {...item.selectProps}
-          />
-        );
-      case 'datePicker':
-        return (
-          <DatePicker
-            {...commonProps}
-            placeholder={item.placeholder}
-            style={{ width: '100%' }}
-            {...item.datePickerProps}
-          />
-        );
-      case 'rangePicker':
-        return (
-          <RangePicker
-            {...commonProps}
-            style={{ width: '100%' }}
-            placeholder={item.placeholder || ['开始日期', '结束日期']}
-            {...item.rangePickerProps}
-          />
-        );
-      case 'treeSelect':
-        return (
-          <TreeSelect
-            {...commonProps}
-            placeholder={item.placeholder}
-            treeData={item.treeData}
-            allowClear
-            style={{ width: '100%' }}
-            {...item.treeSelectProps}
-          />
-        );
-      default:
-        return null;
-    }
   };
 
   return (

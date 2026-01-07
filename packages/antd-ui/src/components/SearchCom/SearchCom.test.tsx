@@ -12,8 +12,8 @@ vi.mock('../../utils/heightManager', () => ({
   heightManager: {
     updateHeight: vi.fn(),
     subscribe: vi.fn(),
-    unsubscribe: vi.fn()
-  }
+    unsubscribe: vi.fn(),
+  },
 }));
 
 describe('SearchCom', () => {
@@ -35,7 +35,7 @@ describe('SearchCom', () => {
       label: '用户名',
       name: 'username',
       type: 'input',
-      placeholder: '请输入用户名'
+      placeholder: '请输入用户名',
     },
     {
       label: '状态',
@@ -44,9 +44,9 @@ describe('SearchCom', () => {
       placeholder: '请选择状态',
       options: [
         { label: '启用', value: 'active' },
-        { label: '禁用', value: 'inactive' }
-      ]
-    }
+        { label: '禁用', value: 'inactive' },
+      ],
+    },
   ];
 
   describe('基础渲染', () => {
@@ -61,14 +61,14 @@ describe('SearchCom', () => {
     });
 
     it('应该使用外部传入的form实例', () => {
-      let formInstance: any;
-      
+      let formInstance: unknown;
+
       const TestComponent = () => {
         const [form] = Form.useForm();
         formInstance = form;
         return <SearchCom items={basicItems} onSearch={mockOnSearch} form={form} />;
       };
-      
+
       render(<TestComponent />);
 
       expect(screen.getByPlaceholderText('请输入用户名')).toBeInTheDocument();
@@ -77,7 +77,7 @@ describe('SearchCom', () => {
 
     it('应该应用自定义className', () => {
       const { container } = render(
-        <SearchCom items={basicItems} onSearch={mockOnSearch} className="custom-search" />
+        <SearchCom items={basicItems} onSearch={mockOnSearch} className="custom-search" />,
       );
 
       expect(container.querySelector('.custom-search')).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('SearchCom', () => {
     it('应该正确设置初始值', async () => {
       const initialValues = { username: 'testuser', status: 'active' };
       render(
-        <SearchCom items={basicItems} onSearch={mockOnSearch} initialValues={initialValues} />
+        <SearchCom items={basicItems} onSearch={mockOnSearch} initialValues={initialValues} />,
       );
 
       await waitFor(() => {
@@ -103,8 +103,8 @@ describe('SearchCom', () => {
           name: 'test',
           type: 'input',
           placeholder: '测试占位符',
-          inputProps: { maxLength: 10 }
-        }
+          inputProps: { maxLength: 10 },
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -123,9 +123,9 @@ describe('SearchCom', () => {
           placeholder: '请选择',
           options: [
             { label: '选项1', value: '1' },
-            { label: '选项2', value: '2' }
-          ]
-        }
+            { label: '选项2', value: '2' },
+          ],
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -140,8 +140,8 @@ describe('SearchCom', () => {
           label: '测试日期',
           name: 'date',
           type: 'datePicker',
-          placeholder: '请选择日期'
-        }
+          placeholder: '请选择日期',
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -155,8 +155,8 @@ describe('SearchCom', () => {
           label: '测试日期范围',
           name: 'dateRange',
           type: 'rangePicker',
-          placeholder: ['开始时间', '结束时间']
-        }
+          placeholder: ['开始时间', '结束时间'],
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -173,10 +173,10 @@ describe('SearchCom', () => {
           type: 'treeSelect',
           placeholder: '请选择节点',
           treeData: [
-            { title: '节点1', value: '1', key: '1' },
-            { title: '节点2', value: '2', key: '2' }
-          ]
-        }
+            { title: '节点1', key: '1' },
+            { title: '节点2', key: '2' },
+          ],
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -192,8 +192,8 @@ describe('SearchCom', () => {
           name: 'date',
           type: 'datePicker',
           placeholder: '请选择日期',
-          format: 'YYYY-MM-DD'
-        }
+          format: 'YYYY-MM-DD',
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -208,8 +208,8 @@ describe('SearchCom', () => {
           name: 'dateRange',
           type: 'rangePicker',
           placeholder: ['开始时间', '结束时间'],
-          format: 'YYYY-MM-DD'
-        }
+          format: 'YYYY-MM-DD',
+        },
       ];
 
       render(<SearchCom items={items} onSearch={mockOnSearch} />);
@@ -232,7 +232,7 @@ describe('SearchCom', () => {
       await waitFor(() => {
         expect(mockOnSearch).toHaveBeenCalledWith({
           username: 'testuser',
-          status: undefined
+          status: undefined,
         });
       });
     });
@@ -273,7 +273,7 @@ describe('SearchCom', () => {
           onSearch={mockOnSearch}
           searchButtonText="查询"
           resetButtonText="清空"
-        />
+        />,
       );
 
       expect(screen.getByRole('button', { name: /查询/i })).toBeInTheDocument();
@@ -303,8 +303,8 @@ describe('SearchCom', () => {
           name: 'disabled',
           type: 'input',
           placeholder: '禁用状态',
-          disabled: true
-        }
+          disabled: true,
+        },
       ];
 
       render(<SearchCom items={disabledItems} onSearch={mockOnSearch} />);
@@ -320,8 +320,8 @@ describe('SearchCom', () => {
           name: 'hidden',
           type: 'input',
           placeholder: '隐藏状态',
-          hidden: true
-        }
+          hidden: true,
+        },
       ];
 
       render(<SearchCom items={hiddenItems} onSearch={mockOnSearch} />);
@@ -358,8 +358,8 @@ describe('SearchCom', () => {
           type: 'input',
           placeholder: '必填输入',
           required: true,
-          rules: [{ required: true, message: '请输入必填项' }]
-        }
+          rules: [{ required: true, message: '请输入必填项' }],
+        },
       ];
 
       render(<SearchCom items={requiredItems} onSearch={mockOnSearch} />);
@@ -369,10 +369,13 @@ describe('SearchCom', () => {
       await user.click(searchButton);
 
       // 等待一段时间让验证完成
-      await waitFor(() => {
-        // 验证不会调用onSearch（因为验证失败）
-        expect(mockOnSearch).not.toHaveBeenCalled();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          // 验证不会调用onSearch（因为验证失败）
+          expect(mockOnSearch).not.toHaveBeenCalled();
+        },
+        { timeout: 1000 },
+      );
     });
 
     it('应该处理自定义验证规则', async () => {
@@ -382,8 +385,8 @@ describe('SearchCom', () => {
           name: 'custom',
           type: 'input',
           placeholder: '最少3个字符',
-          rules: [{ min: 3, message: '最少输入3个字符' }]
-        }
+          rules: [{ min: 3, message: '最少输入3个字符' }],
+        },
       ];
 
       render(<SearchCom items={customRuleItems} onSearch={mockOnSearch} />);
@@ -396,10 +399,13 @@ describe('SearchCom', () => {
       await user.click(searchButton);
 
       // 等待一段时间让验证完成
-      await waitFor(() => {
-        // 验证不会调用onSearch（因为验证失败）
-        expect(mockOnSearch).not.toHaveBeenCalled();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          // 验证不会调用onSearch（因为验证失败）
+          expect(mockOnSearch).not.toHaveBeenCalled();
+        },
+        { timeout: 1000 },
+      );
     });
   });
 
@@ -415,12 +421,14 @@ describe('SearchCom', () => {
         label: `字段${i}`,
         name: `field${i}`,
         type: 'input' as const,
-        placeholder: `请输入字段${i}`
+        placeholder: `请输入字段${i}`,
       }));
 
       render(<SearchCom items={manyItems} onSearch={mockOnSearch} />);
 
-      const initialCallCount = (heightManager.updateHeight as any).mock.calls.length;
+      const initialCallCount = (
+        heightManager.updateHeight as unknown as { mock: { calls: unknown[][] } }
+      ).mock.calls.length;
 
       const toggleButton = screen.getByRole('button', { name: /收起/i });
       await user.click(toggleButton);
