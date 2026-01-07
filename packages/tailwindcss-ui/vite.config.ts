@@ -7,22 +7,15 @@ import { resolve } from 'node:path';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(), 
-    tailwindcss(), 
+    react(),
+    tailwindcss(),
     dts({
-      // 更明确地指定入口点，避免处理配置文件
       entryRoot: resolve(__dirname, 'src'),
       include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        'src/**/*.test.*', 
-        'src/**/*.spec.*', 
-        'src/**/*.example.*',
-        'vite.config.ts'
-      ],
+      exclude: ['src/**/*.test.*', 'src/**/*.spec.*', 'src/**/*.example.*', 'vite.config.ts'],
       outDir: 'lib/types',
       insertTypesEntry: true,
       rollupTypes: true,
-      // 明确指定要处理的文件，避免处理配置文件
       tsconfigPath: resolve(__dirname, 'tsconfig.app.json')
     })
   ],
@@ -38,25 +31,44 @@ export default defineConfig({
       formats: ['es'],
       fileName: 'index'
     },
+    // 代码压缩配置 - 使用rolldown的oxc压缩器
+    minify: 'esbuild', // rolldown-vite会自动使用oxc
     rollupOptions: {
-      // 正确external react和react-dom，避免重复打包
       external: ['react', 'react-dom', 'react/jsx-runtime'],
       output: {
         format: 'es',
-        // 确保所有模块都使用 ES 模块格式
         exports: 'auto',
-        // 明确指定外部依赖的全局变量名
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime'
         },
-        assetFileNames: '[name][extname]'
+        assetFileNames: '[name][extname]',
+        manualChunks: undefined, // 禁用手动代码分割
+        preserveModules: false
       }
     },
-    // 浏览器兼容性
-    target: 'es2022',
-    // 确保CSS被正确处理
-    cssCodeSplit: false
+    // CSS处理配置
+    cssCodeSplit: false,
+    // 启用CSS压缩
+    cssMinify: true
+  },
+  // CSS 配置优化 - 使用PostCSS处理和压缩CSS
+  css: {
+    // PostCSS配置
+    postcss: './postcss.config.js'
+  },
+  esbuild: {
+    drop: ['console', 'debugger'], // 移除console和debugger语句
+    legalComments: 'none', // 移除所有注释
+    minifyIdentifiers: true, // 压缩标识符
+    minifySyntax: true, // 压缩语法
+    minifyWhitespace: true, // 压缩空白字符
+    target: 'es2022' // 启用额外的压缩选项
+  },
+  // 优化构建性能
+  optimizeDeps: {
+    // 排除某些依赖的优化
+    exclude: ['react', 'react-dom', 'react/jsx-runtime']
   }
 });
