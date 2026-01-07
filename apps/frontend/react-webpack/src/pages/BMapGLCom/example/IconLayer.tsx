@@ -10,12 +10,16 @@ interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
+interface MapVglEvent {
+  dataItem?: unknown;
+}
+
 const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
-  const map = useRef<typeof window.BMapGL | null>(null);
-  const mapViewRef = useRef<typeof window.mapvgl | null>(null);
+  const map = useRef<BMapGL.Map | null>(null);
+  const mapViewRef = useRef<mapvgl.View | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -24,6 +28,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
       BMapGLRef.current = window.BMapGL;
 
       // 初始化地图
+      if (!mapRef.current) return;
       map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
       console.log('测试map', map.current);
       const centerPoint = new BMapGLRef.current.Point(center.lng, center.lat); // 2.设置中心点坐标
@@ -80,29 +85,33 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
         selectedIndex: -1, // 选中项
         // selectedColor: '#ff0000', // 选中项颜色
         // autoSelect: true, // 根据鼠标位置来自动设置选中项
-        onClick: (e: any) => {
+        onClick: (e: MapVglEvent) => {
           // 点击事件
           console.log('click', e);
         }
-        // onDblClick: (e: any) => {
+        // onDblClick: (e: MapVglEvent) => {
         //   console.log('double click', e);
         // },
-        // onRightClick: (e: any) => {
+        // onRightClick: (e: MapVglEvent) => {
         //   console.log('right click', e);
         // }
       });
-      mapViewRef.current.addLayer(layer);
-      layer.setData(data);
 
-      map.current.setDefaultCursor('default');
+      if (mapViewRef.current) {
+        mapViewRef.current.addLayer(layer);
+        layer.setData(data);
+      }
+
+      if (map.current) {
+        map.current.setDefaultCursor('default');
+      }
     };
     init();
 
-    // 在组件卸载时，销毁地图实例
     return () => {
       map.current = null;
     };
-  }, []);
+  }, [center.lat, center.lng, zoom]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
 };

@@ -10,12 +10,16 @@ interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
+interface MapVglEvent {
+  dataItem?: unknown;
+}
+
 const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
-  const map = useRef<typeof window.BMapGL | null>(null);
-  const mapViewRef = useRef<typeof window.mapvgl | null>(null);
+  const map = useRef<BMapGL.Map | null>(null);
+  const mapViewRef = useRef<mapvgl.View | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -24,6 +28,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
       BMapGLRef.current = window.BMapGL;
 
       // 初始化地图
+      if (!mapRef.current) return;
       map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
       console.log('测试map', map.current);
       const centerPoint = new BMapGLRef.current.Point(center.lng, center.lat); // 2.设置中心点坐标
@@ -61,7 +66,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
         minSize: 30, // 聚合点显示的最小直径
         maxSize: 50, // 聚合点显示的最大直径
         clusterRadius: 150, // 聚合范围半径
-        gradient: { 0: 'blue', 0.5: 'green', 1.0: 'red' }, // 聚合点颜色梯度
+        gradient: { 0: 'blue', 0.5: 'green', 1: 'red' }, // 聚合点颜色梯度
         maxZoom: 15, // 聚合的最大级别，当地图放大级别高于此值将不再聚合
         minZoom: 5, // 聚合的最小级别，当地图放大级别低于此值将不再聚合
         // 是否显示文字
@@ -84,24 +89,25 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
         //     icon: 'images/marker.png',
         // },
         enablePicked: true,
-        onClick(e: any) {
-          if (e.dataItem) {
+        onClick(e: MapVglEvent) {
+          if ((e as { dataItem?: unknown }).dataItem) {
             // 可通过dataItem下面的children属性拿到被聚合的所有点
-            console.log(e.dataItem);
+            console.log((e as { dataItem?: unknown }).dataItem);
           }
         }
       });
 
-      mapViewRef.current.addLayer(clusterLayer);
-      clusterLayer.setData(data);
+      if (mapViewRef.current) {
+        mapViewRef.current.addLayer(clusterLayer);
+        clusterLayer.setData(data);
+      }
     };
     init();
 
-    // 在组件卸载时，销毁地图实例
     return () => {
       map.current = null;
     };
-  }, []);
+  }, [center.lat, center.lng, zoom]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
 };

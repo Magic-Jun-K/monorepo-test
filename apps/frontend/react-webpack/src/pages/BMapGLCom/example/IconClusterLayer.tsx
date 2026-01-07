@@ -3,20 +3,28 @@
  */
 import { FC, useEffect, useRef } from 'react';
 
-import { loadScript } from '@/utils/index';
+import { loadScript } from '@/utils/loadScript';
 import { generateRandomCoordinates } from '../utils';
 
 interface MapProps {
   mapParams?: { center: { lng: number; lat: number }; zoom: number };
 }
 
+interface IconClusterEvent {
+  dataItem?: {
+    geometry: {
+      coordinates: [number, number];
+    };
+  };
+}
+
 const MapComponent: FC<MapProps> = ({ mapParams }) => {
   const { center = { lng: 113.33107, lat: 23.11204 }, zoom = 14 } = mapParams || {};
   const mapRef = useRef<HTMLDivElement>(null);
   const BMapGLRef = useRef<typeof window.BMapGL | null>(null);
-  const map = useRef<typeof window.BMapGL | null>(null);
+  const map = useRef<BMapGL.Map | null>(null);
   // const BMapGLLibRef = useRef<typeof window.BMapGLLib | null>(null);
-  const mapViewRef = useRef<typeof window.mapvgl | null>(null);
+  const mapViewRef = useRef<mapvgl.View | null>(null);
 
   useEffect(() => {
     console.log('测试mapvgl', window.mapvgl);
@@ -26,6 +34,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
       BMapGLRef.current = window.BMapGL;
 
       // 初始化地图
+      if (!mapRef.current) return;
       map.current = new BMapGLRef.current.Map(mapRef.current); // 1.创建地图实例
       console.log('测试map', map.current);
       const centerPoint = new BMapGLRef.current.Point(center.lng, center.lat); // 2.设置中心点坐标
@@ -37,7 +46,7 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
       map.current.addControl(scaleCtrl); // 5.添加比例尺控件
 
       // await loadScript('https://unpkg.com/mapvgl/dist/mapvgl.min.js');
-      await loadScript('https://unpkg.com/mapvgl@1.0.0-beta.191/dist/mapvgl.min.js');
+      await loadScript({ src: 'https://unpkg.com/mapvgl@1.0.0-beta.191/dist/mapvgl.min.js' });
       mapViewRef.current = new window.mapvgl.View({
         map: map.current
       })!;
@@ -90,18 +99,23 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
           // 1000: 'http://localhost:7000/iconCluster.png',
           // 10000: 'http://localhost:7000/iconCluster.png',
         },
-        onClick(e: any) {
+        onClick(e: IconClusterEvent) {
           if (e.dataItem) {
             // 可通过dataItem下面的children属性拿到被聚合的所有点
             console.log('测试iconClusterLayer click', e.dataItem);
             const _point = e.dataItem.geometry.coordinates;
-            map.current.panTo({ lng: _point[0], lat: _point[1] });
+            if (map.current && BMapGLRef.current) {
+              const point = new BMapGLRef.current.Point(_point[0], _point[1]);
+              map.current.panTo(point);
+            }
           }
         }
       });
 
-      mapViewRef.current.addLayer(iconClusterLayer);
-      iconClusterLayer.setData(data);
+      if (mapViewRef.current) {
+        mapViewRef.current.addLayer(iconClusterLayer);
+        iconClusterLayer.setData(data);
+      }
 
       // 在地图上创建一个聚合器实例
       // const markerClusterer = new BMapLibRef.current.MarkerClusterer(map.current, {});
@@ -111,11 +125,10 @@ const MapComponent: FC<MapProps> = ({ mapParams }) => {
     };
     init();
 
-    // 在组件卸载时，销毁地图实例
     return () => {
       map.current = null;
     };
-  }, []);
+  }, [center.lat, center.lng, zoom]);
 
   return <div ref={mapRef} style={{ width: '100%', height: '100%' }} />;
 };
