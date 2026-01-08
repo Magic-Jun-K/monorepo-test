@@ -214,8 +214,6 @@ const generateRandomCoordinatesWasm = (
     // 直接读取数据
     const pointsArray = new Float64Array(memory, dataStart, expectedLength);
 
-    console.log('WASM返回数据长度:', pointsArray.length);
-
     // 将Float64Array转换为对象数组
     const points = [];
     const actualCount = Math.min(safeCount, Math.floor(pointsArray.length / 2));
@@ -249,7 +247,6 @@ const generateRandomCoordinatesWasm = (
 
     // 如果WASM生成了部分数据，继续用WASM补齐剩余部分
     const remaining = count - actualCount;
-    console.log(`[递归防御] count=${count}, actualCount=${actualCount}, remaining=${remaining}`);
 
     if (remaining > 0 && remaining < count && actualCount > 0) {
       // 只有在递归参数完全正常时才递归
@@ -263,15 +260,10 @@ const generateRandomCoordinatesWasm = (
       points.push(...remainingPoints);
     } else if (remaining > 0) {
       // 只要递归参数异常，直接用JS补齐
-      console.error(
-        `WASM递归出口防御触发：count=${count}, actualCount=${actualCount}, remaining=${remaining}，回退到JS实现`,
-      );
       const jsPoints = generateRandomCoordinatesJS(minLng, maxLng, minLat, maxLat, remaining);
       points.push(...jsPoints);
     }
 
-    console.log('转换后的点数据示例:', points.slice(0, 5));
-    console.log('总生成点数:', points.length);
     return points;
   } catch (error) {
     console.error('WASM调用失败，回退到JS实现:', error);
