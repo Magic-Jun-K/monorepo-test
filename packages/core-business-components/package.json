@@ -23,7 +23,7 @@
   "scripts": {
     "dev": "vite",
     "build:workers": "tsc -p tsconfig.worker.json && node scripts/build-workers.js",
-    "build": "tsc -b && vite build && pnpm build:workers",
+    "build": "tsc -b && pnpm build:workers && vite build && pnpm build:workers",
     "lint": "eslint .",
     "preview": "vite preview",
     "asbuild:debug": "asc assembly/index.ts --target debug",
