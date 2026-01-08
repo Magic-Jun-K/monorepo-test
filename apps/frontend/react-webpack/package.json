@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "main": "index.js",
+  "browser": {},
   "type": "module",
   "scripts": {
     "dev": "webpack serve --env development",
