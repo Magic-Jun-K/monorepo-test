@@ -7,7 +7,8 @@ import FormInput from './components/FormInput';
 import FormButton from './components/FormButton';
 import RegisterText from './components/RegisterText';
 
-import { useToast, ToastProvider } from '@/components/Toast';
+import { useToast } from '@/components/Toast/useToast';
+import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
 import { emailLogin, login, register, sendCode } from '@/services';
 import { useAuthStore } from '@/stores/zustand/auth.store';
