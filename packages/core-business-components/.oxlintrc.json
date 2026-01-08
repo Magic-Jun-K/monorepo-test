@@ -1,6 +1,11 @@
 {
   "extends": ["../../.oxlintrc.json"],
-  "ignorePatterns": ["dist/**/*", "build/**/*", "node_modules/**/*", "public/**/*"],
+  "ignorePatterns": [
+    "dist/**/*",
+    "build/**/*",
+    "node_modules/**/*",
+    "scripts/MapV/*"
+  ],
   "globals": {
     "window": "readonly",
     "document": "readonly",
