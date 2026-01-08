@@ -1,7 +1,13 @@
 import { FC, useRef, useEffect } from 'react';
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
-import { TitleComponent, TooltipComponent, GridComponent, DatasetComponent, LegendComponent } from 'echarts/components';
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  DatasetComponent,
+  LegendComponent,
+} from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
 // 注册必要的组件和图表类型
@@ -14,7 +20,7 @@ echarts.use([
   GridComponent,
   DatasetComponent,
   LegendComponent,
-  CanvasRenderer
+  CanvasRenderer,
 ]);
 
 const EChartsCom: FC<{ options: echarts.EChartsCoreOption }> = ({ options }) => {
