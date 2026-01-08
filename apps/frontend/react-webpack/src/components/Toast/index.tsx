@@ -1,50 +1,34 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect } from 'react';
+
+import { ToastProps, ToastContext } from './useToast';
+
 import styles from './index.module.scss';
-
-interface ToastProps {
-  message: string;
-  type: 'success' | 'error' | 'info';
-  duration?: number;
-  onClose?: () => void;
-}
-
-interface ToastContextType {
-  addToast: (toast: ToastProps) => void;
-}
-
-const ToastContext = createContext<ToastContextType>({
-  addToast: () => {}
-});
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const addToast = (toast: ToastProps) => {
-    setToasts((prev) => [...prev, toast]);
+  const addToast = (toast: Omit<ToastProps, 'id'>) => {
+    const newToast: ToastProps = {
+      ...toast,
+      id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
+    };
+    setToasts((prev) => [...prev, newToast]);
   };
 
-  const removeToast = (index: number) => {
-    setToasts((prev) => prev.filter((_, i) => i !== index));
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
       <div className={styles.container}>
-        {toasts.map((toast, index) => (
-          <Toast
-            key={index}
-            {...toast}
-            onClose={() => removeToast(index)}
-          />
+        {toasts.map((toast) => (
+          <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} />
         ))}
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  return useContext(ToastContext);
 }
 
 function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
