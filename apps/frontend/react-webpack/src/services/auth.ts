@@ -1,3 +1,5 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { request } from '@/utils/httpClient';
 
 export interface LoginPayload {
@@ -10,9 +12,6 @@ export interface LoginPayload {
 export interface LoginRes {
   success: boolean;
   message: string;
-  // data: {
-  //   access_token: string;
-  // };
   data: string;
 }
 
@@ -98,8 +97,59 @@ export const refreshToken = async (): Promise<RefreshRes> => {
  * @returns
  */
 export const currentUser = async (): Promise<CurrentUserRes> => {
-  const user = await request.get('/auth/current-user');
+  const user = await request.get('/auth/current-user') as {
+    id: number;
+    username: string;
+    email: string;
+    userType?: string;
+    isActive?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+    roles?: Array<{
+      id: number;
+      name: string;
+      code: string;
+      level: number;
+    }>;
+  };
   return {
     data: user
   };
+};
+
+// TanStack Query hooks
+// 获取当前用户信息
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: currentUser,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+  });
+};
+
+// 登录
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: login,
+    onSuccess: () => {
+      // 登录成功后，使 currentUser 查询失效，触发重新获取
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    }
+  });
+};
+
+// 登出
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      // 登出成功后，清除 currentUser 查询缓存
+      queryClient.removeQueries({ queryKey: ['currentUser'] });
+    }
+  });
 };
