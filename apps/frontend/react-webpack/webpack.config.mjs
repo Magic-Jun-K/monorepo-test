@@ -4,9 +4,10 @@ import { merge } from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import CSSMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import ImageMinimizerPlugin from 'image-minimizer-webpack-plugin';
+// import ImageMinimizerPlugin from 'image-minimizer-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
+// import CompressionPlugin from 'compression-webpack-plugin';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -336,6 +337,17 @@ const baseConfig = (env) => {
           openAnalyzer: analyzeMode, // 不自动打开报告页面
           generateStatsFile: false, // 不生成stats文件
         }),
+      // isProd &&
+      //   new CompressionPlugin({
+      //     algorithm: 'brotliCompress',
+      //     test: /\.(js|css|html|svg|json|ico|ttf|woff2?)$/i,
+      //     threshold: 10240,
+      //     minRatio: 0.8,
+      //     deleteOriginalAssets: false,
+      //     compressionOptions: {
+      //       level: 11,
+      //     },
+      //   }),
     ],
     // 优化
     optimization: {
@@ -475,7 +487,7 @@ const baseConfig = (env) => {
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
       alias: {
-        '@': path.resolve(__dirname, 'src'),
+        '@': path.join(__dirname, 'src'),
       },
       // 确保只有一个 React 实例
       // modules: [
