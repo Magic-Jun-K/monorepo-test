@@ -23,10 +23,11 @@ export const loadBMapScript = () => {
 
   scriptPromise = new Promise((resolve, reject) => {
     // 百度地图异步加载回调处理
-    window.onBMapCallback = function () {
-      if (window.BMapGL) {
-        console.log('BMapGL 初始化完成', window.BMapGL);
-        resolve(window.BMapGL);
+    (window as Window & { onBMapCallback: () => void }).onBMapCallback = function () {
+      const bmap = (window as Window & { BMapGL?: unknown }).BMapGL;
+      if (bmap) {
+        console.log('BMapGL 初始化完成', bmap);
+        resolve(bmap);
       } else {
         reject(new Error('BMapGL 未定义'));
       }

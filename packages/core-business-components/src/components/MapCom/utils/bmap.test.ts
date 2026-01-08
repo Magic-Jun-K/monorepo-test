@@ -45,8 +45,9 @@ describe('bmap utils', () => {
       // 模拟百度地图回调
       const mockBMapGL = { version: '3.0' } as unknown;
       Reflect.set(window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }, 'BMapGL', mockBMapGL);
-      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
-        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
+      const callback = (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback;
+      if (callback) {
+        callback();
       }
       
       // 等待加载完成
@@ -69,8 +70,9 @@ describe('bmap utils', () => {
       const loadPromise = loadBMapScript();
       
       // 模拟百度地图回调但不设置BMapGL
-      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
-        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
+      const callback = (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback;
+      if (callback) {
+        callback();
       }
       
       // 等待加载完成
@@ -104,8 +106,9 @@ describe('bmap utils', () => {
       // 模拟百度地图回调
       const mockBMapGL = { version: '3.0' } as unknown;
       Reflect.set(window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }, 'BMapGL', mockBMapGL);
-      if ((window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback) {
-        (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback();
+      const callback = (window as unknown as Window & { onBMapCallback?: () => void; BMapGL?: unknown }).onBMapCallback;
+      if (callback) {
+        callback();
       }
       
       await firstPromise;
