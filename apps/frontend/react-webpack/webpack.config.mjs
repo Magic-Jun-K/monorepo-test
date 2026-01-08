@@ -82,6 +82,9 @@ const baseConfig = (env) => {
 
   console.log('测试当前环境：', env, isProd);
   console.log('测试env.ANALYZE', env?.ANALYZE);
+  console.log('当前 __dirname:', __dirname);
+  console.log('src 路径:', path.join(__dirname, 'src'));
+  console.log('components 路径:', path.join(__dirname, 'src', 'components'));
 
   return {
     entry: path.resolve(__dirname, 'src/index.tsx'),
