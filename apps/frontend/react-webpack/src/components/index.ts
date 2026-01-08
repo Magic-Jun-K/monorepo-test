@@ -1,1 +1,1 @@
-export * as echarts from './ECharts';
+export { EChartsCom } from './ECharts/index';

@@ -9,7 +9,7 @@ import {
   TooltipComponent,
   GridComponent,
   DatasetComponent,
-  LegendComponent
+  LegendComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 
@@ -23,7 +23,7 @@ registerECharts([
   BarChart,
   LineChart,
   PieChart,
-  CanvasRenderer
+  CanvasRenderer,
 ]);
 
 // 3. 初始化配置类型（无需 dependencies）
@@ -32,7 +32,7 @@ type EChartsInitOpts = Parameters<typeof init>[2];
 const initOpts: EChartsInitOpts = {
   renderer: 'canvas',
   useDirtyRect: true, // 仅限 5.3.0+ 版本
-  useCoarsePointer: true // 仅限 5.4.0+ 版本
+  useCoarsePointer: true, // 仅限 5.4.0+ 版本
 };
 
 interface EChartsComProps {
@@ -41,7 +41,7 @@ interface EChartsComProps {
   style?: React.CSSProperties;
 }
 
-const EChartsCom: FC<EChartsComProps> = ({ options, className, style }) => {
+export const EChartsCom: FC<EChartsComProps> = memo(({ options, className, style }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<ReturnType<typeof init>>();
 
@@ -66,12 +66,11 @@ const EChartsCom: FC<EChartsComProps> = ({ options, className, style }) => {
   useEffect(() => {
     chartInstance.current?.setOption(options, {
       lazyUpdate: true,
-      replaceMerge: ['series', 'dataset']
+      replaceMerge: ['series', 'dataset'],
     } as SetOptionOpts);
   }, [options]);
 
   return (
     <div ref={chartRef} className={className} style={{ width: '100%', height: '100%', ...style }} />
   );
-};
-export default memo(EChartsCom);
+});
