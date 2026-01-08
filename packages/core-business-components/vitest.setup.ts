@@ -69,7 +69,7 @@ const mockBMapGL = {
   Point: vi.fn(),
   Bounds: vi.fn(),
   ScaleControl: vi.fn()
-};
+} as unknown as typeof window.BMapGL;
 
 Reflect.set(global.window, 'BMapGL', mockBMapGL);
 
@@ -82,7 +82,7 @@ const mockMapvgl = {
     setData: vi.fn(),
     destroy: vi.fn()
   }))
-};
+} as unknown as typeof window.mapvgl;
 
 Reflect.set(global.window, 'mapvgl', mockMapvgl);
 

@@ -43,7 +43,7 @@ describe('MapCom', () => {
       Bounds: vi.fn(),
       ScaleControl: vi.fn(),
       LocalSearch: vi.fn()
-    };
+    } as unknown as typeof window.BMapGL;
 
     (global.window as unknown as { mapvgl: unknown }).mapvgl = {
       View: vi.fn().mockImplementation(() => ({
@@ -54,7 +54,7 @@ describe('MapCom', () => {
         setData: vi.fn(),
         destroy: vi.fn()
       }))
-    };
+    } as unknown as typeof window.mapvgl;
   });
 
   afterEach(() => {
