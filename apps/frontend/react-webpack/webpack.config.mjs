@@ -492,10 +492,6 @@ const baseConfig = (env) => {
       alias: {
         '@': path.resolve(__dirname, 'src'),
       },
-      // 禁用 browser 字段解析，避免路径拼接问题
-      aliasFields: [],
-      // 禁用符号链接解析
-      symlinks: false,
       // 确保只有一个 React 实例
       // modules: [
       //   'node_modules',
