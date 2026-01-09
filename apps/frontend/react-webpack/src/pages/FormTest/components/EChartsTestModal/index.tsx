@@ -1,5 +1,5 @@
 import { Modal } from '@eggshell/antd-ui';
-import { EChartsCom } from '../../../../components/ECharts';
+import { EChartsCom } from '@/components';
 
 import { PieOptions } from './constant';
 
@@ -9,6 +9,7 @@ interface Props {
   visible: boolean;
   onCancel: () => void;
 }
+
 export default (props: Props) => {
   const { visible, onCancel } = props;
 
