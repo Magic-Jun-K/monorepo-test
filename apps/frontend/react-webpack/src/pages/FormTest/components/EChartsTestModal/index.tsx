@@ -1,6 +1,6 @@
 import { Modal } from '@eggshell/antd-ui';
+import { EChartsCom } from '../../../../components/ECharts';
 
-import { EChartsCom } from '@/components';
 import { PieOptions } from './constant';
 
 const options = PieOptions;
