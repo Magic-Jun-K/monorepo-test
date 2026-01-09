@@ -35,6 +35,8 @@ RUN pnpm --filter @eggshell/antd-ui build
 RUN pnpm --filter @eggshell/core-business-components build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack
+# 清除 webpack 缓存
+RUN rm -rf .webpack_temp_cache || true
 RUN pnpm build --stats=detailed
 
 # 阶段4：运行环境
