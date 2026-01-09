@@ -515,10 +515,10 @@ const baseConfig = (env) => {
     externals: isProd
       ? {
           BMapGL: 'BMapGL',
-          react: 'React',
-          'react-dom': 'ReactDOM',
-          '@sentry/react': 'SentryReact',
-          'web-vitals': 'WebVitals',
+          // react: 'React',
+          // 'react-dom': 'ReactDOM',
+          // '@sentry/react': 'SentryReact',
+          // 'web-vitals': 'WebVitals',
           three: 'THREE',
         }
       : {},
