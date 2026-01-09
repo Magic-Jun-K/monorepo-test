@@ -77,7 +77,7 @@ const envVariables = parseEnvFile();
 const baseConfig = (env) => {
   // 更好地处理环境变量
   const isProd = env && env.production;
-  const isDev = env && env.development;
+  // const isDev = env && env.development;
   const analyzeMode = env && env.ANALYZE === 'true';
 
   console.log('测试当前环境：', env, isProd);
@@ -490,23 +490,29 @@ const baseConfig = (env) => {
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
       alias: {
-        '@': path.join(__dirname, 'src'),
+        '@': path.resolve(__dirname, 'src'),
       },
+      // 禁用 browser 字段解析，避免路径拼接问题
+      aliasFields: [],
+      // 禁用符号链接解析
+      symlinks: false,
       // 确保只有一个 React 实例
       // modules: [
       //   'node_modules',
       //   path.resolve(__dirname, 'node_modules')
       // ]
     },
-    cache: {
-      type: 'filesystem',
-      version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
-      cacheDirectory: path.resolve(__dirname, '.webpack_temp_cache'),
-      buildDependencies: {
-        config: [__filename],
-      },
-      allowCollectingMemory: true, // 允许内存回收
-    },
+    cache: isProd
+      ? false
+      : {
+          type: 'filesystem',
+          version: process.env.NODE_ENV, // 不同环境使用不同缓存版本
+          cacheDirectory: path.resolve(__dirname, '.webpack_temp_cache'),
+          buildDependencies: {
+            config: [__filename],
+          },
+          allowCollectingMemory: true, // 允许内存回收
+        },
     watchOptions: {
       ignored: /node_modules/,
     },
