@@ -1,1 +1,1 @@
-export { EChartsCom } from './ECharts/index';
+export { EChartsCom } from './ECharts/index.tsx';
