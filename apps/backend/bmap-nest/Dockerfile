@@ -18,9 +18,6 @@ COPY tsconfig* ./
 COPY apps/backend/bmap-nest/ ./apps/backend/bmap-nest/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    # pnpm install --frozen-lockfile \
-    # --filter="@backend/bmap-nest..."
-    # pnpm install --frozen-lockfile --prefer-offline
     pnpm install --frozen-lockfile --prefer-offline
 
 # 阶段3：构建应用
@@ -29,6 +26,8 @@ WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 # 在子包目录下执行构建
 # RUN pnpm build
+# 清理可能存在的 dist 目录
+RUN rm -rf dist || true
 # 显示当前目录和文件
 RUN echo "=== 当前工作目录 ===" && pwd && ls -la
 # 显示 TypeScript 配置
@@ -37,8 +36,8 @@ RUN echo "=== TypeScript 配置 ===" && cat tsconfig.json
 RUN echo "=== TypeScript 构建配置 ===" && cat tsconfig.build.json
 # 显示源代码目录
 RUN echo "=== 源代码目录 ===" && ls -la src/
-# 使用 tsconfig.build.json 来构建（避免 noEmit: true 的问题）
-RUN npx tsc --project tsconfig.build.json
+# 使用 tsconfig.build.json 来构建（添加详细输出）
+RUN npx tsc --project tsconfig.build.json --listFiles --listEmittedFiles
 # 验证构建产物
 RUN echo "=== 检查构建产物 ===" && \
     ls -la dist/ && \
