@@ -10,14 +10,18 @@ ENV PATH="$PNPM_HOME:$PATH"
 FROM base AS deps
 # 设置容器内工作目录
 WORKDIR /app
-# 复制整个monorepo结构
+# 复制 monorepo 配置文件
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# 复制 TypeScript 配置
 COPY tsconfig* ./
+# 复制后端应用代码
 COPY apps/backend/bmap-nest/ ./apps/backend/bmap-nest/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile \
-    --filter="@backend/bmap-nest..."
+    # pnpm install --frozen-lockfile \
+    # --filter="@backend/bmap-nest..."
+    # pnpm install --frozen-lockfile --prefer-offline
+    pnpm install --frozen-lockfile --prefer-offline
 
 # 阶段3：构建应用
 FROM deps AS builder
@@ -30,20 +34,25 @@ RUN pnpm --filter @backend/bmap-nest build
 # 阶段4：生产环境
 FROM base AS production
 WORKDIR /app
-# 复制构建产物和必要文件
+# 复制构建产物
 COPY --from=builder /app/apps/backend/bmap-nest/dist ./dist
 COPY --from=builder /app/apps/backend/bmap-nest/public ./public
-COPY --from=builder /app/apps/backend/bmap-nest/package.json ./
-# 复制 monorepo 根目录配置文件（从 builder 阶段）
+# COPY --from=builder /app/apps/backend/bmap-nest/package.json ./
+# 复制 monorepo 配置文件（用于 pnpm 解析依赖）
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
+# 复制子包 package.json（用于 workspace 解析）
+COPY --from=builder /app/apps/backend/bmap-nest/package.json ./apps/backend/bmap-nest/
 
-# 只安装生产依赖
+# 安装生产依赖
 # 添加--unsafe-perm以允许构建脚本运行
 # RUN pnpm install --prod --unsafe-perm
+# --ignore-scripts: 跳过所有脚本执行（避免 husky prepare 失败）
+# --shamefully-hoist: 将所有依赖提升到 node_modules 根目录，避免符号链接问题
+# --prefer-offline: 优先使用缓存，加速安装
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+    pnpm install --prod --frozen-lockfile --shamefully-hoist --prefer-offline --ignore-scripts
 
 # 暴露端口
 EXPOSE 7000
