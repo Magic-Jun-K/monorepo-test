@@ -33,12 +33,12 @@ ENV NODE_OPTIONS="--experimental-vm-modules"
 RUN echo "=== 当前工作目录 ===" && pwd && ls -la
 # 显示 TypeScript 配置
 RUN echo "=== TypeScript 配置 ===" && cat tsconfig.json
-# 显示 NestJS CLI 配置
-RUN echo "=== NestJS CLI 配置 ===" && cat nest-cli.json
+# 显示 TypeScript 构建配置
+RUN echo "=== TypeScript 构建配置 ===" && cat tsconfig.build.json
 # 显示源代码目录
 RUN echo "=== 源代码目录 ===" && ls -la src/
-# 尝试直接使用 TypeScript 编译器
-RUN npx tsc --project tsconfig.json
+# 使用 tsconfig.build.json 来构建（避免 noEmit: true 的问题）
+RUN npx tsc --project tsconfig.build.json
 # 验证构建产物
 RUN echo "=== 检查构建产物 ===" && \
     ls -la dist/ && \
