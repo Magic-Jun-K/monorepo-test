@@ -25,15 +25,14 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # 阶段3：构建应用
 FROM deps AS builder
-# WORKDIR /app/apps/backend/bmap-nest
-WORKDIR /app
+WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
-# RUN pnpm build
-RUN pnpm --filter @backend/bmap-nest build
+# 在子包目录下执行构建
+RUN pnpm build
 # 验证构建产物
 RUN echo "=== 检查构建产物 ===" && \
-    ls -la /app/apps/backend/bmap-nest/dist/ && \
-    test -f /app/apps/backend/bmap-nest/dist/main.js || exit 1
+    ls -la dist/ && \
+    test -f dist/main.js || (echo "main.js 不存在，构建失败" && exit 1)
 
 # 阶段4：生产环境
 FROM base AS production
