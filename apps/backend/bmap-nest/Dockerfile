@@ -28,7 +28,17 @@ FROM deps AS builder
 WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 # 在子包目录下执行构建
-RUN pnpm build
+# RUN pnpm build
+# 显示当前目录和文件
+RUN echo "=== 当前工作目录 ===" && pwd && ls -la
+# 显示 TypeScript 配置
+RUN echo "=== TypeScript 配置 ===" && cat tsconfig.json
+# 显示 NestJS CLI 配置
+RUN echo "=== NestJS CLI 配置 ===" && cat nest-cli.json
+# 显示源代码目录
+RUN echo "=== 源代码目录 ===" && ls -la src/
+# 尝试直接使用 TypeScript 编译器
+RUN npx tsc --project tsconfig.json
 # 验证构建产物
 RUN echo "=== 检查构建产物 ===" && \
     ls -la dist/ && \
