@@ -40,7 +40,7 @@
     "cookie-parser": "1.4.7",
     "crystals-kyber-js": "2.5.0",
     "file-type": "21.3.0",
-    "ioredis": "5.9.0",
+    "ioredis": "5.9.1",
     "jose": "6.1.3",
     "kafkajs": "2.2.4",
     "multer": "2.0.2",
