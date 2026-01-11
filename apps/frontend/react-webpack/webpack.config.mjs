@@ -437,6 +437,14 @@ const baseConfig = (env) => {
             priority: 45,
             enforce: true,
           },
+          // 新增 three.js 独立包（按需加载）
+          threeVendor: {
+            test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
+            name: 'three',
+            priority: 50,
+            enforce: true,
+            chunks: 'async',
+          },
           // 低频稳定工具库 (合并)
           utilsStable: {
             test: /[\\/]node_modules[\\/]axios[\\/]/,
@@ -522,7 +530,7 @@ const baseConfig = (env) => {
           // 'react-dom': 'ReactDOM',
           // '@sentry/react': 'SentryReact',
           // 'web-vitals': 'WebVitals',
-          three: 'THREE',
+          // three: 'THREE',
         }
       : {},
   };
