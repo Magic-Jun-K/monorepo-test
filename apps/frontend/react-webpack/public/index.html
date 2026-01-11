@@ -18,7 +18,7 @@
     
     <!-- 加载 three.js (仅生产环境) -->
     <% if (htmlWebpackPlugin.options.templateParameters.isProd) { %>
-    <script defer src="https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.min.js" integrity="sha256-D4YElQaQZ6ED0d+Z4rsBJg8lDhGO16UFNxZ0EroZWgo=" crossorigin="anonymous"></script>
     <% } %>
   </head>
   <body>
