@@ -262,6 +262,9 @@ const baseConfig = (env) => {
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, 'public/index.html'),
         filename: 'index.html', // 输出文件名
+        templateParameters: {
+          isProd: isProd,
+        },
         // 添加CSP nonce支持
         cspPlugin: {
           enabled: true,
