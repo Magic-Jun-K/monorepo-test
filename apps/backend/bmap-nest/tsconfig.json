@@ -10,6 +10,6 @@
     },
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "public", "test"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "public", "test", "scripts/**/*.ts"]
 }
