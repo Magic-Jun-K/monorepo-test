@@ -24,24 +24,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM deps AS builder
 WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
-# 在子包目录下执行构建
-# RUN pnpm build
 # 清理可能存在的 dist 目录
 RUN rm -rf dist || true
-# 显示当前目录和文件
-RUN echo "=== 当前工作目录 ===" && pwd && ls -la
-# 显示 TypeScript 配置
-RUN echo "=== TypeScript 配置 ===" && cat tsconfig.json
-# 显示 TypeScript 构建配置
-RUN echo "=== TypeScript 构建配置 ===" && cat tsconfig.build.json
-# 显示源代码目录
-RUN echo "=== 源代码目录 ===" && ls -la src/
-# 使用 tsconfig.build.json 来构建（添加详细输出）
-RUN npx tsc --project tsconfig.build.json --listFiles --listEmittedFiles
-# 验证构建产物
-RUN echo "=== 检查构建产物 ===" && \
-    ls -la dist/ && \
-    test -f dist/main.js || (echo "main.js 不存在，构建失败" && exit 1)
+# 使用 tsconfig.build.json 来构建
+RUN npx tsc --project tsconfig.build.json
 
 # 阶段4：生产环境
 FROM base AS production
@@ -49,7 +35,6 @@ WORKDIR /app
 # 复制构建产物
 COPY --from=builder /app/apps/backend/bmap-nest/dist ./dist
 COPY --from=builder /app/apps/backend/bmap-nest/public ./public
-# COPY --from=builder /app/apps/backend/bmap-nest/package.json ./
 # 复制 monorepo 配置文件（用于 pnpm 解析依赖）
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
@@ -58,8 +43,6 @@ COPY --from=builder /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/apps/backend/bmap-nest/package.json ./apps/backend/bmap-nest/
 
 # 安装生产依赖
-# 添加--unsafe-perm以允许构建脚本运行
-# RUN pnpm install --prod --unsafe-perm
 # --ignore-scripts: 跳过所有脚本执行（避免 husky prepare 失败）
 # --shamefully-hoist: 将所有依赖提升到 node_modules 根目录，避免符号链接问题
 # --prefer-offline: 优先使用缓存，加速安装
