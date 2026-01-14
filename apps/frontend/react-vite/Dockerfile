@@ -40,7 +40,7 @@ RUN ls -alR /app/apps/frontend/react-vite
 RUN pnpm build
 
 # 阶段4：运行环境
-FROM nginx:latest
+FROM nginx:1.28.1-alpine
 # 复制构建好的前端文件到Nginx的默认目录
 COPY --from=fe-build /app/apps/frontend/react-vite/build /usr/share/nginx/html
 # 复制Nginx配置文件
