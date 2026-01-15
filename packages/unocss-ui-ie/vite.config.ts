@@ -1,27 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import UnoCSS from '@unocss/vite';
-import { presetUno, presetAttributify, transformerDirectives } from 'unocss';
 import dts from 'vite-plugin-dts';
-import { resolve } from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [
-    UnoCSS({
-      mode: 'global',
-      presets: [
-        presetUno(),
-        presetAttributify()
-      ],
-      // 启用 class 转换
-      transformers: [
-        transformerDirectives() // 启用指令转换器
-      ],
-      // 自定义规则
-      rules: [
-        ['flex-center', { display: 'flex', 'align-items': 'center', 'justify-content': 'center' }]
-      ]
-    }),
+    UnoCSS({ mode: 'global' }),
     react({
       jsxRuntime: 'automatic',
       babel: {
@@ -32,19 +21,18 @@ export default defineConfig({
             {
               corejs: 3, // @babel/runtime-corejs3
               absoluteRuntime: true, // 重要：启用绝对路径解析
-              version: '7.26.9'
-            }
-          ]
-        ]
-      }
+            },
+          ],
+        ],
+      },
     }),
     dts({
       include: ['src'],
       exclude: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
       outDir: 'lib/es/types',
       rollupTypes: true, // 自动生成类型声明
-      insertTypesEntry: true // 自动插入类型声明
-    })
+      insertTypesEntry: true, // 自动插入类型声明
+    }),
   ],
   build: {
     target: 'es2015', // 确保兼容 IE
@@ -54,26 +42,19 @@ export default defineConfig({
       // formats: ['es', 'cjs'],
       formats: ['es'],
       // fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`
-      fileName: 'index'
+      fileName: 'index',
     },
     rollupOptions: {
-      external: [
-        'react',
-        'react-dom'
-      ],
+      external: ['react', 'react-dom', 'clsx'],
       output: {
-        // preserveModules: true,
-        // preserveModulesRoot: 'src',
-        // entryFileNames: '[name].[format].js',
         globals: {
           react: 'React',
-          'react-dom': 'ReactDOM'
+          'react-dom': 'ReactDOM',
+          clsx: 'clsx',
         },
         assetFileNames: 'index.css', // 指定输出文件的名称
-        // format: 'es',
-        // exports: 'named'
-      }
+      },
     },
-    cssCodeSplit: false // 是否将 CSS 代码分割为单独的文件
-  }
+    cssCodeSplit: false, // 是否将 CSS 代码分割为单独的文件
+  },
 });
