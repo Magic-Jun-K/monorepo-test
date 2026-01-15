@@ -1,10 +1,6 @@
 {
-  "extends": ["../../.oxlintrc.json"],
-  "ignorePatterns": [
-    "dist/**/*",
-    "lib/**/*",
-    "node_modules/**/*"
-  ],
+  "extends": ["../../../.oxlintrc.json"],
+  "ignorePatterns": ["dist/**/*", "lib/**/*", "node_modules/**/*"],
   "rules": {
     "no-console": "warn",
     "typescript/no-unused-vars": "error",
