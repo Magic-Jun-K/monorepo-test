@@ -36,7 +36,7 @@ export const Table = <T extends object>({
     const column = columns.find(col => col.key === sortState.columnKey);
     if (!column?.sorter) return dataSource;
     
-    return [...dataSource].sort((a, b) => {
+    return [...dataSource].toSorted((a, b) => {
       const result = column.sorter!(a, b);
       return sortState.order === 'ascend' ? result : -result;
     });
