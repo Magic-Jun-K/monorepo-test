@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -9,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ['dist', 'build', 'lib'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -20,25 +21,25 @@ export default tseslint.config(
       parser: tseslint.parser,
       parserOptions: {
         project: ['./tsconfig.json'],
-        tsconfigRootDir: __dirname
-      }
+        tsconfigRootDir: __dirname,
+      },
     },
     plugins: {
       'react-hooks': reactHooks,
-      'react-refresh': reactRefresh
+      'react-refresh': reactRefresh,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      '@typescript-eslint/no-explicit-any': 'off'
-    }
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
   {
     files: ['vite.config.ts', 'uno.config.ts', 'eslint.config.js', 'vitest.setup.ts'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser
-    }
-  }
+      globals: globals.browser,
+    },
+  },
 );
