@@ -22,6 +22,7 @@
     "build:ui": "tsup",
     "build:wasm": "cd src/components/Table/lib && wasm-pack build --target web --out-dir ../../../../pkg",
     "start:wasm": "cd src/components/Table/lib && wasm-pack build --target web --out-dir ../../../../pkg --dev --watch",
+    "lint": "oxlint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
