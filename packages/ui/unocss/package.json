@@ -1,0 +1,70 @@
+{
+  "name": "@eggshell/ui-unocss",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "browser": "./lib/index.js",
+  "types": "./lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/index.js",
+      "types": "./lib/types/index.d.ts"
+    },
+    "./lib/index.css": "./lib/index.css"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "dependencies": {
+    "@unocss/reset": "66.6.0",
+    "clsx": "2.1.1",
+    "unocss": "66.6.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@iconify-json/carbon": "^1.2.18",
+    "@iconify-json/heroicons": "^1.2.3",
+    "@iconify/react": "^6.0.2",
+    "@testing-library/react": "^16.0.1",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@unocss/vite": "^66.6.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "eslint": "^9",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^17.0.0",
+    "tslib": "^2.8.1",
+    "typescript-eslint": "^8",
+    "vite": "npm:rolldown-vite@7.3.1",
+    "vite-plugin-dts": "^4.5.4"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Magic-Jun-K/monorepo-test.git",
+    "directory": "packages/unocss-ui"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  }
+}
