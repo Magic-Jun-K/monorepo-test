@@ -15,13 +15,3 @@ services:
     depends_on:
       - eggshell-baiduMap-postgresql
     command: sh -c "npm install -g pnpm && pnpm install --prod && node dist/main.js"
-  
-  # eggshell-baiduMap-caddy:
-  #   image: caddy:latest
-  #   container_name: eggshell-baiduMap-caddy
-  #   ports:
-  #     - '80:80'
-  #     - '443:443'
-  #   volumes:
-  #     - ./caddy:/etc/caddy
-  #     - ../apps/frontend/baiduMap-react/build:/app/frontend/baiduMap-react/build

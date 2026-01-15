@@ -1,0 +1,51 @@
+services:
+  eggshell-bmap-postgresql:
+    image: bitnami/postgresql:latest
+    container_name: eggshell-bmap-rpc-postgresql
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=test123
+      - POSTGRESQL_DATABASE=bmap-nest-rpc
+      # 添加以下配置使PostgreSQL监听所有地址
+      - POSTGRESQL_POSTGRES_PASSWORD=test123
+      - POSTGRESQL_LISTEN_ADDRESSES=*
+    # volumes:
+    # - ../postgresql_data:/bitnami/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      eggshell-bmap-rpc-network:
+        aliases:
+          - localhost
+          - 127.0.0.1
+  
+  # Redis 缓存服务
+#   eggshell-bmap-redis:
+#     container_name: eggshell-bmap-rpc-redis
+#     image: redis:8-alpine
+#     environment:
+#       - REDIS_PORT=6379
+#       - REDIS_PASSWORD=test123
+#     # volumes:
+#     #   - redis_data:/data
+#     ports:
+#       - '6379:6379'
+#     restart: always
+#     healthcheck:
+#       test: ['CMD', 'redis-cli', 'ping']
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - eggshell-bmap-network
+
+networks:
+  eggshell-bmap-rpc-network:
+    driver: bridge
+
+# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=bmap-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
