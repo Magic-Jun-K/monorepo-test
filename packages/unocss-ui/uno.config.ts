@@ -9,7 +9,7 @@ export default defineConfig({
     presetAttributify(), // 支持属性化模式（可选）
     presetIcons({
       scale: 1.2, // 图标缩放比例
-      cdn: 'https://esm.sh/' // 使用CDN加载图标
+      // cdn: 'https://esm.sh/' // 使用CDN加载图标
     })
   ],
   // 启用 class 转换
