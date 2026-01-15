@@ -6,7 +6,7 @@
     "emitDeclarationOnly": true, // 只生成类型声明
     "outDir": "lib/es/types", // 生成的 .d.ts 文件输出目录
     "jsx": "react-jsx", // 启用 React 的 JSX
-    "rootDir": "src", //  
+    "rootDir": "src",
     "baseUrl": ".", // 告诉 TypeScript 解析 src 目录下的文件
     // 配置路径别名
     "paths": {
