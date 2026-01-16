@@ -119,7 +119,6 @@ jobs:
           skip-security-audit: 'true'
           skip-format-check: 'true'
           cache-turbo: 'false'
-          timeout-minutes: '5'
 
       - name: Build Docker Image for Scanning
         uses: docker/build-push-action@v6
@@ -141,7 +140,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy Results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -212,7 +211,6 @@ jobs:
           skip-security-audit: 'true'
           skip-format-check: 'true'
           cache-turbo: 'false'
-          timeout-minutes: '15'
 
       - name: Quality Checks(质量检查)
         if: steps.check.outputs.should_run == 'true'
