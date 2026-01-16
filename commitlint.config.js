@@ -13,6 +13,7 @@ const getPrefixedPackages = (packagePath, prefix) => {
 const scopes = [
   // ...getPackages('apps'),
   ...getPrefixedPackages('packages', 'packages'),
+  ...getPrefixedPackages('packages/ui', 'ui'),
   ...getPrefixedPackages('apps/frontend', 'frontend'),
   ...getPrefixedPackages('apps/backend', 'backend'),
   ...getPrefixedPackages('apps/web', 'web'),
