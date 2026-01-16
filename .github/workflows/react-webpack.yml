@@ -155,10 +155,15 @@ jobs:
     # 环境矩阵支持
     strategy:
       matrix:
-        environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment != '' && toJSON([github.event.inputs.environment]) || toJSON(['production']) }}
+        environment: [production, staging]
       fail-fast: false
 
     environment: ${{ matrix.environment }}
+
+    # 根据触发条件过滤环境
+    if: |
+      (github.event_name == 'push' && matrix.environment == 'production') ||
+      (github.event_name == 'workflow_dispatch' && matrix.environment == github.event.inputs.environment)
 
     outputs:
       image_tag: ${{ steps.set-outputs.outputs.image_tag }}
