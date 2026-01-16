@@ -159,26 +159,48 @@ jobs:
 
     environment: ${{ matrix.environment }}
 
-    # 根据触发条件过滤环境
-    if: |
-      (github.event_name == 'push' && matrix.environment == 'production') ||
-      (github.event_name == 'workflow_dispatch' && matrix.environment == github.event.inputs.environment)
+    # 存储触发信息供步骤使用
+    env:
+      TRIGGER_EVENT: ${{ github.event_name }}
+      TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
 
     outputs:
       image_tag: ${{ steps.set-outputs.outputs.image_tag }}
       rollback_image: ${{ steps.set-outputs.outputs.rollback_image }}
 
     steps:
+      # 根据触发条件过滤环境
+      - name: Check if should run
+        id: check
+        run: |
+          if [ "${{ env.TRIGGER_EVENT }}" == "push" ] && [ "${{ matrix.environment }}" != "production" ]; then
+            echo "Skipping deployment to ${{ matrix.environment }} (only production on push)"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          if [ "${{ env.TRIGGER_EVENT }}" == "workflow_dispatch" ] && [ "${{ matrix.environment }}" != "${{ env.TARGET_ENV }}" ]; then
+            echo "Skipping deployment to ${{ matrix.environment }} (target: ${{ env.TARGET_ENV }})"
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "should_run=true" >> $GITHUB_OUTPUT
+          echo "✅ Running deployment to ${{ matrix.environment }}"
+
       - uses: actions/checkout@v4
+        if: steps.check.outputs.should_run == 'true'
 
       - name: Set Deployment Outputs
         id: set-outputs
+        if: steps.check.outputs.should_run == 'true'
         run: |
           echo "image_tag=${{ github.sha }}" >> $GITHUB_OUTPUT
           echo "rollback_image=latest" >> $GITHUB_OUTPUT
 
       - name: Run Common Steps
         id: common
+        if: steps.check.outputs.should_run == 'true'
         uses: ./.github/actions/common-steps
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -193,6 +215,7 @@ jobs:
           timeout-minutes: '15'
 
       - name: Quality Checks(质量检查)
+        if: steps.check.outputs.should_run == 'true'
         run: |
           echo "🔍 Running quality checks..."
           echo "Node.js: ${{ steps.common.outputs.node-version }}"
@@ -203,6 +226,7 @@ jobs:
 
       # 构建应用
       - name: Build Application(构建应用)
+        if: steps.check.outputs.should_run == 'true'
         run: |
           echo "🏗️ Building react-webpack application..."
           pnpm build:react-webpack
@@ -210,6 +234,7 @@ jobs:
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
+        if: steps.check.outputs.should_run == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -233,6 +258,7 @@ jobs:
 
       - name: Deploy to server
         id: deploy
+        if: steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -297,7 +323,7 @@ jobs:
             echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
 
       - name: Health Check
-        if: steps.deploy.outcome == 'success'
+        if: steps.deploy.outcome == 'success' && steps.check.outputs.should_run == 'true'
         run: |
           echo "🏥 Performing health check..."
           sleep 10
@@ -321,7 +347,7 @@ jobs:
           exit 1
 
       - name: Rollback on Failure
-        if: failure()
+        if: failure() && steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -358,7 +384,7 @@ jobs:
             echo "✅ Rollback completed!"
 
       - name: Notify Deployment Status
-        if: always()
+        if: always() && steps.check.outputs.should_run == 'true'
         uses: slackapi/slack-github-action@v2
         with:
           payload: |
@@ -431,7 +457,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Create Deployment Summary
-        if: always()
+        if: always() && steps.check.outputs.should_run == 'true'
         run: |
           echo "## 📊 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
