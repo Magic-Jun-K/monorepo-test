@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Swiper } from '@eggshell/tailwindcss-ui';
+import { Swiper } from '@eggshell/ui-tailwind';
 
 import LazyImage from '@/components/LazyImage';
 import { BASE_URL } from '@/config';

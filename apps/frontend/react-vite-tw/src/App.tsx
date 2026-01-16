@@ -2,14 +2,14 @@ import { FC /* useEffect */ } from 'react';
 import { RouterProvider } from 'react-router-dom';
 // import { init, browserTracingIntegration } from '@sentry/react';
 
-import { router } from './router/index';
-// import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
 import { ToastContainer } from '@/components/Toast/ToastContainer';
+
+// import { initWebVitals, initPerformanceChecker } from '@/utils/performance';
+import { router } from './router/index';
 
 import '@/assets/css/index.scss';
 import '@/assets/css/font.scss';
-import '@eggshell/unocss-ui/build/es/index.css';
-import { useTokenExpirationCheck } from './hooks/useTokenExpirationCheck';
+import '@eggshell/ui-tailwind/lib/index.css';
 
 const App: FC = () => {
   // useEffect(() => {
@@ -25,9 +25,6 @@ const App: FC = () => {
   //   // initPerformanceChecker();
   //   // }
   // }, []);
-
-  // 检查token是否过期
-  useTokenExpirationCheck();
 
   return (
     <>
