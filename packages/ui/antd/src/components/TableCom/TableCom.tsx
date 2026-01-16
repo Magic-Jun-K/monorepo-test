@@ -1,15 +1,16 @@
 import { forwardRef, useMemo, useEffect, useState } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { Table, PaginationProps } from 'antd';
 import type { TableRef } from 'antd/es/table';
-import clsx from 'clsx';
 import { FilterValue, SorterResult, TableCurrentDataSource } from 'antd/es/table/interface';
+import clsx from 'clsx';
 
 import { TableComProps } from './types';
 import { heightManager } from '../../utils/heightManager';
 
 import styles from './index.module.css';
 
-export const TableCom = forwardRef<TableRef, TableComProps<unknown>>((props, ref) => {
+const TableComInner = <T = unknown,>(props: TableComProps<T>, ref: Ref<TableRef>) => {
   const {
     className,
     pagination,
@@ -51,8 +52,8 @@ export const TableCom = forwardRef<TableRef, TableComProps<unknown>>((props, ref
   const handleTableChange = (
     pagination: PaginationProps,
     filters: Record<string, FilterValue | null>,
-    sorter: SorterResult<unknown> | SorterResult<unknown>[],
-    extra: TableCurrentDataSource<unknown>,
+    sorter: SorterResult<T> | SorterResult<T>[],
+    extra: TableCurrentDataSource<T>,
   ) => {
     onChange?.(pagination, filters, sorter, extra);
   };
@@ -115,4 +116,8 @@ export const TableCom = forwardRef<TableRef, TableComProps<unknown>>((props, ref
       />
     </div>
   );
-});
+};
+
+export const TableCom = forwardRef(TableComInner) as <T = unknown>(
+  props: TableComProps<T> & { ref?: Ref<TableRef> },
+) => ReactElement;

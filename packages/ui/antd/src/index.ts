@@ -16,3 +16,4 @@ export {
   AutoComplete,
 } from 'antd';
 export type { MenuProps } from 'antd';
+export type { ColumnType } from 'antd/es/table/interface';
