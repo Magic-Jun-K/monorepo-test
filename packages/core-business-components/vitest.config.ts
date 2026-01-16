@@ -54,7 +54,7 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@utils': resolve(__dirname, './src/utils'),
       '@types': resolve(__dirname, './src/types'),
-      '@eggshell/unocss-ui': resolve(__dirname, '../unocss-ui/src')
+      '@eggshell/ui-unocss': resolve(__dirname, '../unocss-ui/src')
     }
   },
   // 添加对虚拟模块的处理
