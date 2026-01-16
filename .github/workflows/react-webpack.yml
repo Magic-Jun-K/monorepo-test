@@ -149,7 +149,6 @@ jobs:
   # 构建和部署阶段
   build-and-deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: [security-scan]
 
     # 环境矩阵支持
