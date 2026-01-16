@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Modal, Form, Select, message } from '@eggshell/antd-ui';
-import { Input } from '@eggshell/tailwindcss-ui';
+import { Modal, Form, Select, message } from '@eggshell/ui-antd';
+import { Input } from '@eggshell/ui-tailwind';
 
 import { updateUser } from '@/services/user';
 

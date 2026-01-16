@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SearchCom, TableCom, Space, message, Modal } from '@eggshell/antd-ui';
-import { Button } from '@eggshell/tailwindcss-ui';
+import { SearchCom, TableCom, Space, message, Modal } from '@eggshell/ui-antd';
+import { Button } from '@eggshell/ui-tailwind';
 import { Plus, Import, Download } from 'lucide-react';
 import dayjs from 'dayjs';
 

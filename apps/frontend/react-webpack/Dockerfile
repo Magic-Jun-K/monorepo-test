@@ -23,15 +23,15 @@ COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     # pnpm install --frozen-lockfile \
     pnpm install \
-    --filter="@eggshell/tailwindcss-ui..." \
-    --filter="@eggshell/antd-ui..." \
+    --filter="@eggshell/ui-tailwind..." \
+    --filter="@eggshell/ui-antd..." \
     --filter="@eggshell/core-business-components"\
     --filter="@frontend/react-webpack..."
 
 # 阶段3：构建应用
 FROM deps AS fe-build
-RUN pnpm --filter @eggshell/tailwindcss-ui build
-RUN pnpm --filter @eggshell/antd-ui build
+RUN pnpm --filter @eggshell/ui-tailwind build
+RUN pnpm --filter @eggshell/ui-antd build
 RUN pnpm --filter @eggshell/core-business-components build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack

@@ -10,9 +10,9 @@ import { setupErrorHandlers } from './utils/errorHandler';
 
 import '@/styles/index.scss';
 import '@/styles/font.scss';
-// import '@eggshell/unocss-ui/lib/index.css'; // 直接引入样式
-import '@eggshell/antd-ui/es/index.css';
-import '@eggshell/tailwindcss-ui/lib/index.css';
+// import '@eggshell/ui-unocss/lib/index.css'; // 直接引入样式
+import '@eggshell/ui-antd/es/index.css';
+import '@eggshell/ui-tailwind/lib/index.css';
 
 setupErrorHandlers(); // 设置错误处理器
 

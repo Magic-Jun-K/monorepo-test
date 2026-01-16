@@ -1,9 +1,9 @@
 import { useState } from 'react';
-// import { Upload } from '@eggshell/unocss-ui';
-import { Modal, message, Upload } from '@eggshell/antd-ui';
-import { Button } from '@eggshell/tailwindcss-ui';
+// import { Upload } from '@eggshell/ui-unocss';
+import { Modal, message, Upload } from '@eggshell/ui-antd';
+import { Button } from '@eggshell/ui-tailwind';
 import { Import, Download, Info } from 'lucide-react';
-// import type { UploadFile } from '@eggshell/unocss-ui/src/components/Upload/types';
+// import type { UploadFile } from '@eggshell/ui-unocss/src/components/Upload/types';
 
 // 定义 UploadFile 类型以解决 ts(2304) 错误
 interface UploadFile {
