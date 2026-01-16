@@ -7,8 +7,7 @@
     "declarationDir": "build/types", // 将 .d.ts 输出到独立目录
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@eggshell/antd-ui": ["../../../../packages/antd-ui/src"]
+      "@/*": ["src/*"]
     },
     "typeRoots": ["../../../node_modules/@types", "./node_modules/@types", "./src/types"]
   },
