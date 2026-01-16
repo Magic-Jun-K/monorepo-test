@@ -1,4 +1,4 @@
-import { Input } from '@eggshell/tailwindcss-ui';
+import { Input } from '@eggshell/ui-tailwind';
 import { MapCom, MapSearch, PlaceResult } from '@eggshell/core-business-components';
 
 import { BASE_URL } from '@/config';
