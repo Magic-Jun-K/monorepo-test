@@ -1,5 +1,5 @@
-import { SearchItem, Tag } from '@eggshell/antd-ui';
-import { Button } from '@eggshell/tailwindcss-ui';
+import { SearchItem, Tag } from '@eggshell/ui-antd';
+import { Button } from '@eggshell/ui-tailwind';
 
 // 搜索配置
 export const searchItems: SearchItem[] = [

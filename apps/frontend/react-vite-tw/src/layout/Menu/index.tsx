@@ -1,6 +1,6 @@
 import { FC, memo, useMemo } from 'react';
 
-import { Menu } from '@eggshell/antd-ui';
+import { Menu } from '@eggshell/ui-antd';
 
 import { useUserStore } from '@/stores/zustand/user.store';
 import { getMenuConfig, filterCustomProps } from './constant';

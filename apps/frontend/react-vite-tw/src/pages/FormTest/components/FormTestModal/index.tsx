@@ -1,6 +1,6 @@
-import { Upload } from '@eggshell/antd-ui';
-import { Modal, Select } from '@eggshell/antd-ui';
-import { Input } from '@eggshell/tailwindcss-ui';
+import { Upload } from '@eggshell/ui-antd';
+import { Modal, Select } from '@eggshell/ui-antd';
+import { Input } from '@eggshell/ui-tailwind';
 
 interface Props {
   visible: boolean;

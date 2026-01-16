@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { SearchCom, TableCom } from '@eggshell/antd-ui';
-import { Button } from '@eggshell/tailwindcss-ui';
+import { SearchCom, TableCom } from '@eggshell/ui-antd';
+import { Button } from '@eggshell/ui-tailwind';
 
 import ContainerBody from '@/layout/ContainerBody';
 import ImageTestModal from './components/ImageTestModal';
