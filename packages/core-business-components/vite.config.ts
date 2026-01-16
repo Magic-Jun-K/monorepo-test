@@ -81,12 +81,12 @@ export default defineConfig({
     },
     rollupOptions: {
       // 3. 不将依赖打包进库，由宿主项目提供（重要！）
-      external: ['react', 'react-dom', '@eggshell/antd-ui'],
+      external: ['react', 'react-dom', '@eggshell/ui-antd'],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          '@eggshell/antd-ui': 'AntdUI',
+          '@eggshell/ui-antd': 'AntdUI',
         },
       },
     },
