@@ -100,8 +100,8 @@ global.URL.createObjectURL = vi.fn(() => 'mocked-blob-url');
 global.URL.revokeObjectURL = vi.fn();
 
 // 添加对 unocss-ui 中其他可能的虚拟模块的模拟
-vi.mock('@eggshell/unocss-ui', async () => {
-  const actual = await vi.importActual('@eggshell/unocss-ui');
+vi.mock('@eggshell/ui-unocss', async () => {
+  const actual = await vi.importActual('@eggshell/ui-unocss');
   return {
     ...actual,
     // 如果需要，可以在这里添加对特定导出的模拟
