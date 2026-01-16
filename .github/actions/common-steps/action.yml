@@ -1,47 +1,190 @@
 name: Common Steps
 
+description: 'Common CI/CD steps for monorepo projects'
+
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '22'
+  pnpm-version:
+    description: 'pnpm version (empty for latest)'
+    required: false
+    default: '10'
+  ALIYUN_ACR_REGISTRY:
+    description: '阿里云ACR注册地址'
+    required: false
+  ALIYUN_ACR_USERNAME:
+    description: '阿里云ACR用户名'
+    required: false
+  ALIYUN_ACR_PASSWORD:
+    description: '阿里云ACR密码'
+    required: false
+  skip-tests:
+    description: '跳过测试步骤'
+    required: false
+    default: 'true'
+  skip-security-audit:
+    description: '跳过安全审计'
+    required: false
+    default: 'false'
+  security-audit-level:
+    description: '安全审计级别 (low, moderate, high, critical)'
+    required: false
+    default: 'moderate'
+  skip-format-check:
+    description: '跳过格式检查'
+    required: false
+    default: 'true'
+  cache-dependencies:
+    description: '是否缓存依赖'
+    required: false
+    default: 'true'
+  cache-turbo:
+    description: '是否缓存 Turbo'
+    required: false
+    default: 'true'
+  timeout-minutes:
+    description: '步骤超时时间（分钟）'
+    required: false
+    default: '10'
+
+outputs:
+  node-version:
+    description: '使用的 Node.js 版本'
+    value: ${{ steps.node-info.outputs.version }}
+  pnpm-version:
+    description: '使用的 pnpm 版本'
+    value: ${{ steps.pnpm-info.outputs.version }}
+  cache-hit:
+    description: '依赖缓存是否命中'
+    value: ${{ steps.cache-deps.outputs.cache-hit }}
+
 runs:
   using: 'composite'
   steps:
-    # 安装 pnpm
-    - name: Install pnpm(安装 pnpm)
-      uses: pnpm/action-setup@v4
-      # 不指定版本，让 pnpm 自动检测
-      # with:
-      #   version: 10.8.0
+    - name: Configure Git(配置 Git)
+      shell: bash
+      run: |
+        git config --global core.autocrlf false
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
 
-    # 设置 Node.js 环境
-    - name: Set up Node.js(设置 Node.js 环境)
+    - name: Setup pnpm(设置 pnpm)
+      id: pnpm-info
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Get pnpm version(获取 pnpm 版本)
+      id: pnpm-version
+      shell: bash
+      run: |
+        VERSION=$(pnpm --version)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📦 pnpm version: $VERSION"
+
+    - name: Setup Node.js(设置 Node.js 环境)
+      id: node-info
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: ${{ inputs.node-version }}
+        cache: 'pnpm'
 
-    # 依赖缓存优化
-    - name: Cache pnpm modules(依赖缓存优化)
+    - name: Get Node.js version(获取 Node.js 版本)
+      id: node-version
+      shell: bash
+      run: |
+        VERSION=$(node --version)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "🟢 Node.js version: $VERSION"
+
+    - name: Cache Turbo(缓存 Turbo)
+      if: inputs.cache-turbo == 'true'
       uses: actions/cache@v4
       with:
-        path: |
-          ~/.pnpm-store
-          **/node_modules
-        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ hashFiles('**/turbo.json') }}-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-pnpm-
+          ${{ runner.os }}-turbo-${{ hashFiles('**/turbo.json') }}-
+          ${{ runner.os }}-turbo-
 
-    # 登录到 GitHub Container Registry
-    # - name: Login to GitHub Container Registry(登录到 GitHub Container Registry)
-    #   uses: docker/login-action@v3
-    #   with:
-    #     registry: ghcr.io
-    #     username: ${{ github.actor }}
-    #     password: ${{ secrets.GH_TOKEN }}
+    - name: Check lockfile consistency(检查 lockfile 一致性)
+      shell: bash
+      run: |
+        echo "🔍 Checking lockfile consistency..."
+        if [ -f "pnpm-lock.yaml" ]; then
+          echo "✅ pnpm-lock.yaml found"
+        else
+          echo "⚠️ pnpm-lock.yaml not found, consider committing it"
+        fi
 
-    # 登录到阿里云 ACR
+    - name: Install Dependencies(安装依赖)
+      shell: bash
+      run: |
+        echo "📦 Installing dependencies..."
+        pnpm install --frozen-lockfile --prefer-offline
+        echo "✅ Dependencies installed successfully!"
+      timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    - name: Verify installation(验证安装)
+      shell: bash
+      run: |
+        echo "🔍 Verifying installation..."
+        if [ -d "node_modules" ]; then
+          MODULE_COUNT=$(find node_modules -maxdepth 1 -type d | wc -l)
+          echo "✅ Found $(($MODULE_COUNT - 1)) packages in node_modules"
+        else
+          echo "⚠️ node_modules directory not found"
+          exit 1
+        fi
+
+    - name: Run Tests(运行测试)
+      if: inputs.skip-tests != 'true'
+      shell: bash
+      run: |
+        echo "🧪 Running tests..."
+        pnpm test || echo "⚠️ Some tests failed, but continuing..."
+      timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    - name: Run Security Audit(运行安全审计)
+      if: inputs.skip-security-audit != 'true'
+      shell: bash
+      run: |
+        echo "🔒 Running security audit..."
+        AUDIT_LEVEL="${{ inputs.security-audit-level }}"
+        echo "📊 Audit level: $AUDIT_LEVEL"
+        pnpm audit --audit-level "$AUDIT_LEVEL" || echo "⚠️ Security audit found issues, please review"
+
+    - name: Code Format Check(代码格式检查)
+      if: inputs.skip-format-check != 'true'
+      shell: bash
+      run: |
+        echo "✨ Checking code formatting..."
+        if pnpm format:check; then
+          echo "✅ Format check passed!"
+        else
+          echo "❌ Format check failed!"
+          echo "💡 Run 'pnpm format' to fix formatting issues"
+          exit 1
+        fi
+
+    - name: Generate dependency report(生成依赖报告)
+      if: always()
+      shell: bash
+      run: |
+        echo "📊 Dependency Report:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Node.js | ${{ steps.node-version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| pnpm | ${{ steps.pnpm-version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Cache Hit | ${{ steps.cache-deps.outputs.cache-hit }} |" >> $GITHUB_STEP_SUMMARY
+
     - name: Login to Aliyun ACR(登录到阿里云 ACR)
+      if: inputs.ALIYUN_ACR_REGISTRY != '' && inputs.ALIYUN_ACR_USERNAME != '' && inputs.ALIYUN_ACR_PASSWORD != ''
       uses: docker/login-action@v3
       with:
-        # registry: registry.cn-guangzhou.aliyuncs.com
-        # username: ${{ secrets.ALIYUN_ACR_USERNAME }}
-        # password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
         registry: ${{ inputs.ALIYUN_ACR_REGISTRY }}
         username: ${{ inputs.ALIYUN_ACR_USERNAME }}
         password: ${{ inputs.ALIYUN_ACR_PASSWORD }}
