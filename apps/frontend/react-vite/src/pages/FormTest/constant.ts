@@ -1,4 +1,4 @@
-import { SearchItem } from '@eggshell/antd-ui';
+import { SearchItem } from '@eggshell/ui-antd';
 
 // 搜索项配置 - 性能指标字段
 export const SEARCH_ITEMS: SearchItem[] = [

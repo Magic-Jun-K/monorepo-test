@@ -24,15 +24,15 @@ COPY apps/frontend/react-vite/ ./apps/frontend/react-vite/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     # pnpm install --frozen-lockfile \
     pnpm install \
-    --filter="@eggshell/unocss-ui..." \
-    --filter="@eggshell/antd-ui..." \
+    --filter="@eggshell/ui-unocss..." \
+    --filter="@eggshell/ui-antd..." \
     --filter="@eggshell/core-business-components..." \
     --filter="@frontend/react-vite..."
 
 # 阶段3：构建应用
 FROM deps AS fe-build
-RUN pnpm --filter @eggshell/unocss-ui build
-RUN pnpm --filter @eggshell/antd-ui build
+RUN pnpm --filter @eggshell/ui-unocss build
+RUN pnpm --filter @eggshell/ui-antd build
 RUN pnpm --filter @eggshell/core-business-components build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-vite

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-import { Dropdown } from '@eggshell/antd-ui';
+import { Dropdown } from '@eggshell/ui-antd';
 
 import { useAuthStore } from '@/stores/zustand/auth.store';
 import { logout } from '@/services';

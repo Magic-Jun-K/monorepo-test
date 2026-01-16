@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import type { MenuProps } from '@eggshell/antd-ui';
+import type { MenuProps } from '@eggshell/ui-antd';
 
 // 定义我们自己的菜单项类型，兼容 Ant Design 的 MenuItem 类型
 export interface MenuItemTypeWithComponent {
