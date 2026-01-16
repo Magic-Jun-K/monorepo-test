@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-import { AutoComplete } from '@eggshell/antd-ui';
+import { AutoComplete } from '@eggshell/ui-antd';
 
 import type { MapInstance, LocalSearch, LocalResult, Marker } from '../../types/baiduMap';
 
