@@ -15,8 +15,8 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml* ./
 COPY tsconfig* ./
-COPY packages/tailwindcss-ui/ ./packages/tailwindcss-ui/
-COPY packages/antd-ui/ ./packages/antd-ui/
+COPY packages/ui/tailwind/ ./packages/ui/tailwind/
+COPY packages/ui/antd/ ./packages/ui/antd/
 COPY packages/core-business-components/ ./packages/core-business-components/
 COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 # 安装所有依赖（包含 devDependencies）
