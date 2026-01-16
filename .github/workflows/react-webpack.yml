@@ -1,34 +1,208 @@
 name: 前端react-webpack部署流程
 
+# 环境变量
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: 'latest'
+  # 镜像仓库名称
+  REGISTRY_NAME: 'eggshell'
+  APP_NAME: 'react-webpack'
+  # 启用 Docker BuildKit 来提高构建效率
+  DOCKER_BUILDKIT: '1'
+  # 启用 Docker Compose 的 BuildKit 功能
+  COMPOSE_DOCKER_CLI_BUILD: '1'
+
+# 触发条件
 on:
+  # 推送触发部署流程
   push:
     branches: [main, master] # 只在 main 和 master 分支上触发
     paths:
-      - 'apps/frontend/react-webpack/**' # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
-      - 'packges/**' # 只在 packages 目录下的文件发生变化时触发
-      - '.github/workflows/react-webpack.yml' # 只在该工作流文件发生变化时触发
+      # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
+      - 'apps/frontend/react-webpack/**'
+      # 只在 packages 目录下的文件发生变化时触发
+      - 'packages/**'
+      # 只在该工作流文件发生变化时触发
+      - '.github/workflows/react-webpack.yml'
+  # 拉取请求触发部署流程
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/frontend/react-webpack/**'
+      - 'packages/**'
+  # 手动触发部署流程
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      rollback:
+        description: '是否回滚到上一个版本'
+        required: false
+        default: false
+        type: boolean
 
+# 工作流作业
 jobs:
-  build-and-deploy:
+  # 拉取请求测试阶段
+  test:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      # 运行公共步骤
+      - name: Run Common Steps
+        id: common
+        uses: ./.github/actions/common-steps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          skip-tests: 'true'
+          skip-security-audit: 'false'
+          skip-format-check: 'true'
+
+      # 类型检查
+      - name: Type Check
+        run: |
+          echo "🔍 Running type check..."
+          pnpm typecheck
+
+      # 代码风格检查
+      - name: Lint Check
+        run: |
+          echo "✨ Running linting..."
+          pnpm lint
+
+      # 单元测试
+      - name: Unit Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          pnpm test:react-webpack -- --coverage
+
+      # 构建测试
+      - name: Build Test
+        run: |
+          echo "🏗️ Testing build..."
+          pnpm build:react-webpack
+
+      # 上传测试覆盖率
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/coverage-final.json
+          flags: react-webpack
+          name: codecov-react-webpack
+          fail_ci_if_error: false
+
+  # 安全扫描阶段
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
 
-      # 运行 Common Steps
       - name: Run Common Steps
+        id: common
         uses: ./.github/actions/common-steps
         with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          skip-tests: 'true'
+          skip-security-audit: 'true'
+          skip-format-check: 'true'
+          cache-turbo: 'false'
+          timeout-minutes: '5'
+
+      - name: Build Docker Image for Scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/frontend/react-webpack/Dockerfile
+          push: false
+          tags: ${{ env.APP_NAME }}:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.APP_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy Results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # 构建和部署阶段
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [security-scan]
+
+    # 环境矩阵支持
+    strategy:
+      matrix:
+        environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment != '' && toJSON([github.event.inputs.environment]) || toJSON(['production']) }}
+      fail-fast: false
+
+    environment: ${{ matrix.environment }}
+
+    outputs:
+      image_tag: ${{ steps.set-outputs.outputs.image_tag }}
+      rollback_image: ${{ steps.set-outputs.outputs.rollback_image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Deployment Outputs
+        id: set-outputs
+        run: |
+          echo "image_tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "rollback_image=latest" >> $GITHUB_OUTPUT
+
+      - name: Run Common Steps
+        id: common
+        uses: ./.github/actions/common-steps
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
           ALIYUN_ACR_REGISTRY: ${{ secrets.ALIYUN_ACR_REGISTRY }}
           ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
           ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+          skip-tests: 'true'
+          skip-security-audit: 'true'
+          skip-format-check: 'true'
+          cache-turbo: 'false'
+          timeout-minutes: '15'
 
-      # 前端测试
-      # - name: Frontend Tests(前端测试)
-      #   run: |
-      #     cd apps/frontend/react-webpack
-      #     pnpm install
-      # pnpm test
+      - name: Quality Checks(质量检查)
+        run: |
+          echo "🔍 Running quality checks..."
+          echo "Node.js: ${{ steps.common.outputs.node-version }}"
+          echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
+          pnpm typecheck
+          pnpm lint
+          echo "✅ Quality checks passed!"
+
+      # 构建应用
+      - name: Build Application(构建应用)
+        run: |
+          echo "🏗️ Building react-webpack application..."
+          pnpm build:react-webpack
+          echo "✅ Build completed!"
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
@@ -37,16 +211,113 @@ jobs:
           context: .
           file: ./apps/frontend/react-webpack/Dockerfile
           push: true
-          # tags: ghcr.io/Magic-Jun-K/react-webpack:latest
-          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/react-webpack:${{ github.sha }}
-          # 添加构建参数，启用详细日志
-          # VERBOSE=true 启用详细日志
+          tags: |
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.sha }}
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ matrix.environment }}
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
           build-args: |
-            NODE_ENV=production
+            NODE_ENV=${{ matrix.environment }}
             VERBOSE=true
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+          cache-from: type=gha,ref=${{ github.repository }}/buildcache
+          cache-to: type=gha,ref=${{ github.repository }}/buildcache,mode=max
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-      # 部署前端到服务器（使用 SSH）
-      - name: Deploy to server(部署前端到服务器)
+      - name: Deploy to server
+        id: deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+
+            DEPLOY_DIR="/var/www/eggshell"
+            DEPLOY_USER="${{ secrets.SERVER_USERNAME }}"
+            REGISTRY="${{ secrets.ALIYUN_ACR_REGISTRY }}"
+            IMAGE_TAG="${{ github.sha }}"
+            ENVIRONMENT="${{ matrix.environment }}"
+            CONTAINER_NAME="eggshell-react-webpack"
+
+            echo "🚀 Starting deployment to $ENVIRONMENT..."
+
+            mkdir -p "$DEPLOY_DIR"
+            cd "$DEPLOY_DIR"
+
+            echo "🔐 Logging into ACR..."
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "$REGISTRY" && echo "✅ Login successful" || (echo "❌ Login failed" && exit 1)
+
+            echo "📝 Setting environment configuration..."
+            cat > .env.deploy << 'EOF'
+            ALIYUN_REGISTRY=$REGISTRY
+            IMAGE_TAG=$IMAGE_TAG
+            ENVIRONMENT=$ENVIRONMENT
+            DEPLOY_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            DEPLOY_USER=$DEPLOY_USER
+            EOF
+            chmod 600 .env.deploy
+
+            echo "🏗️ Starting infrastructure services..."
+            docker-compose -f docker-compose.infra.yml up -d
+
+            echo "💾 Backup current container state..."
+            if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+              docker inspect "$CONTAINER_NAME" > "backup_${CONTAINER_NAME}_$(date +%s).json" || true
+            fi
+
+            echo "⏹️ Stopping existing containers..."
+            docker-compose -f docker-compose.react-webpack.yml stop "$CONTAINER_NAME" || true
+            docker-compose -f docker-compose.react-webpack.yml rm -f "$CONTAINER_NAME" || true
+
+            echo "📦 Pulling and starting new containers..."
+            docker-compose -f docker-compose.react-webpack.yml pull "$CONTAINER_NAME"
+            docker-compose -f docker-compose.react-webpack.yml up -d "$CONTAINER_NAME"
+
+            echo "⏳ Waiting for container to be healthy..."
+            timeout 120 bash -c 'until docker ps --filter "name=$CONTAINER_NAME" --filter "status=running" --format "{{.Status}}" | grep -q "healthy"; do sleep 5; done' || echo "⚠️ Health check timeout, continuing..."
+
+            echo "✅ Deployment completed! Verifying..."
+            docker-compose -f docker-compose.react-webpack.yml ps "$CONTAINER_NAME"
+
+            echo "🧹 Cleanup old images..."
+            docker image prune -af --filter "until=72h" || true
+
+            echo "🎉 Deployment successful!"
+            echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
+
+      - name: Health Check
+        if: steps.deploy.outcome == 'success'
+        run: |
+          echo "🏥 Performing health check..."
+          sleep 10
+
+          MAX_RETRIES=6
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+            
+            if curl -f -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_URL }}/health" | grep -q "200"; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 10
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Rollback on Failure
+        if: failure()
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -54,30 +325,121 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
-            # 手动创建目录（如果不存在）
-            mkdir -p /var/www/eggshell
-            cd /var/www/eggshell
+            set -e
 
-            # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
-            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
+            DEPLOY_DIR="/var/www/eggshell"
+            CONTAINER_NAME="eggshell-react-webpack"
+            REGISTRY="${{ secrets.ALIYUN_ACR_REGISTRY }}"
+            ROLLBACK_IMAGE="${{ needs.build-and-deploy.outputs.rollback_image }}"
 
-            # 创建 .env 文件
-            echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
-            echo "IMAGE_TAG=${{ github.sha }}" >> .env
+            echo "🔄 Starting rollback..."
+            cd "$DEPLOY_DIR"
 
-            # 打印 .env 文件验证内容
-            cat .env
+            echo "🔐 Logging into ACR..."
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "$REGISTRY"
 
-            # 确保基础设施服务正在运行
-            docker-compose -f docker-compose.infra.yml up -d
+            echo "⏹️ Stopping failed deployment..."
+            docker-compose -f docker-compose.react-webpack.yml stop "$CONTAINER_NAME" || true
+            docker-compose -f docker-compose.react-webpack.yml rm -f "$CONTAINER_NAME" || true
 
-            # 查看 compose 配置是否正确解析变量
-            # docker-compose -f docker-compose.react-webpack.yml config
+            echo "📦 Rolling back to previous version..."
+            IMAGE_TAG="$(grep 'IMAGE_TAG=' .env.deploy 2>/dev/null | cut -d'=' -f2)"
+            if [ -n "$IMAGE_TAG" ]; then
+              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=$ROLLBACK_IMAGE/" .env.deploy
+            fi
 
-            # 停止现有的前端容器
-            docker-compose -f docker-compose.react-webpack.yml stop eggshell-react-webpack
-            docker-compose -f docker-compose.react-webpack.yml rm -f eggshell-react-webpack
+            docker-compose -f docker-compose.react-webpack.yml pull "$CONTAINER_NAME"
+            docker-compose -f docker-compose.react-webpack.yml up -d "$CONTAINER_NAME"
 
-            # 拉取并启动容器
-            docker-compose -f docker-compose.react-webpack.yml pull eggshell-react-webpack
-            docker-compose -f docker-compose.react-webpack.yml up -d eggshell-react-webpack
+            echo "✅ Rollback completed!"
+
+      - name: Notify Deployment Status
+        if: always()
+        uses: slackapi/slack-github-action@v2
+        with:
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ job.status == 'success' && '✅ 部署成功' || '❌ 部署失败' }} - ${{ env.APP_NAME }}",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Environment:*\n${{ matrix.environment }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Status:*\n${{ job.status }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Image Tag:*\n\`${{ github.sha }}\`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Repository:* ${{ github.repository }}\n*Commit:* ${{ github.event.head_commit.message }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "查看 Workflow",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                      "style": "${{ job.status == 'success' && 'primary' || 'danger' }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "查看 Commit",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create Deployment Summary
+        if: always()
+        run: |
+          echo "## 📊 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ matrix.environment }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tag | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered By | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Deployment Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${{ secrets.ALIYUN_ACR_REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deploy Time**: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_STEP_SUMMARY
