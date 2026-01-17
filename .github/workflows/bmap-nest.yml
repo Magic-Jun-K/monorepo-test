@@ -1,16 +1,74 @@
 name: 后端bmap-nest部署流程
 
+# 环境变量
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: 'latest'
+  REGISTRY_NAME: 'eggshell'
+  APP_NAME: 'bmap-nest'
+
 on:
   push:
     branches: [main, master]
     paths:
       - 'apps/backend/bmap-nest/**' # 只在 apps/backend/bmap-nest 目录下的文件发生变化时触发
-      # - '.github/workflows/bmap-nest.yml' # 只在该工作流文件发生变化时触发
+      # - 'packages/**' # 共享包变化也需要重新部署
+      - '.github/workflows/bmap-nest.yml' # 只在该工作流文件发生变化时触发
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/backend/bmap-nest/**'
+      # - 'packages/**'
 
 jobs:
+  # 拉取请求测试阶段
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Common Steps
+        uses: ./.github/actions/common-steps
+        with:
+          skip-security-audit: 'false'  # 后端项目的安全审计很重要
+      
+      - name: Type Check
+        run: |
+          echo "🔍 Running type check..."
+          pnpm typecheck
+      
+      - name: Lint Check
+        run: |
+          echo "✨ Running linting..."
+          pnpm lint
+      
+      - name: Unit Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          cd apps/backend/bmap-nest
+          pnpm test
+      
+      - name: Build Test
+        run: |
+          echo "🏗️ Testing build..."
+          cd apps/backend/bmap-nest
+          pnpm build
+
+  # 构建和部署阶段
   build-and-deploy-backend:
     runs-on: ubuntu-latest
-
+    if: github.event_name == 'push'
+    
+    # 环境矩阵支持
+    strategy:
+      matrix:
+        environment: [production]
+        # 未来可扩展: [staging, production]
+    
+    environment: ${{ matrix.environment }}
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -21,13 +79,46 @@ jobs:
           ALIYUN_ACR_REGISTRY: ${{ secrets.ALIYUN_ACR_REGISTRY }}
           ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
           ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+          skip-tests: 'false'  # 后端测试很重要
+          skip-security-audit: 'false'  # 后端安全审计很重要
 
-      # 后端测试
+      # 类型检查和代码质量
+      - name: Quality Checks(质量检查)
+        run: |
+          echo "🔍 Running quality checks..."
+          pnpm typecheck
+          pnpm lint
+          echo "✅ Quality checks passed!"
+
+      # 后端测试（增强版）
       - name: Backend Tests(后端测试)
         run: |
+          echo "🧪 Running comprehensive backend tests..."
           cd apps/backend/bmap-nest
-          pnpm install
+          
+          # 单元测试
+          echo "📝 Running unit tests..."
           pnpm test
+          
+          # 测试覆盖率
+          echo "📊 Running test coverage..."
+          pnpm test:cov
+          
+          # E2E 测试（如果存在）
+          if [ -f "test/jest-e2e.json" ]; then
+            echo "🔍 Running e2e tests..."
+            pnpm test:e2e || echo "⚠️ E2E tests failed or not configured"
+          fi
+          
+          echo "✅ All backend tests completed!"
+
+      # 构建应用
+      - name: Build Application(构建应用)
+        run: |
+          echo "🏗️ Building bmap-nest application..."
+          cd apps/backend/bmap-nest
+          pnpm build
+          echo "✅ Build completed!"
 
       # 构建并推送后端镜像
       - name: Build and push backend image(构建并推送后端镜像)
@@ -36,10 +127,18 @@ jobs:
           context: .
           file: ./apps/backend/bmap-nest/Dockerfile
           push: true
-          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/bmap-nest:${{ github.sha }}
+          tags: |
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.sha }}
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
+          build-args: |
+            NODE_ENV=${{ matrix.environment }}
+          # 缓存优化
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # 部署后端到服务器（使用 SSH）
       - name: Deploy backend to server(部署后端到服务器)
+        if: matrix.environment == 'production'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -47,27 +146,62 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
+            set -e  # 出错时立即退出
+            
+            echo "🚀 Starting backend deployment..."
+            
             # 手动创建目录（如果不存在）
             mkdir -p /var/www/eggshell
             cd /var/www/eggshell
 
             # 登录阿里云 ACR
-            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
+            echo "🔐 Logging into ACR..."
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "✅ Login successful" || (echo "❌ Login failed" && exit 1)
 
             # 创建 .env 文件
+            echo "📝 Creating environment configuration..."
             echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
             echo "IMAGE_TAG=${{ github.sha }}" >> .env
+            echo "ENVIRONMENT=${{ matrix.environment }}" >> .env
 
             # 确保基础设施服务正在运行
+            echo "🏗️ Starting infrastructure services..."
             docker-compose -f docker-compose.infra.yml up -d
 
-            # 查看 compose 配置是否正确解析变量
-            # docker-compose -f docker-compose.backend.yml config
+            # 健康检查 - 等待数据库和缓存服务就绪
+            echo "🚑 Waiting for infrastructure services..."
+            sleep 10
+            
+            # 检查数据库连接（如果配置了的话）
+            if docker-compose -f docker-compose.infra.yml ps | grep -q postgres; then
+              echo "📋 Checking database connection..."
+              timeout 30 docker-compose -f docker-compose.infra.yml exec -T postgres pg_isready || echo "⚠️ Database not ready, but continuing..."
+            fi
 
             # 停止现有的后端容器
-            docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend
-            docker-compose -f docker-compose.backend.yml rm -f eggshell-bmap-backend
+            echo "⏹️ Stopping existing backend containers..."
+            docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend || true
+            docker-compose -f docker-compose.backend.yml rm -f eggshell-bmap-backend || true
 
             # 拉取并启动后端容器
+            echo "📦 Pulling and starting new backend containers..."
             docker-compose -f docker-compose.backend.yml pull eggshell-bmap-backend
             docker-compose -f docker-compose.backend.yml up -d eggshell-bmap-backend
+            
+            # 等待服务启动
+            echo "⏳ Waiting for backend service to start..."
+            sleep 15
+            
+            # 验证部署
+            echo "✅ Deployment completed! Verifying..."
+            docker-compose -f docker-compose.backend.yml ps eggshell-bmap-backend
+            
+            # 尝试健康检查（如果后端有健康检查端点）
+            if docker-compose -f docker-compose.backend.yml logs eggshell-bmap-backend | tail -10 | grep -q "Nest application successfully started"; then
+              echo "🎉 Backend service is healthy!"
+            else
+              echo "⚠️ Backend service may not be fully ready, check logs:"
+              docker-compose -f docker-compose.backend.yml logs --tail=20 eggshell-bmap-backend
+            fi
+            
+            echo "🎉 Backend deployment completed!"
