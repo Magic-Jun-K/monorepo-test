@@ -130,9 +130,9 @@ runs:
           exit 1
         fi
         echo "📦 Running pnpm install..."
-        pnpm install --prefer-offline || {
+        pnpm install --prefer-offline --no-frozen-lockfile || {
           echo "⚠️ pnpm install failed with --prefer-offline, trying without it..."
-          pnpm install || {
+          pnpm install --no-frozen-lockfile || {
             echo "❌ pnpm install failed completely!"
             exit 1
           }
