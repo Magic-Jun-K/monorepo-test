@@ -275,8 +275,11 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
         with:
+          # 服务器 IP 地址
           host: ${{ secrets.SERVER_HOST }}
+          # 服务器登录用户名
           username: ${{ secrets.SERVER_USERNAME }}
+          # 服务器 SSH 私钥
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
@@ -365,8 +368,11 @@ jobs:
         env:
           TURBO_TELEMETRY_DISABLED: 1
         with:
+          # 服务器 IP 地址
           host: ${{ secrets.SERVER_HOST }}
+          # 服务器登录用户名
           username: ${{ secrets.SERVER_USERNAME }}
+          # 服务器 SSH 私钥
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 22
           script: |
