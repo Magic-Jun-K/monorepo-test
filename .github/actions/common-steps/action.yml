@@ -170,6 +170,8 @@ runs:
     - name: Code Format Check(代码格式检查)
       if: inputs.skip-format-check != 'true'
       shell: bash
+      env:
+        TURBO_TELEMETRY_DISABLED: 1
       run: |
         echo "✨ Checking code formatting..."
         if pnpm format:check; then
