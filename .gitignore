@@ -7,8 +7,6 @@ node_modules/
 apps/**/*.webpack_temp_cache
 .turbo
 
-pnpm-lock.yaml
-
 **/*.log
 
 **/*.tsbuildinfo
