@@ -118,7 +118,25 @@ runs:
       shell: bash
       run: |
         echo "📦 Installing dependencies..."
-        pnpm install --frozen-lockfile --prefer-offline
+        echo "🔍 Checking pnpm version..."
+        pnpm --version
+        echo "🔍 Checking Node.js version..."
+        node --version
+        echo "🔍 Checking if pnpm-lock.yaml exists..."
+        if [ -f "pnpm-lock.yaml" ]; then
+          echo "✅ pnpm-lock.yaml found"
+        else
+          echo "❌ pnpm-lock.yaml not found!"
+          exit 1
+        fi
+        echo "📦 Running pnpm install..."
+        pnpm install --frozen-lockfile --prefer-offline || {
+          echo "❌ pnpm install failed, trying without --prefer-offline..."
+          pnpm install --frozen-lockfile || {
+            echo "❌ pnpm install failed completely!"
+            exit 1
+          }
+        }
         echo "✅ Dependencies installed successfully!"
 
     - name: Verify installation(验证安装)
