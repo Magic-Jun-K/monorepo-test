@@ -229,6 +229,17 @@ jobs:
           pnpm --filter @frontend/react-webpack lint
           echo "✅ Quality checks passed!"
 
+      # 构建依赖包
+      - name: Build Dependencies(构建依赖包)
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "🏗️ Building dependency packages..."
+          pnpm --filter @eggshell/ui-antd build
+          pnpm --filter @eggshell/ui-tailwind build
+          pnpm --filter @eggshell/ui-unocss build
+          pnpm --filter @eggshell/core-business-components build
+          echo "✅ Dependencies built!"
+
       # 构建应用
       - name: Build Application(构建应用)
         if: steps.check.outputs.should_run == 'true'
