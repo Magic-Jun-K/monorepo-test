@@ -121,7 +121,6 @@ runs:
         echo "📦 Installing dependencies..."
         pnpm install --frozen-lockfile --prefer-offline
         echo "✅ Dependencies installed successfully!"
-      timeout-minutes: 10
 
     - name: Verify installation(验证安装)
       shell: bash
@@ -141,7 +140,6 @@ runs:
       run: |
         echo "🧪 Running tests..."
         pnpm test || echo "⚠️ Some tests failed, but continuing..."
-      timeout-minutes: 10
 
     - name: Run Security Audit(运行安全审计)
       if: inputs.skip-security-audit != 'true'
