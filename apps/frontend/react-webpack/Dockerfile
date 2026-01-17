@@ -11,22 +11,25 @@ FROM base AS deps
 # 设置容器内工作目录
 WORKDIR /app
 # COPY . ./
-# 复制整个monorepo结构
-COPY package.json pnpm-workspace.yaml ./
-COPY pnpm-lock.yaml* ./
+# 复制 monorepo 配置文件
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# 复制 TypeScript 配置
 COPY tsconfig* ./
+# 复制 UI 组件库代码
 COPY packages/ui/tailwind/ ./packages/ui/tailwind/
 COPY packages/ui/antd/ ./packages/ui/antd/
+# 复制核心业务组件库代码
 COPY packages/core-business-components/ ./packages/core-business-components/
+# 复制前端端应用代码
 COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    # pnpm install --frozen-lockfile \
-    pnpm install \
-    --filter="@eggshell/ui-tailwind..." \
-    --filter="@eggshell/ui-antd..." \
-    --filter="@eggshell/core-business-components"\
-    --filter="@frontend/react-webpack..."
+    pnpm install --frozen-lockfile
+    # pnpm install \
+    # --filter="@eggshell/ui-tailwind..." \
+    # --filter="@eggshell/ui-antd..." \
+    # --filter="@eggshell/core-business-components"\
+    # --filter="@frontend/react-webpack..."
 
 # 阶段3：构建应用
 FROM deps AS fe-build
