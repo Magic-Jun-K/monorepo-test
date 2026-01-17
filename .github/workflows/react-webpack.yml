@@ -147,6 +147,8 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
         continue-on-error: true
+        env:
+          CODE_SCANNING_ENABLED: 'true'
 
   # 构建和部署阶段
   build-and-deploy:
@@ -383,9 +385,10 @@ jobs:
             echo "✅ Rollback completed!"
 
       - name: Notify Deployment Status
-        if: always() && steps.check.outputs.should_run == 'true'
+        if: always() && steps.check.outputs.should_run == 'true' && secrets.SLACK_WEBHOOK_URL != ''
         uses: slackapi/slack-github-action@v2
         with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
@@ -452,8 +455,6 @@ jobs:
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Create Deployment Summary
         if: always() && steps.check.outputs.should_run == 'true'
