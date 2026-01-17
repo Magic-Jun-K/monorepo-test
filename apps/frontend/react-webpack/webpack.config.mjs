@@ -504,10 +504,11 @@ const baseConfig = (env) => {
         '@': path.resolve(__dirname, 'src'),
       },
       // 确保只有一个 React 实例
-      // modules: [
-      //   'node_modules',
-      //   path.resolve(__dirname, 'node_modules')
-      // ]
+      modules: [
+        'node_modules',
+        path.resolve(__dirname, 'node_modules'),
+        path.resolve(__dirname, '../../../node_modules'),
+      ],
     },
     cache: isProd
       ? false
