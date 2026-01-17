@@ -385,7 +385,7 @@ jobs:
             echo "✅ Rollback completed!"
 
       - name: Notify Deployment Status
-        if: always() && steps.check.outputs.should_run == 'true' && secrets.SLACK_WEBHOOK_URL != ''
+        if: always() && steps.check.outputs.should_run == 'true'
         uses: slackapi/slack-github-action@v2
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -455,6 +455,7 @@ jobs:
                 }
               ]
             }
+        continue-on-error: true
 
       - name: Create Deployment Summary
         if: always() && steps.check.outputs.should_run == 'true'
