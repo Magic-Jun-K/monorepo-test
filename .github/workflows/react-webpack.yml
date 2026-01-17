@@ -131,6 +131,8 @@ jobs:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+        env:
+          DOCKER_BUILDKIT: 1
 
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
