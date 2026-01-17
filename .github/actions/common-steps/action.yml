@@ -85,7 +85,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'pnpm'
 
     - name: Get Node.js version(获取 Node.js 版本)
       id: node-version
