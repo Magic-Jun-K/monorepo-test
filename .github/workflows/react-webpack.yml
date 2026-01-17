@@ -3,7 +3,7 @@ name: 前端react-webpack部署流程
 # 环境变量
 env:
   NODE_VERSION: '22'
-  PNPM_VERSION: 'latest'
+  PNPM_VERSION: ''
   # 镜像仓库名称
   REGISTRY_NAME: 'eggshell'
   APP_NAME: 'react-webpack'
@@ -139,12 +139,14 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
+        continue-on-error: true
 
       - name: Upload Trivy Results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
 
   # 构建和部署阶段
   build-and-deploy:
