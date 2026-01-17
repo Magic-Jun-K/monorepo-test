@@ -1,4 +1,4 @@
-import { Input, Modal, Select, Upload } from '@eggshell/unocss-ui';
+import { Input, Modal, Select, Upload } from '@eggshell/ui-unocss';
 
 interface Props {
   visible: boolean;

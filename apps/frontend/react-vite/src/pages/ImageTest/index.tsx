@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Swiper } from '@eggshell/unocss-ui';
+import { Swiper } from '@eggshell/ui-unocss';
 import LazyImage from '@/components/LazyImage';
 import Footer from '@/layout/Footer';
 

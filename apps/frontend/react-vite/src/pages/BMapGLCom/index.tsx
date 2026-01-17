@@ -1,4 +1,4 @@
-import { Input } from '@eggshell/unocss-ui';
+import { Input } from '@eggshell/ui-unocss';
 import { MapCom, MapSearch, PlaceResult } from '@eggshell/core-business-components';
 
 import { BASE_URL } from '@/config';
