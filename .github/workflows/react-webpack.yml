@@ -11,6 +11,8 @@ env:
   DOCKER_BUILDKIT: '1'
   # 启用 Docker Compose 的 BuildKit 功能
   COMPOSE_DOCKER_CLI_BUILD: '1'
+  # 禁用 Turbo 遥测
+  TURBO_TELEMETRY_DISABLED: 1
 
 # 触发条件
 on:
@@ -223,8 +225,8 @@ jobs:
           echo "🔍 Running quality checks..."
           echo "Node.js: ${{ steps.common.outputs.node-version }}"
           echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
-          pnpm typecheck
-          pnpm lint
+          cd apps/frontend/react-webpack && pnpm typecheck
+          cd apps/frontend/react-webpack && pnpm lint
           echo "✅ Quality checks passed!"
 
       # 构建应用
@@ -350,6 +352,8 @@ jobs:
       - name: Rollback on Failure
         if: failure() && steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
+        env:
+          TURBO_TELEMETRY_DISABLED: 1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
