@@ -398,81 +398,81 @@ jobs:
 
             echo "✅ Rollback completed!"
 
-      - name: Notify Deployment Status
-        if: always() && steps.check.outputs.should_run == 'true' && secrets.SLACK_WEBHOOK_URL != ''
-        uses: slackapi/slack-github-action@v2
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          webhook: ${{ env.SLACK_WEBHOOK_URL }}
-          webhook-type: INCOMING_WEBHOOK
-          payload: |
-            {
-              "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
-              "blocks": [
-                {
-                  "type": "header",
-                  "text": {
-                    "type": "plain_text",
-                    "text": "${{ job.status == 'success' && '✅ 部署成功' || '❌ 部署失败' }} - ${{ env.APP_NAME }}",
-                    "emoji": true
-                  }
-                },
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Environment:*\n${{ matrix.environment }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Status:*\n${{ job.status }}"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Image Tag:*\n\`${{ github.sha }}\`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Author:*\n${{ github.actor }}"
-                    }
-                  ]
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Repository:* ${{ github.repository }}\n*Commit:* ${{ github.event.head_commit.message }}"
-                  }
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "查看 Workflow",
-                        "emoji": true
-                      },
-                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                      "style": "${{ job.status == 'success' && 'primary' || 'danger' }}"
-                    },
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "查看 Commit",
-                        "emoji": true
-                      },
-                      "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
-                    }
-                  ]
-                }
-              ]
-            }
-        continue-on-error: true
+      # - name: Notify Deployment Status
+      #   if: always() && steps.check.outputs.should_run == 'true' && secrets.SLACK_WEBHOOK_URL != ''
+      #   uses: slackapi/slack-github-action@v2
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #   with:
+      #     webhook: ${{ env.SLACK_WEBHOOK_URL }}
+      #     webhook-type: INCOMING_WEBHOOK
+      #     payload: |
+      #       {
+      #         "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
+      #         "blocks": [
+      #           {
+      #             "type": "header",
+      #             "text": {
+      #               "type": "plain_text",
+      #               "text": "${{ job.status == 'success' && '✅ 部署成功' || '❌ 部署失败' }} - ${{ env.APP_NAME }}",
+      #               "emoji": true
+      #             }
+      #           },
+      #           {
+      #             "type": "section",
+      #             "fields": [
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Environment:*\n${{ matrix.environment }}"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Status:*\n${{ job.status }}"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Image Tag:*\n\`${{ github.sha }}\`"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Author:*\n${{ github.actor }}"
+      #               }
+      #             ]
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "*Repository:* ${{ github.repository }}\n*Commit:* ${{ github.event.head_commit.message }}"
+      #             }
+      #           },
+      #           {
+      #             "type": "actions",
+      #             "elements": [
+      #               {
+      #                 "type": "button",
+      #                 "text": {
+      #                   "type": "plain_text",
+      #                   "text": "查看 Workflow",
+      #                   "emoji": true
+      #                 },
+      #                 "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+      #                 "style": "${{ job.status == 'success' && 'primary' || 'danger' }}"
+      #               },
+      #               {
+      #                 "type": "button",
+      #                 "text": {
+      #                   "type": "plain_text",
+      #                   "text": "查看 Commit",
+      #                   "emoji": true
+      #                 },
+      #                 "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+      #               }
+      #             ]
+      #           }
+      #         ]
+      #       }
+      #   continue-on-error: true
 
       - name: Create Deployment Summary
         if: always() && steps.check.outputs.should_run == 'true'
