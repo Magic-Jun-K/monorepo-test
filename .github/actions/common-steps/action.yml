@@ -10,7 +10,7 @@ inputs:
   pnpm-version:
     description: 'pnpm version (empty for latest)'
     required: false
-    default: '10'
+    default: ''
   ALIYUN_ACR_REGISTRY:
     description: '阿里云ACR注册地址'
     required: false
@@ -130,9 +130,9 @@ runs:
           exit 1
         fi
         echo "📦 Running pnpm install..."
-        pnpm install --frozen-lockfile --prefer-offline || {
-          echo "❌ pnpm install failed, trying without --prefer-offline..."
-          pnpm install --frozen-lockfile || {
+        pnpm install --prefer-offline || {
+          echo "⚠️ pnpm install failed with --prefer-offline, trying without it..."
+          pnpm install || {
             echo "❌ pnpm install failed completely!"
             exit 1
           }
