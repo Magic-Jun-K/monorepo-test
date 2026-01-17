@@ -37,8 +37,8 @@ const Home: FC = () => {
               {[
                 { icon: Code, label: 'Code', href: '#' },
                 { icon: GitBranch, label: 'Git', href: '#' },
-                { icon: Rocket, label: 'Deploy', href: '#' }
-              ].map(item => (
+                { icon: Rocket, label: 'Deploy', href: '#' },
+              ].map((item) => (
                 <a
                   key={item.label}
                   href={item.href}
