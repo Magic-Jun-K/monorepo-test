@@ -24,6 +24,7 @@ on:
       - 'packages/**'
       # 只在该工作流文件发生变化时触发
       - '.github/workflows/react-webpack.yml'
+      - '.github/actions/common-steps/action.yml'
   # 拉取请求触发部署流程
   pull_request:
     branches: [main, master]
