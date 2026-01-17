@@ -75,13 +75,13 @@ jobs:
       - name: Type Check
         run: |
           echo "🔍 Running type check..."
-          pnpm typecheck
+          pnpm --filter @frontend/react-webpack typecheck
 
       # 代码风格检查
       - name: Lint Check
         run: |
           echo "✨ Running linting..."
-          pnpm lint
+          pnpm --filter @frontend/react-webpack lint
 
       # 单元测试
       - name: Unit Tests
@@ -225,8 +225,8 @@ jobs:
           echo "🔍 Running quality checks..."
           echo "Node.js: ${{ steps.common.outputs.node-version }}"
           echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
-          cd apps/frontend/react-webpack && pnpm typecheck
-          cd apps/frontend/react-webpack && pnpm lint
+          pnpm --filter @frontend/react-webpack typecheck
+          pnpm --filter @frontend/react-webpack lint
           echo "✅ Quality checks passed!"
 
       # 构建应用
