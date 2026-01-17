@@ -388,7 +388,7 @@ jobs:
         if: always() && steps.check.outputs.should_run == 'true'
         uses: slackapi/slack-github-action@v2
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "${{ job.status == 'success' && '✅' || '❌' }} Deployment ${{ job.status }}",
