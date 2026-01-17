@@ -1,5 +1,5 @@
 // pages/image-test.tsx 或 app/image-test/page.tsx (取决于使用 Pages Router 还是 App Router)
-import { Swiper } from '@eggshell/tailwindcss-ui';
+import { Swiper } from '@eggshell/ui-tailwind';
 import LazyImage from '@/src/components/LazyImage';
 
 // ⭐ ISR 关键配置：90天重新验证（3个月）

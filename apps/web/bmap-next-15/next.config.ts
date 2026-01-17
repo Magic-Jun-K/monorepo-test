@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
     // 启用 Next.js 图片优化功能
     unoptimized: false
   },
-  // 允许编译 @eggshell/tailwindcss-ui 包
-  transpilePackages: ['@eggshell/tailwindcss-ui']
+  // 允许编译 @eggshell/ui-tailwind 包
+  transpilePackages: ['@eggshell/ui-tailwind']
 };
 export default nextConfig;
