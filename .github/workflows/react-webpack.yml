@@ -270,7 +270,8 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
 
-      - name: Deploy to server
+      # 部署前端到服务器（使用 SSH）
+      - name: Deploy to server(部署前端到服务器)
         id: deploy
         if: steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
@@ -362,7 +363,8 @@ jobs:
           echo "❌ Health check failed after $MAX_RETRIES attempts"
           exit 1
 
-      - name: Rollback on Failure
+      # 回滚部署（在失败时）
+      - name: Rollback on Failure(回滚部署)
         if: failure() && steps.check.outputs.should_run == 'true'
         uses: appleboy/ssh-action@master
         env:
@@ -404,7 +406,8 @@ jobs:
 
             echo "✅ Rollback completed!"
 
-      # - name: Notify Deployment Status
+      # 通知部署状态（成功或失败）
+      # - name: Notify Deployment Status(通知部署状态)
       #   if: always() && steps.check.outputs.should_run == 'true' && secrets.SLACK_WEBHOOK_URL != ''
       #   uses: slackapi/slack-github-action@v2
       #   env:
@@ -480,7 +483,8 @@ jobs:
       #       }
       #   continue-on-error: true
 
-      - name: Create Deployment Summary
+      # 创建部署摘要
+      - name: Create Deployment Summary(创建部署摘要)
         if: always() && steps.check.outputs.should_run == 'true'
         run: |
           echo "## 📊 Deployment Summary" >> $GITHUB_STEP_SUMMARY
