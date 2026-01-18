@@ -319,7 +319,8 @@ jobs:
             chmod 600 .env.deploy
 
             echo "🏗️ Starting infrastructure services..."
-            docker-compose -f docker-compose.infra.yml up -d
+            docker-compose -f docker-compose.db.yml up -d
+            docker-compose -f docker-compose.redis.yml up -d
 
             echo "💾 Backup current container state..."
             if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
