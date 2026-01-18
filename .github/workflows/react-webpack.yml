@@ -346,10 +346,11 @@ jobs:
       # 健康检查
       - name: Health Check(健康检查)
         if: steps.deploy.outcome == 'success' && steps.check.outputs.should_run == 'true'
+        timeout-minutes: 3
         run: |
           echo "🏥 Performing health check..."
           echo "Waiting for container to be ready..."
-          sleep 15
+          sleep 10
 
           MAX_RETRIES=6
           RETRY_COUNT=0
@@ -357,14 +358,14 @@ jobs:
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
             
-            # 尝试多个健康检查端点
-            if curl -f -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_URL }}/health" 2>/dev/null | grep -q "200"; then
+            # 尝试多个健康检查端点（添加超时参数）
+            if curl -f -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 10 "${{ secrets.APP_URL }}/health" 2>/dev/null | grep -q "200"; then
               echo "✅ Health check passed!"
               exit 0
             fi
             
-            # 如果 /health 不存在，尝试根路径
-            if curl -f -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_URL }}/" 2>/dev/null | grep -q "200"; then
+            # 如果 /health 不存在，尝试根路径（添加超时参数）
+            if curl -f -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 10 "${{ secrets.APP_URL }}/" 2>/dev/null | grep -q "200"; then
               echo "✅ Health check passed (root path)!"
               exit 0
             fi
