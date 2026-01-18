@@ -342,7 +342,6 @@ jobs:
             docker-compose -f docker-compose.react-webpack.yml ps "$CONTAINER_NAME"
 
             echo "🎉 Deployment successful!"
-            echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
 
       # 健康检查
       - name: Health Check(健康检查)
