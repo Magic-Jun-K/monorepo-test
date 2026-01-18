@@ -112,6 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 运行公共步骤
       - name: Run Common Steps
         id: common
         uses: ./.github/actions/common-steps
@@ -123,6 +124,7 @@ jobs:
           skip-format-check: 'true'
           cache-turbo: 'false'
 
+      # 构建 Docker 镜像用于扫描
       - name: Build Docker Image for Scanning
         uses: docker/build-push-action@v6
         with:
@@ -134,6 +136,7 @@ jobs:
         env:
           DOCKER_BUILDKIT: 1
 
+      # 运行 Trivy 漏洞扫描器
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -143,6 +146,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
         continue-on-error: true
 
+      # 上传 Trivy 扫描结果到 GitHub Security
       - name: Upload Trivy Results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('trivy-results.sarif') != ''
@@ -176,7 +180,8 @@ jobs:
 
     steps:
       # 根据触发条件过滤环境
-      - name: Check if should run
+      # 检查是否应该运行部署
+      - name: Check if should run(检查是否应该运行部署)
         id: check
         run: |
           if [ "${{ env.TRIGGER_EVENT }}" == "push" ] && [ "${{ matrix.environment }}" != "production" ]; then
@@ -197,14 +202,16 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.check.outputs.should_run == 'true'
 
-      - name: Set Deployment Outputs
+      # 设置部署输出
+      - name: Set Deployment Outputs(设置部署输出)
         id: set-outputs
         if: steps.check.outputs.should_run == 'true'
         run: |
           echo "image_tag=${{ github.sha }}" >> $GITHUB_OUTPUT
           echo "rollback_image=latest" >> $GITHUB_OUTPUT
 
-      - name: Run Common Steps
+      # 运行公共步骤
+      - name: Run Common Steps(运行公共步骤)
         id: common
         if: steps.check.outputs.should_run == 'true'
         uses: ./.github/actions/common-steps
@@ -339,7 +346,8 @@ jobs:
             echo "🎉 Deployment successful!"
             echo "DEPLOY_STATUS=success" >> $GITHUB_ENV
 
-      - name: Health Check
+      # 健康检查
+      - name: Health Check(健康检查)
         if: steps.deploy.outcome == 'success' && steps.check.outputs.should_run == 'true'
         run: |
           echo "🏥 Performing health check..."
