@@ -6,6 +6,7 @@ env:
   PNPM_VERSION: ''
   # 镜像仓库名称
   REGISTRY_NAME: 'eggshell'
+  # 应用名称
   APP_NAME: 'react-webpack'
   # 启用 Docker BuildKit 来提高构建效率
   DOCKER_BUILDKIT: '1'
@@ -346,38 +347,68 @@ jobs:
       # 健康检查
       - name: Health Check(健康检查)
         if: steps.deploy.outcome == 'success' && steps.check.outputs.should_run == 'true'
-        timeout-minutes: 3
-        run: |
-          echo "🏥 Performing health check..."
-          echo "Waiting for container to be ready..."
-          sleep 10
+        timeout-minutes: 2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
 
-          MAX_RETRIES=6
-          RETRY_COUNT=0
-
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+            CONTAINER_NAME="eggshell-react-webpack"
+            echo "🏥 Checking container status..."
             
-            # 尝试多个健康检查端点（添加超时参数）
-            if curl -f -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 10 "${{ secrets.APP_URL }}/health" 2>/dev/null | grep -q "200"; then
-              echo "✅ Health check passed!"
-              exit 0
+            echo "⏳ Waiting for container to be ready..."
+            sleep 20
+            
+            echo "🔍 Checking if container is running..."
+            if ! docker ps --filter "name=$CONTAINER_NAME" --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
+              echo "❌ Container is not running!"
+              docker ps -a --filter "name=$CONTAINER_NAME"
+              exit 1
             fi
             
-            # 如果 /health 不存在，尝试根路径（添加超时参数）
-            if curl -f -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 10 "${{ secrets.APP_URL }}/" 2>/dev/null | grep -q "200"; then
-              echo "✅ Health check passed (root path)!"
-              exit 0
+            echo "✅ Container is running!"
+            
+            echo "🔍 Checking container health status..."
+            HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null || echo "no-healthcheck")
+            echo "Health Status: $HEALTH_STATUS"
+            
+            if [ "$HEALTH_STATUS" == "healthy" ]; then
+              echo "✅ Container is healthy!"
+            elif [ "$HEALTH_STATUS" == "starting" ]; then
+              echo "⏳ Container is still starting..."
+              echo "Waiting for health check to complete..."
+              sleep 30
+              
+              HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null || echo "no-healthcheck")
+              if [ "$HEALTH_STATUS" == "healthy" ]; then
+                echo "✅ Container is now healthy!"
+              else
+                echo "⚠️ Container health status: $HEALTH_STATUS"
+                echo "Container is running but health check may still be in progress"
+              fi
+            else
+              echo "ℹ️ Container has no healthcheck configured"
             fi
             
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            sleep 15
-          done
-
-          echo "⚠️ Health check failed after $MAX_RETRIES attempts"
-          echo "This might be expected if the application doesn't have a /health endpoint"
-          echo "Container is running, please verify manually at: ${{ secrets.APP_URL }}"
-          exit 0
+            echo "🔍 Testing container internally..."
+            if docker exec $CONTAINER_NAME wget --quiet --tries=1 --spider http://localhost/; then
+              echo "✅ Internal health check passed!"
+            else
+              echo "⚠️ Internal health check failed"
+              echo "Checking nginx process..."
+              docker exec $CONTAINER_NAME ps aux | grep nginx || true
+              echo "Checking nginx error logs..."
+              docker exec $CONTAINER_NAME cat /var/log/nginx/error.log 2>/dev/null | tail -20 || true
+            fi
+            
+            echo "📊 Container details:"
+            docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo "🎉 Deployment verification completed!"
 
       # 回滚部署（在失败时）
       - name: Rollback on Failure(回滚部署)
