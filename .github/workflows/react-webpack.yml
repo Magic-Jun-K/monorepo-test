@@ -347,7 +347,7 @@ jobs:
       # 健康检查
       - name: Health Check(健康检查)
         if: steps.deploy.outcome == 'success' && steps.check.outputs.should_run == 'true'
-        timeout-minutes: 2
+        timeout-minutes: 3
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -361,7 +361,7 @@ jobs:
             echo "🏥 Checking container status..."
             
             echo "⏳ Waiting for container to be ready..."
-            sleep 20
+            sleep 30
             
             echo "🔍 Checking if container is running..."
             if ! docker ps --filter "name=$CONTAINER_NAME" --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
@@ -381,7 +381,7 @@ jobs:
             elif [ "$HEALTH_STATUS" == "starting" ]; then
               echo "⏳ Container is still starting..."
               echo "Waiting for health check to complete..."
-              sleep 30
+              sleep 60
               
               HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME 2>/dev/null || echo "no-healthcheck")
               if [ "$HEALTH_STATUS" == "healthy" ]; then
@@ -394,15 +394,40 @@ jobs:
               echo "ℹ️ Container has no healthcheck configured"
             fi
             
+            echo "🔍 Checking nginx listening ports..."
+            docker exec $CONTAINER_NAME netstat -tlnp 2>/dev/null || docker exec $CONTAINER_NAME ss -tlnp 2>/dev/null || echo "netstat/ss not available"
+            
             echo "🔍 Testing container internally..."
-            if docker exec $CONTAINER_NAME wget --quiet --tries=1 --spider http://localhost/; then
-              echo "✅ Internal health check passed!"
-            else
-              echo "⚠️ Internal health check failed"
+            MAX_INTERNAL_RETRIES=5
+            INTERNAL_RETRY_COUNT=0
+            
+            while [ $INTERNAL_RETRY_COUNT -lt $MAX_INTERNAL_RETRIES ]; do
+              echo "Internal health check attempt $((INTERNAL_RETRY_COUNT + 1))/$MAX_INTERNAL_RETRIES..."
+              
+              if docker exec $CONTAINER_NAME wget --quiet --tries=1 --timeout=5 --spider http://localhost/; then
+                echo "✅ Internal health check passed!"
+                break
+              else
+                echo "⚠️ Internal health check failed (attempt $((INTERNAL_RETRY_COUNT + 1)))"
+                INTERNAL_RETRY_COUNT=$((INTERNAL_RETRY_COUNT + 1))
+                
+              if [ $INTERNAL_RETRY_COUNT -lt $MAX_INTERNAL_RETRIES ]; then
+                echo "Waiting 10 seconds before retry..."
+                sleep 10
+              fi
+            fi
+            done
+            
+            if [ $INTERNAL_RETRY_COUNT -eq $MAX_INTERNAL_RETRIES ]; then
+              echo "⚠️ Internal health check failed after $MAX_INTERNAL_RETRIES attempts"
               echo "Checking nginx process..."
               docker exec $CONTAINER_NAME ps aux | grep nginx || true
+              echo "Checking nginx configuration..."
+              docker exec $CONTAINER_NAME nginx -t 2>&1 || true
               echo "Checking nginx error logs..."
-              docker exec $CONTAINER_NAME cat /var/log/nginx/error.log 2>/dev/null | tail -20 || true
+              docker exec $CONTAINER_NAME cat /var/log/nginx/error.log 2>/dev/null | tail -30 || true
+              echo "Checking nginx access logs..."
+              docker exec $CONTAINER_NAME cat /var/log/nginx/access.log 2>/dev/null | tail -10 || true
             fi
             
             echo "📊 Container details:"
