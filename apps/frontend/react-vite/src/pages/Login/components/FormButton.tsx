@@ -1,5 +1,5 @@
 import { ReactNode, memo } from 'react';
-import { Button } from '@eggshell/tailwindcss-ui';
+import { Button } from '@eggshell/ui-tailwind';
 
 import styles from '../index.module.scss';
 
