@@ -2,6 +2,7 @@ node_modules/
 **/build
 **/dist
 **/es
+**/lib
 
 .cspellcache
 apps/**/*.webpack_temp_cache
