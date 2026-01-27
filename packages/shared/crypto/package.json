@@ -1,0 +1,33 @@
+{
+  "name": "@eggshell/shared-crypto",
+  "version": "0.0.0",
+  "description": "跨平台加密工具包，支持浏览器和Node.js环境",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    "./web": {
+      "types": "./lib/web/index.d.mts",
+      "import": "./lib/web/index.mjs"
+    },
+    "./node": {
+      "types": "./lib/node/index.d.mts",
+      "import": "./lib/node/index.mjs",
+      "require": "./lib/node/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "lint": "oxlint .",
+    "typecheck": "tsc --project tsconfig.json --noEmit --skipLibCheck",
+    "clean": "rm -rf lib dist",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "argon2": "0.44.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "extends": ["../../../.oxlintrc.json"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "ignorePatterns": [
+    "node_modules/**/*",
+    "lib/**/*"
+  ],
+  "rules": {
+    "no-console": "off",
+    "typescript/no-explicit-any": "error"
+  }
+}
