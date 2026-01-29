@@ -72,7 +72,7 @@ export async function encryptWithKeyExchange(
 
     // 5. 加密数据
     const encoder = new TextEncoder();
-    
+
     const encrypted = await webcrypto.subtle.encrypt(
       {
         name: 'AES-GCM',
@@ -205,7 +205,7 @@ export async function verifySignature(
         encoder.encode(data),
       );
     }
-    
+
     return false;
   } catch (error) {
     console.error('验证签名失败:', error);
@@ -222,7 +222,6 @@ async function importPublicKey(keyString: string, algorithm: string): Promise<we
 
   let algorithmParams:
     | webcrypto.AlgorithmIdentifier
-    | webcrypto.RsaHashedImportParams
     | webcrypto.EcKeyImportParams
     | webcrypto.HmacImportParams
     | webcrypto.AesKeyAlgorithm;
@@ -254,7 +253,6 @@ async function importPrivateKey(
 
   let algorithmParams:
     | webcrypto.AlgorithmIdentifier
-    | webcrypto.RsaHashedImportParams
     | webcrypto.EcKeyImportParams
     | webcrypto.HmacImportParams
     | webcrypto.AesKeyAlgorithm;

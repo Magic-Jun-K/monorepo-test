@@ -186,7 +186,7 @@ export async function verifySignature(
     if (algorithm === 'Ed25519') {
       return crypto.subtle.verify({ name: 'Ed25519' }, key, signatureBuffer, encoder.encode(data));
     }
-    
+
     return false;
   } catch (error) {
     console.error('验证签名失败:', error);
@@ -207,12 +207,7 @@ export async function verifySignature(
 async function importPublicKey(keyString: string, algorithm: string): Promise<CryptoKey> {
   const keyData = Uint8Array.from(atob(keyString), (c) => c.charCodeAt(0));
 
-  let algorithmParams:
-    | AlgorithmIdentifier
-    | RsaHashedImportParams
-    | EcKeyImportParams
-    | HmacImportParams
-    | AesKeyAlgorithm;
+  let algorithmParams: AlgorithmIdentifier | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm;
   switch (algorithm) {
     case 'Ed25519':
       algorithmParams = { name: 'Ed25519' };
@@ -242,12 +237,7 @@ async function importPublicKey(keyString: string, algorithm: string): Promise<Cr
 async function importPrivateKey(keyString: string, algorithm: string): Promise<CryptoKey> {
   const keyData = Uint8Array.from(atob(keyString), (c) => c.charCodeAt(0));
 
-  let algorithmParams:
-    | AlgorithmIdentifier
-    | RsaHashedImportParams
-    | EcKeyImportParams
-    | HmacImportParams
-    | AesKeyAlgorithm;
+  let algorithmParams: AlgorithmIdentifier | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm;
   switch (algorithm) {
     case 'Ed25519':
       algorithmParams = { name: 'Ed25519' };
