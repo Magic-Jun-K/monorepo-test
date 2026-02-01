@@ -12,6 +12,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
+// import { createRequire } from 'node:module';
 
 // import UnoCssAutoImportPlugin from './plugins/UnoCssAutoImportPlugin.ts';
 import devConfig from './webpack.config.dev.mjs';
@@ -21,6 +22,7 @@ const prodConfig = { mode: 'production' };
 // 模拟 CommonJS 的 __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// const require = createRequire(import.meta.url);
 
 const { DefinePlugin } = webpack;
 
@@ -396,107 +398,108 @@ const baseConfig = (env) => {
         }),
       ],
       // 代码分割
-      splitChunks: {
-        chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
-        minSize: 20000, // 降低最小阈值
-        maxSize: 244000, // 设置合理的最大阈值
-        minChunks: 2, // 确保至少被引用两次
-        maxAsyncRequests: 20, // 允许同时加载的最大异步请求数
-        maxInitialRequests: 20, // 允许同时加载的最大初始请求数
-        automaticNameDelimiter: '~', // 分割块之间的分隔符
-        cacheGroups: {
-          reactVendor: {
-            // test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
-            test: /[\\/]node_modules[\\/](scheduler|react-router|react-router-dom)[\\/]/,
-            name: 'react-core',
-            priority: 70, // 最高优先级确保独立打包
-            chunks: 'all',
-            reuseExistingChunk: true, // 允许重复使用已经打包的模块
-            enforce: true, // 强制打包
-          },
-          dataGridVendor: {
-            test: /[\\/]node_modules[\\/]@glideapps[\\/]/,
-            name: 'data-grid',
-            priority: 60,
-            reuseExistingChunk: true,
-            minSize: 80000,
-            enforce: true,
-          },
-          stylesVendor: {
-            name: 'styles',
-            test: /\.(css|scss)$/,
-            chunks: 'all',
-            enforce: true,
-            priority: 55,
-            minSize: 30000,
-          },
-          // 新增 echarts 独立包
-          echartsVendor: {
-            test: /[\\/]node_modules[\\//]echarts[\\/]/,
-            name: 'echarts',
-            priority: 45,
-            enforce: true,
-          },
-          // 新增 three.js 独立包（按需加载）
-          threeVendor: {
-            test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
-            name: 'three',
-            priority: 50,
-            enforce: true,
-            chunks: 'async',
-          },
-          // 低频稳定工具库 (合并)
-          utilsStable: {
-            test: /[\\/]node_modules[\\/]axios[\\/]/,
-            name: 'utils-stable',
-            priority: 35,
-            minSize: 20000,
-            maxSize: 100000,
-            enforce: true,
-          },
-          corejs: {
-            test: /[\\/]node_modules[\\/]core-js[\\/]/,
-            name: 'core-js',
-            priority: 30,
-            enforce: true,
-            reuseExistingChunk: true,
-            chunks: 'async',
-          },
-          // 自定义UI组件库分割策略
-          eggshellUI: {
-            test: /[\\/]node_modules[\\/]@eggshell[\\/]/,
-            name: 'eggshell-ui',
-            priority: 25, // 提升优先级，确保UI库被单独打包
-            chunks: 'all',
-            enforce: true,
-            minSize: 10000, // 降低阈值确保UI库被单独打包
-            maxSize: 200000,
-          },
-          // 更精确的UI组件分割
-          antdUI: {
-            test: /[\\/]node_modules[\\/]@eggshell[\\/]antd-ui[\\/]/,
-            name: 'antd-ui',
-            priority: 30,
-            chunks: 'all',
-            enforce: true,
-            minSize: 5000,
-            maxSize: 150000,
-          },
-          defaultVendors: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            reuseExistingChunk: true,
-            minSize: 20000,
-            maxSize: 244000,
-          },
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-        },
-      },
+      splitChunks: isProd
+        ? {
+            chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
+            minSize: 20000, // 降低最小阈值
+            maxSize: 244000, // 设置合理的最大阈值
+            minChunks: 2, // 确保至少被引用两次
+            maxAsyncRequests: 20, // 允许同时加载的最大异步请求数
+            maxInitialRequests: 20, // 允许同时加载的最大初始请求数
+            automaticNameDelimiter: '~', // 分割块之间的分隔符
+            cacheGroups: {
+              reactVendor: {
+                test: /[\\/]node_modules[\\/](react|react-dom|react-is|scheduler|react-router|react-router-dom)[\\/]/,
+                name: 'react-core',
+                priority: 70, // 最高优先级确保独立打包
+                chunks: 'all',
+                reuseExistingChunk: true, // 允许重复使用已经打包的模块
+                enforce: true, // 强制打包
+              },
+              stylesVendor: {
+                name: 'styles',
+                test: /\.(css|scss)$/,
+                chunks: 'all',
+                enforce: true,
+                priority: 60,
+                minSize: 30000,
+              },
+              // 新增 three.js 独立包（按需加载）
+              threeVendor: {
+                test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
+                name: 'three',
+                priority: 50,
+                enforce: true,
+                chunks: 'async',
+              },
+              // AG Grid 独立包（体积较大，单独分割）
+              agGridVendor: {
+                test: /[\\/]node_modules[\\/]ag-grid-(community|react)[\\/]/,
+                name: 'ag-grid',
+                priority: 48,
+                enforce: true,
+                chunks: 'async', // 异步加载，不阻塞首屏
+              },
+              // 新增 echarts 独立包
+              echartsVendor: {
+                test: /[\\/]node_modules[\\//]echarts[\\/]/,
+                name: 'echarts',
+                priority: 45,
+                enforce: true,
+              },
+              // 低频稳定工具库 (合并)
+              utilsStable: {
+                test: /[\\/]node_modules[\\/]axios[\\/]/,
+                name: 'utils-stable',
+                priority: 35,
+                minSize: 20000,
+                maxSize: 100000,
+                enforce: true,
+              },
+              corejs: {
+                test: /[\\/]node_modules[\\/]core-js[\\/]/,
+                name: 'core-js',
+                priority: 30,
+                enforce: true,
+                reuseExistingChunk: true,
+                chunks: 'async',
+              },
+              // 自定义UI组件库分割策略
+              eggshellUI: {
+                test: /[\\/]node_modules[\\/]@eggshell[\\/]/,
+                name: 'eggshell-ui',
+                priority: 25, // 提升优先级，确保UI库被单独打包
+                chunks: 'all',
+                enforce: true,
+                minSize: 10000, // 降低阈值确保UI库被单独打包
+                maxSize: 200000,
+              },
+              // 更精确的UI组件分割
+              antdUI: {
+                test: /[\\/]node_modules[\\/]@eggshell[\\/]antd-ui[\\/]/,
+                name: 'antd-ui',
+                priority: 30,
+                chunks: 'all',
+                enforce: true,
+                minSize: 5000,
+                maxSize: 150000,
+              },
+              defaultVendors: {
+                test: /[\\/]node_modules[\\/]/,
+                name: 'vendors',
+                priority: -10,
+                reuseExistingChunk: true,
+                minSize: 20000,
+                maxSize: 244000,
+              },
+              default: {
+                minChunks: 2,
+                priority: -20,
+                reuseExistingChunk: true,
+              },
+            },
+          }
+        : false,
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
@@ -529,8 +532,6 @@ const baseConfig = (env) => {
           BMapGL: 'BMapGL',
           // react: 'React',
           // 'react-dom': 'ReactDOM',
-          // '@sentry/react': 'SentryReact',
-          // 'web-vitals': 'WebVitals',
           // three: 'THREE',
         }
       : {},
