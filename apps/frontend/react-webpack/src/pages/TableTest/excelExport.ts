@@ -324,9 +324,9 @@ export async function generateExcelBuffer(
   return new Promise((resolve, reject) => {
     const worker = new Worker(workerUrl);
     
-    worker.onmessage = (e: MessageEvent<ExportMessage>) => {
+    worker.addEventListener('message', (e: MessageEvent<ExportMessage>) => {
       const message = e.data;
-      
+
       switch (message.type) {
         case 'progress':
           onProgress?.(message);
@@ -340,13 +340,13 @@ export async function generateExcelBuffer(
           reject(new Error(message.error));
           break;
       }
-    };
-    
-    worker.onerror = (error) => {
+    });
+
+    worker.addEventListener('error', (error) => {
       worker.terminate();
       reject(error);
-    };
-    
+    });
+
     worker.postMessage({ rowData, headers, batchSize: 50000 });
   });
 }

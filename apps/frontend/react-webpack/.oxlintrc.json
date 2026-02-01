@@ -1,7 +1,8 @@
 {
   "extends": ["../../../.oxlintrc.json"],
   "env": {
-    "browser": true
+    "browser": true,
+    "node": true
   },
   "ignorePatterns": [
     "dist/**/*",
@@ -20,6 +21,7 @@
     "typescript/no-unused-vars": "error",
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
-    "react/jsx-uses-react": "off"
+    "react/jsx-uses-react": "off",
+    "unicorn/require-post-message-target-origin": "off"
   }
 }
