@@ -404,7 +404,7 @@ jobs:
             while [ $INTERNAL_RETRY_COUNT -lt $MAX_INTERNAL_RETRIES ]; do
               echo "Internal health check attempt $((INTERNAL_RETRY_COUNT + 1))/$MAX_INTERNAL_RETRIES..."
               
-              if docker exec $CONTAINER_NAME wget --quiet --tries=1 --timeout=5 --spider http://127.0.0.1/; then
+              if docker exec $CONTAINER_NAME wget --no-check-certificate --quiet --tries=1 --timeout=5 --spider http://127.0.0.1/; then
                 echo "✅ Internal health check passed!"
                 break
               else
