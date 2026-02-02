@@ -14,6 +14,7 @@ const scopes = [
   // ...getPackages('apps'),
   ...getPrefixedPackages('packages', 'packages'),
   ...getPrefixedPackages('packages/ui', 'ui'),
+  ...getPrefixedPackages('packages/shared', 'shared'),
   ...getPrefixedPackages('apps/frontend', 'frontend'),
   ...getPrefixedPackages('apps/backend', 'backend'),
   ...getPrefixedPackages('apps/web', 'web'),
