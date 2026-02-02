@@ -26,14 +26,13 @@ import { RolePermissionEntity } from './entities/role-permission.entity';
 import { UserEntity } from './entities/user.entity';
 import { PermissionModule } from './module/permission/permission.module';
 import { RoleModule } from './module/role/role.module';
-// import { AnalyticsModule } from './module/analytics/analytics.module';
 import database from './config/database';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // 设置为全局模块
-      envFilePath: ['.env', '.env.local', '.env.prod'],
+      envFilePath: ['.env.local', '.env.prod'],
       load: [database],
     }),
     TypeOrmModule.forRootAsync({
@@ -79,7 +78,6 @@ import database from './config/database';
     ExampleModule,
     PermissionModule,
     RoleModule,
-    // AnalyticsModule,
   ], // 需要导入的模块
   exports: [PgService, TypeOrmModule, ConfigModule], // 往外暴露的模块
   controllers: [AppController], // 控制器，定义路由
