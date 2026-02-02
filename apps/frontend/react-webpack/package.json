@@ -14,6 +14,8 @@
     "build:react-webpack": "webpack --env production --env ANALYZE=false",
     "build:font": "node scripts/font-subset.js",
     "build:analyze": "webpack --env production --env ANALYZE=true",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint . && stylelint \"**/*.{css,scss}\"",
     "setup-wasm": "node scripts/setup-wasm.js",
     "test": "vitest run",
     "test:watch": "vitest",
