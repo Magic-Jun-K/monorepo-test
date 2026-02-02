@@ -1,19 +1,16 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomBytes } from 'node:crypto';
 
 import { UserEntity, UserStatus, UserType } from '../../entities/user.entity';
+import { UserOAuthEntity } from '../../entities/user-oauth.entity';
 import { AuthUtils } from '../../common/utils/auth.utils';
 import { TokenBlacklistService } from './token-backlist.service';
 import { RedisService } from '../redis/redis.service';
-import { MailService } from '../mail/mail.service';
+import { VerificationCodeService } from './verification-code.service';
+import { WeChatService } from './wechat.service';
 import { AuthUser } from './types/user.interface';
 import { RoleService } from '../role/role.service';
 
@@ -36,12 +33,27 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(UserOAuthEntity)
+    private readonly userOAuthRepository: Repository<UserOAuthEntity>,
     private readonly authUtils: AuthUtils,
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly redisService: RedisService,
-    private readonly mailService: MailService,
+    private readonly verificationCodeService: VerificationCodeService,
     private readonly roleService: RoleService,
+    private readonly weChatService: WeChatService,
   ) {}
+
+  /**
+   * 根据标识符查找用户 (支持用户名、邮箱、手机号)
+   * @param identifier
+   * @returns
+   */
+  async findUserByIdentifier(identifier: string): Promise<UserEntity | null> {
+    return this.userRepository.findOne({
+      where: [{ username: identifier }, { email: identifier }, { phone: identifier }],
+      select: ['id', 'username', 'password', 'status', 'isSuperAdmin', 'email', 'phone'],
+    });
+  }
 
   /**
    * 验证用户
@@ -58,7 +70,7 @@ export class AuthService {
     if (user && user.status === UserStatus.ACTIVE) {
       // 检查用户是否有密码，如果没有密码说明是邮箱注册用户，不能使用账号密码登录
       if (!user.password) {
-        throw new UnauthorizedException('该账户只能通过邮箱验证码登录，请使用邮箱登录方式');
+        throw new UnauthorizedException('该账户只能通过邮箱验证码登录');
       }
       return user;
     }
@@ -66,20 +78,52 @@ export class AuthService {
   }
 
   /**
-   * 验证密码是否正确
-   * @param finalHashedPassword 数据库存储的哈希值
-   * @param inputEncryptPassword 前端传递的RSA加密密码
-   * @returns 是否验证成功
+   * 验证密码哈希（新版加密方式）
+   * @param databaseHash 数据库存储的argon2哈希
+   * @param frontendHash 前端传来的scrypt哈希
    */
-  async verifyPassword(
-    finalHashedPassword: string,
-    inputEncryptPassword: string,
-  ): Promise<boolean> {
-    // 如果数据库存储的密码为null，说明是邮箱注册用户，不能使用密码登录
-    if (!finalHashedPassword) {
-      return false;
+  async verifyPasswordHash(databaseHash: string, frontendHash: string): Promise<boolean> {
+    return this.authUtils.verifyPasswordHash(databaseHash, frontendHash);
+  }
+
+  /**
+   * 使用密码哈希注册用户
+   * @param username 用户名
+   * @param passwordHash 前端传来的scrypt哈希密码
+   */
+  async registerWithHash(
+    username: string,
+    passwordHash: string,
+  ): Promise<{ success: boolean; message: string; user?: UserEntity }> {
+    this.logger.log(`开始注册用户: ${username}`);
+
+    // 检查用户名是否已存在
+    const existingUser = await this.userRepository.findOne({
+      where: { username },
+    });
+
+    if (existingUser) {
+      return { success: false, message: '用户名已存在' };
     }
-    return this.authUtils.verifyPassword(finalHashedPassword, inputEncryptPassword);
+
+    // 将前端传来的scrypt哈希再进行argon2哈希存储
+    const finalHash = await this.authUtils.hashPassword(passwordHash);
+
+    // 创建新用户
+    const newUser = this.userRepository.create({
+      username,
+      password: finalHash,
+      userType: UserType.EXTERNAL,
+      status: UserStatus.ACTIVE,
+    });
+
+    const savedUser = await this.userRepository.save(newUser);
+    this.logger.log(`用户 ${username} 创建成功，ID: ${savedUser.id}`);
+
+    // 分配默认角色
+    await this.assignDefaultRole(savedUser.id);
+
+    return { success: true, message: '注册成功', user: savedUser };
   }
 
   /**
@@ -336,32 +380,170 @@ export class AuthService {
    * @param email
    */
   async sendVerificationCode(email: string) {
-    // 生成6位随机数
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    // 缓存验证码到redis
-    await this.redisService.set(`email_code:${email}`, code);
-    // 发送邮件
-    await this.mailService.sendMail(email, '验证码', `您的验证码是：${code}`);
+    await this.verificationCodeService.sendCode(email, 'email');
   }
 
   /**
-   * 验证验证码
+   * 手机验证码登录 (如果用户不存在则自动注册)
+   * @param phone
+   * @param code
+   * @returns
+   */
+  async loginWithPhone(phone: string, code: string) {
+    // 1. 验证验证码
+    const isValid = await this.verificationCodeService.verifyCode(phone, code, 'sms');
+    if (!isValid) {
+      throw new BadRequestException('验证码错误或已过期');
+    }
+
+    // 2. 查找用户
+    let user = await this.userRepository.findOne({
+      where: { phone },
+    });
+
+    if (!user) {
+      // 3. 首次登录：自动注册
+      const username = this.generateUniqueUsername(phone);
+      const newUser = this.userRepository.create({
+        phone,
+        password: null,
+        username,
+        userType: UserType.EXTERNAL,
+        status: UserStatus.ACTIVE,
+      });
+
+      const savedUser = await this.userRepository.save(newUser);
+      await this.assignDefaultRole(savedUser.id);
+
+      user = await this.userRepository.findOne({
+        where: { id: savedUser.id },
+        relations: ['roles'],
+      });
+    }
+
+    const tokens = await this.generateTokenPair(user);
+
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+    };
+  }
+
+  /**
+   * 微信扫码登录
+   * @param code 微信回调code
+   */
+  async loginWithWeChat(code: string) {
+    // 1. 获取微信 access_token 和 openid
+    const weChatToken = await this.weChatService.getAccessToken(code);
+
+    // 2. 查找是否已绑定用户
+    let userOAuth = await this.userOAuthRepository.findOne({
+      where: {
+        provider: 'wechat',
+        openid: weChatToken.openid,
+      },
+      relations: ['user'],
+    });
+
+    let user: UserEntity;
+
+    if (userOAuth) {
+      // 已绑定，直接登录
+      user = userOAuth.user;
+    } else {
+      // 3. 未绑定，获取用户信息并注册
+      const weChatUserInfo = await this.weChatService.getUserInfo(
+        weChatToken.access_token,
+        weChatToken.openid,
+      );
+
+      // 创建新用户
+      // 注意：这里可能需要处理 unionid 关联逻辑，如果同主体下有其他应用
+      // 暂时简化为直接创建新用户
+
+      const username = this.generateUniqueUsername(weChatUserInfo.nickname || 'wx_user');
+      const newUser = this.userRepository.create({
+        username,
+        password: null,
+        userType: UserType.EXTERNAL,
+        status: UserStatus.ACTIVE,
+        // 这里可以保存头像等信息，如果 UserEntity 有对应字段
+      });
+
+      const savedUser = await this.userRepository.save(newUser);
+      await this.assignDefaultRole(savedUser.id);
+
+      user = savedUser;
+
+      // 创建 OAuth 关联
+      const newOAuth = this.userOAuthRepository.create({
+        provider: 'wechat',
+        openid: weChatToken.openid,
+        unionid: weChatToken.unionid,
+        accessToken: weChatToken.access_token,
+        refreshToken: weChatToken.refresh_token,
+        expiresIn: weChatToken.expires_in,
+        nickname: weChatUserInfo.nickname,
+        avatar: weChatUserInfo.headimgurl,
+        user: savedUser,
+      });
+
+      await this.userOAuthRepository.save(newOAuth);
+    }
+
+    // 重新查询以确保包含 roles
+    user = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: ['roles'],
+    });
+
+    const tokens = await this.generateTokenPair(user);
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+    };
+  }
+
+  /**
+   * 为用户分配默认角色
+   * @param userId
+   */
+  private async assignDefaultRole(userId: number) {
+    try {
+      const defaultRole = await this.roleService.getRoleByCode('USER');
+      if (defaultRole) {
+        await this.roleService.batchAssignRolesToUser(userId, [defaultRole.id]);
+        this.logger.log(`✅ 为用户 ${userId} 分配默认USER角色成功`);
+      } else {
+        throw new Error('未找到默认USER角色');
+      }
+    } catch (error) {
+      this.logger.error(`为用户 ${userId} 分配默认角色失败:`, error.message);
+      // 这里不抛出异常，以免阻断登录流程，但记录错误
+    }
+  }
+
+  /**
+   * 邮箱验证码登录 (如果用户不存在则自动注册)
    * @param email
    * @param code
    * @returns
    */
-  async verifyEmailCodeAndLogin(email: string, code: string) {
-    const storedCode = await this.redisService.get(`email_code:${email}`);
-    if (!storedCode || storedCode !== code) {
+  async loginWithEmail(email: string, code: string) {
+    // 1. 验证验证码
+    const isValid = await this.verificationCodeService.verifyCode(email, code, 'email');
+    if (!isValid) {
       throw new BadRequestException('验证码错误或已过期');
     }
 
+    // 2. 查找用户
     let user = await this.userRepository.findOne({
       where: { email },
     });
 
     if (!user) {
-      // 首次登录：自动注册
+      // 3. 首次登录：自动注册
       const username = this.generateUniqueUsername(email);
       const newUser = this.userRepository.create({
         email,
@@ -375,28 +557,7 @@ export class AuthService {
       const userId = savedUser.id;
 
       // 为新注册的用户分配默认角色
-      try {
-        // 查找默认角色
-        const defaultRole = await this.roleService.getRoleByCode('USER');
-        if (defaultRole) {
-          // 使用角色服务分配默认角色
-          await this.roleService.batchAssignRolesToUser(userId, [defaultRole.id]);
-          this.logger.log('✅ 为邮箱注册用户分配默认USER角色成功');
-        } else {
-          throw new Error('未找到默认USER角色');
-        }
-      } catch (error) {
-        this.logger.error('为邮箱注册用户分配默认角色失败:', error.message);
-        // 角色分配失败时抛出异常，确保用户创建失败
-        throw new HttpException(
-          {
-            message: '用户角色分配失败，请重试',
-            error: 'role assignment failed',
-            details: error.message,
-          },
-          500,
-        );
-      }
+      await this.assignDefaultRole(userId);
 
       // 重新查询用户以获取角色信息
       user = await this.userRepository.findOne({
@@ -415,15 +576,15 @@ export class AuthService {
 
   /**
    * 生成唯一的用户名
-   * @param email
+   * @param prefix 前缀 (如邮箱前缀)
    * @returns
    */
-  private generateUniqueUsername(email: string): string {
-    // 获取邮箱的前缀
-    const base = email.split('@')[0];
-    // 生成三位随机数
-    const suffix = Math.floor(Math.random() * 1000);
-    return `${base}${suffix}`;
+  private generateUniqueUsername(prefix: string): string {
+    // 获取前缀，过滤掉非字母数字字符
+    const cleanPrefix = prefix.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+    // 生成随机后缀 (6位十六进制字符)
+    const suffix = randomBytes(3).toString('hex');
+    return `${cleanPrefix}_${suffix}`;
   }
 
   /**

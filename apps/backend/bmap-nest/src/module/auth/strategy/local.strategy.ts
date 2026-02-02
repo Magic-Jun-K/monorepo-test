@@ -101,7 +101,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 验证密码
-    const isPasswordValid = await this.authService.verifyPassword(user.password, password);
+    const isPasswordValid = await this.authService.verifyPasswordHash(user.password, password);
     if (!isPasswordValid) {
       // 记录失败尝试
       await this.loginAttemptsService.recordFailedAttempt(username);

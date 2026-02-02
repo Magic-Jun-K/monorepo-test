@@ -1,10 +1,71 @@
-import * as argon2 from 'argon2';
 import { Injectable, Logger } from '@nestjs/common';
-import { jwtDecrypt, importPKCS8 } from 'jose';
+import * as argon2 from 'argon2';
+
+import {
+  generateKeyPair,
+  decryptWithKeyExchange,
+  DecryptedLoginData,
+} from '@eggshell/shared-crypto/node';
 
 @Injectable()
 export class AuthUtils {
   private readonly logger = new Logger(AuthUtils.name);
+
+  // 服务器密钥对（X25519）
+  private static serverKeyPair: { publicKey: string; privateKey: string } | null = null;
+
+  /**
+   * 获取服务器X25519公钥
+   * @returns 服务器X25519公钥
+   */
+  async getServerPublicKey(): Promise<string> {
+    const { publicKey } = await this.getServerKeyPair();
+    return publicKey;
+  }
+
+  /**
+   * 获取服务器X25519密钥对
+   * @returns 服务器X25519密钥对
+   */
+  async getServerKeyPair(): Promise<{ publicKey: string; privateKey: string }> {
+    if (AuthUtils.serverKeyPair) {
+      return AuthUtils.serverKeyPair;
+    }
+
+    const keyPair = await generateKeyPair('X25519');
+
+    AuthUtils.serverKeyPair = {
+      publicKey: keyPair.publicKey,
+      privateKey: keyPair.privateKey,
+    };
+
+    this.logger.log('服务器X25519密钥对生成成功');
+    return AuthUtils.serverKeyPair;
+  }
+
+  /**
+   * 使用密钥交换解密数据
+   * @param encryptedData 加密数据
+   * @returns 解密后的登录数据
+   */
+  async decryptWithKeyExchange(encryptedData: {
+    encrypted: string;
+    clientPublicKey: string;
+    nonce: string;
+    algorithm: string;
+  }): Promise<DecryptedLoginData> {
+    const { privateKey } = await this.getServerKeyPair();
+    return decryptWithKeyExchange(
+      {
+        encrypted: encryptedData.encrypted,
+        clientPublicKey: encryptedData.clientPublicKey,
+        nonce: encryptedData.nonce,
+        algorithm: encryptedData.algorithm,
+      },
+      privateKey,
+    );
+  }
+
   /**
    * 对前端传递的哈希值进行哈希处理
    * @param hashedPassword 前端传递的哈希值
@@ -21,65 +82,19 @@ export class AuthUtils {
   }
 
   /**
-   * RSA解密密码
-   * @param encryptedPassword 前端传递的RSA加密密码
-   * @returns 解密后的密码
+   * 验证前端传来的密码哈希是否与数据库存储的哈希匹配
+   * @param databaseHash 数据库存储的argon2哈希
+   * @param frontendHash 前端传来的scrypt哈希
    */
-  async decryptRSA(encryptedPassword: string): Promise<string> {
+  async verifyPasswordHash(databaseHash: string, frontendHash: string): Promise<boolean> {
     try {
-      this.logger.log('开始RSA解密...');
-
-      // 从环境变量获取RSA私钥
-      const privateKey = process.env.RSA_PRIVATE_KEY;
-      if (!privateKey) {
-        throw new Error('RSA_PRIVATE_KEY not found in environment variables');
-      }
-
-      // 导入私钥
-      const key = await importPKCS8(privateKey.trim(), 'RSA-OAEP');
-
-      // 解密JWE
-      const { payload } = await jwtDecrypt(encryptedPassword, key);
-
-      this.logger.log('RSA解密成功');
-
-      // 返回解密后的密码，更安全的类型断言
-      return (payload as { password: string }).password;
-    } catch (error) {
-      this.logger.error('RSA解密失败:', error);
-      throw new Error(`Failed to decrypt RSA password: ${error.message || error}`);
-    }
-  }
-
-  /**
-   * 验证密码是否正确
-   * @param finalHashedPassword 数据库存储的哈希值
-   * @param inputEncryptPassword 前端传递的RSA加密密码
-   * @returns 是否验证成功
-   */
-  async verifyPassword(
-    finalHashedPassword: string,
-    inputEncryptPassword: string,
-  ): Promise<boolean> {
-    this.logger.log('authUtils verifyPassword finalHashedPassword:', finalHashedPassword);
-    this.logger.log('authUtils verifyPassword inputEncryptPassword:', inputEncryptPassword);
-    try {
-      let passwordToVerify = inputEncryptPassword;
-
-      // 检查是否是JWT格式的RSA加密密码
-      if (inputEncryptPassword.includes('.') && inputEncryptPassword.length > 100) {
-        this.logger.log('检测到RSA加密密码，开始解密...');
-        passwordToVerify = await this.decryptRSA(inputEncryptPassword);
-        this.logger.log('RSA解密后的密码:', passwordToVerify);
-      }
-
-      // 使用argon2验证密码
-      const isValid = await argon2.verify(finalHashedPassword, passwordToVerify);
-      this.logger.log('authUtils verifyPassword isValid:', isValid);
-
+      this.logger.log('验证密码哈希...');
+      // 使用argon2验证，前端传来的scrypt哈希作为原始密码
+      const isValid = await argon2.verify(databaseHash, frontendHash);
+      this.logger.log('密码哈希验证结果:', isValid);
       return isValid;
     } catch (error) {
-      this.logger.error('密码验证失败:', error);
+      this.logger.error('密码哈希验证失败:', error);
       return false;
     }
   }

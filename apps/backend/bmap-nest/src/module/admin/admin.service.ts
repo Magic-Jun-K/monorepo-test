@@ -14,6 +14,16 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
+interface RegistrationData {
+  username: string;
+  passwordHash: string;
+  timestamp: number;
+  deviceFingerprint?: string;
+  requestId: string;
+  phone?: string;
+  email?: string;
+}
+
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -31,19 +41,28 @@ export class AdminService {
    * @param body
    * @returns
    */
-  async register(body) {
+  async register(body: {
+    encrypted: string;
+    clientPublicKey: string;
+    nonce: string;
+    algorithm: string;
+  }) {
+    // 先使用密钥交换解密数据
+    const decryptedData = await this.authUtils.decryptWithKeyExchange(body);
+    const { username, passwordHash, phone, email } = decryptedData as RegistrationData;
+
     const userIsExist = await this.userRepository.findOne({
-      where: { username: body.username },
+      where: { username },
     });
     if (userIsExist) {
       throw new HttpException({ message: '用户已存在', error: 'user is existed' }, 400);
     }
 
     // 只在提供了手机号时才检查手机号
-    if (body.phone) {
+    if (phone) {
       // Check for existing phone number(检查是否存在手机号)
       const userByPhone = await this.userRepository.findOne({
-        where: { phone: body.phone },
+        where: { phone },
       });
       if (userByPhone) {
         throw new HttpException(
@@ -57,10 +76,10 @@ export class AdminService {
     }
 
     // 只在提供了邮箱时才检查邮箱
-    if (body.email) {
+    if (email) {
       // Check for existing email(检查是否存在邮箱)
       const userByEmail = await this.userRepository.findOne({
-        where: { email: body.email },
+        where: { email },
       });
       if (userByEmail) {
         throw new HttpException(
@@ -70,26 +89,12 @@ export class AdminService {
       }
     }
 
-    // 先RSA解密密码，再进行哈希处理
-    const decryptedPassword = await this.authUtils.decryptRSA(body.password);
-
-    // let decryptedPassword: string;
-
-    // // 在开发环境中，如果密码不是JWE格式，直接使用明文
-    // if (
-    //   process.env.NODE_ENV === 'development' &&
-    //   (!body.password.includes('.') || body.password.length <= 100)
-    // ) {
-    //   console.log('开发环境检测到明文密码，跳过RSA解密');
-    //   decryptedPassword = body.password;
-    // } else {
-    //   decryptedPassword = await this.authUtils.decryptRSA(body.password);
-    // }
-
-    const hashedPassword = await this.authUtils.hashPassword(decryptedPassword);
+    const hashedPassword = await this.authUtils.hashPassword(passwordHash);
     const user = this.userRepository.create({
-      ...body,
+      username,
       password: hashedPassword,
+      phone,
+      email,
       userType: UserType.EXTERNAL, // 设置用户类型为普通用户
       status: UserStatus.ACTIVE, // 默认激活
     });
@@ -97,7 +102,7 @@ export class AdminService {
 
     // 重新查询用户以获取正确的类型
     const savedUser = await this.userRepository.findOne({
-      where: { username: body.username },
+      where: { username },
     });
 
     // 为新注册用户分配默认角色

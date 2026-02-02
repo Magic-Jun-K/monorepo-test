@@ -6,7 +6,10 @@
 //   UseGuards,
 //   UnauthorizedException,
 //   Body,
+//   Res,
+//   Req,
 // } from '@nestjs/common';
+// import { Response } from 'express';
 // import { AuthGuard } from '@nestjs/passport';
 // import { JwtService } from '@nestjs/jwt';
 // import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +18,7 @@
 // import { AdminEntity } from '../../entities/admin.entity';
 // import { AuthService } from './auth.service';
 // import { Public } from '@/common/decorators/public.decorator';
+// import { LoginDto } from './dto/login.dto';
 
 // // 路由拦截
 // @Controller('auth')
@@ -34,25 +38,56 @@
 //    */
 //   @UseGuards(AuthGuard('local'))
 //   @Post('login')
-//   async login(@Request() req) {
-//     // console.log('测试auth controller login req', req);
-//     const token = await this.authService.login(
-//       req.body.username,
-//       req.body.password,
+//   async login(
+//     @Body() loginDto: LoginDto,
+//     @Res({ passthrough: true }) response: Response,
+//   ) {
+//     console.log('测试auth.controller.ts loginDto', loginDto);
+//     const result = await this.authService.login(
+//       loginDto.username,
+//       loginDto.password,
 //     );
 
-//     return { data: token, message: '登录成功', success: true };
+//     console.log('登录时生成的 refresh_token:', result.refresh_token);
+
+//     /* 设置 httpOnly cookie */
+//     // 设置 access_token
+//     response.cookie('access_token', result.access_token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === 'production',
+//       sameSite: 'strict', // 防御CSRF
+//       maxAge: 15 * 60 * 1000, // 15分钟
+//       // path: '/', // 修改为根路径，这样所有路径都能访问到这个cookie
+//       path: '/api', // ✅ Restrict to API routes
+//       // domain: process.env.COOKIE_DOMAIN, // 限制作用域
+//     });
+
+//     // 设置 refresh_token
+//     response.cookie('refresh_token', result.refresh_token, {
+//       httpOnly: true, // 表示该 cookie 只能在服务器端访问，不能在客户端 JS 中访问
+//       secure: process.env.NODE_ENV === 'production', // 生产环境使用 HTTPS
+//       sameSite: 'strict', // 表示该 cookie 只允许在当前域名下访问，不允许在子域下访问。防御CSRF
+//       // maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+//       maxAge: 60 * 60 * 1000, // 1小时
+//       path: '/api/auth/refresh', // 只允许在刷新接口使用 Restrict to refresh endpoint
+//       // domain: process.env.COOKIE_DOMAIN, // 限制作用域
+//     });
+
+//     return { /* data: result, */ message: '登录成功', success: true };
 //   }
 
 //   @UseGuards(AuthGuard('jwt'))
 //   @Post('logout')
-//   // async logout() {
-//   //   return { success: await this.authService.logout() };
-//   // }
-//   async logout(@Request() req) {
-//     // 从请求头获取refreshToken（需前端传递）
-//     const refreshToken = req.body.refresh_token;
-//     await this.authService.revokeRefreshToken(refreshToken);
+//   async logout(@Request() req, @Res({ passthrough: true }) response: Response) {
+//     // 从 cookie 中获取 refresh_token
+//     const refreshToken = req.cookies.refresh_token;
+//     if (refreshToken) {
+//       await this.authService.revokeRefreshToken(refreshToken);
+//     }
+//     // 清除 cookie
+//     response.clearCookie('access_token', { path: '/api' });
+//     response.clearCookie('refresh_token', { path: '/api/auth/refresh' });
+
 //     return { success: true };
 //   }
 
@@ -63,52 +98,43 @@
 //    */
 //   @Public()
 //   @Post('refresh')
-//   async refreshToken(@Body() body: { refresh_token: string }) {
+//   async refreshToken(
+//     @Req() req, // 使用 @Req() 装饰器获取请求对象
+//     @Res({ passthrough: true }) response: Response,
+//   ) {
+//     // 从cookie中获取refresh token
+//     const refreshToken = req.cookies.refresh_token;
+//     console.log('从cookie获取的refresh_token:', refreshToken);
+
+//     if (!refreshToken) {
+//       console.log('未找到刷新令牌，cookies:', req.cookies);
+//       throw new UnauthorizedException('未找到刷新令牌');
+//     }
+
 //     // 黑名单验证
-//     if (await this.authService.isRefreshTokenRevoked(body.refresh_token)) {
+//     if (await this.authService.isRefreshTokenRevoked(refreshToken)) {
 //       throw new UnauthorizedException('令牌已失效');
 //     }
 
-//     console.log('🔄 后端正在刷新 Token...', new Date().toLocaleTimeString());
-
 //     try {
-//       // 验证 refresh token
-//       const payload = this.jwtService.verify(body.refresh_token, {
-//         secret: process.env.JWT_REFRESH_SECRET,
+//       const result = await this.authService.refreshToken(refreshToken);
+
+//       console.log('✅ 后端 Token 刷新成功！:', result);
+
+//       // 设置新的 access_token
+//       response.cookie('access_token', result.access_token, {
+//         httpOnly: true,
+//         secure: process.env.NODE_ENV === 'production',
+//         sameSite: 'strict', // 防御CSRF
+//         maxAge: 15 * 60 * 1000, // 15分钟
+//         path: '/api',
+//         // domain: process.env.COOKIE_DOMAIN, // 限制作用域
 //       });
 
-//       // 检查用户是否存在
-//       const user = await this.adminRepository.findOne({
-//         where: { id: payload.sub },
-//         select: ['id', 'username'],
-//       });
-
-//       if (!user) throw new UnauthorizedException();
-
-//       const tokens = {
-//         access_token: this.jwtService.sign({
-//           sub: user.id,
-//           username: user.username,
-//         }),
-//         refresh_token: this.jwtService.sign(
-//           { sub: user.id },
-//           {
-//             // expiresIn: '7d',
-//             expiresIn: '6h',
-//             secret: process.env.JWT_REFRESH_SECRET,
-//           },
-//         ),
-//       };
-
-//       console.log('✅ 后端 Token 刷新成功！用户:', user.username);
-
-//       // 确保返回格式一致
-//       return {
-//         success: true,
-//         data: tokens,
-//       };
+//       return { success: true };
 //     } catch (error) {
 //       console.error('Token 刷新失败:', error);
+//       console.error('错误的refresh_token:', refreshToken);
 //       throw new UnauthorizedException('刷新令牌无效');
 //     }
 //   }
@@ -145,11 +171,35 @@
 //    */
 //   @Public()
 //   @Post('email-login')
-//   async emailLogin(@Body() body: { email: string; code: string }) {
-//     const token = await this.authService.verifyEmailCodeAndLogin(
+//   async emailLogin(
+//     @Body() body: { email: string; code: string },
+//     @Res({ passthrough: true }) response: Response,
+//   ) {
+//     const result = await this.authService.verifyEmailCodeAndLogin(
 //       body.email,
 //       body.code,
 //     );
-//     return { data: token, message: '登录成功', success: true };
+
+//     // 设置 access_token
+//     response.cookie('access_token', result.access_token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === 'production',
+//       sameSite: 'strict', // 防御CSRF
+//       maxAge: 15 * 60 * 1000, // 15分钟
+//       path: '/api',
+//       // domain: process.env.COOKIE_DOMAIN, // 限制作用域
+//     });
+//     // 设置 refresh_token
+//     response.cookie('refresh_token', result.refresh_token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === 'production',
+//       sameSite: 'strict', // 防御CSRF
+//       // maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+//       maxAge: 60 * 60 * 1000, // 1小时
+//       path: '/api/auth/refresh', // 只允许在刷新接口使用
+//       // domain: process.env.COOKIE_DOMAIN, // 限制作用域
+//     });
+
+//     return { /* data: token, */ message: '登录成功', success: true };
 //   }
 // }

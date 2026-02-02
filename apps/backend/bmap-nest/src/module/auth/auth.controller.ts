@@ -19,13 +19,19 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { Public } from '../../common/decorators/public.decorator';
-import { LoginDto } from './dto/login.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { AuthRequest } from './types/auth-request.interface';
 import { setPasswordSchema } from './dto/set-password.dto';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { AuthUtils } from '../../common/utils/auth.utils';
 
-// 路由拦截
+interface EncryptedData {
+  encrypted: string;
+  clientPublicKey: string;
+  nonce: string;
+  algorithm: string;
+}
+
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -33,28 +39,43 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
+    private readonly authUtils: AuthUtils,
   ) {}
 
   /**
-   * 用户登录
-   * @param username 用户名
-   * @param password 前端传递的哈希值
-   * @returns 登录结果
+   * 获取服务器公钥（用于前端加密）
    */
-  @UseGuards(AuthGuard('local'))
-  @Post('login')
-  async login(
-    @Req() req: AuthRequest, // 使用 @Req() 装饰器获取请求对象
-    @Body() loginDto: LoginDto, // 使用 @Body 装饰器获取请求体数据
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    try {
-      this.logger.log('测试auth.controller.ts loginDto', loginDto);
+  @Public()
+  @Get('public-key')
+  async getPublicKey() {
+    const { publicKey } = await this.authUtils.getServerKeyPair();
+    return { publicKey };
+  }
 
-      // 检查是否被锁定
-      const isBlocked = await this.loginAttemptsService.isBlocked(loginDto.username);
+  @Public()
+  @Post('login')
+  async login(@Body() body: EncryptedData, @Res({ passthrough: true }) response: Response) {
+    try {
+      this.logger.log('收到登录请求，开始解密...');
+
+      const decryptedData = await this.authUtils.decryptWithKeyExchange(body);
+      const { username, passwordHash } = decryptedData;
+
+      if (
+        !username ||
+        typeof username !== 'string' ||
+        !passwordHash ||
+        typeof passwordHash !== 'string'
+      ) {
+        throw new UnauthorizedException({
+          message: '用户名或密码无效',
+          success: false,
+        });
+      }
+
+      const isBlocked = await this.loginAttemptsService.isBlocked(username);
       if (isBlocked) {
-        const remainingTime = await this.getLockoutRemainingTime(loginDto.username);
+        const remainingTime = await this.getLockoutRemainingTime(username);
         throw new HttpException(
           {
             message: `账户已被锁定，请${remainingTime}分钟后重试`,
@@ -65,14 +86,38 @@ export class AuthController {
         );
       }
 
-      const { access_token, refresh_token } = await this.authService.login(
-        req.user, // 来自LocalStrategy的用户对象
+      const user = await this.authService.validateUser(username);
+      if (!user) {
+        await this.loginAttemptsService.recordFailedAttempt(username);
+        throw new UnauthorizedException({
+          message: '用户不存在',
+          success: false,
+        });
+      }
+
+      const isPasswordValid = await this.authService.verifyPasswordHash(
+        user.password,
+        passwordHash,
       );
 
-      this.logger.log('登录时生成的 refresh_token:', refresh_token);
+      if (!isPasswordValid) {
+        // 记录失败尝试（防止DDoS攻击）
+        await this.loginAttemptsService.recordFailedAttempt(username);
 
-      /* 设置 httpOnly cookie */
-      // 设置 refresh_token
+        // 获取剩余尝试次数
+        const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
+        throw new UnauthorizedException({
+          message: '密码错误',
+          success: false,
+          remainingAttempts,
+        });
+      }
+
+      const { access_token, refresh_token } = await this.authService.login(user);
+
+      this.logger.log('登录成功，refresh_token:', refresh_token);
+
+      // 设置 httpOnly cookie
       response.cookie('refresh_token', refresh_token, {
         httpOnly: true, // 表示该 cookie 只能在服务器端访问，不能在客户端 JS 中访问
         secure: process.env.NODE_ENV === 'production', // 生产环境使用 HTTPS
@@ -89,20 +134,76 @@ export class AuthController {
         throw error;
       }
 
-      // 记录失败尝试
-      await this.loginAttemptsService.recordFailedAttempt(loginDto.username);
-
-      // 获取剩余尝试次数
-      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(
-        loginDto.username,
-      );
+      this.logger.error('登录失败:', error);
 
       throw new UnauthorizedException({
         message: '登录失败',
-        error: error.message,
-        remainingAttempts,
+        error: (error as Error).message,
         success: false,
       });
+    }
+  }
+
+  /**
+   * 用户注册
+   */
+  @Public()
+  @Post('register')
+  async register(@Body() body: EncryptedData, @Res({ passthrough: true }) response: Response) {
+    try {
+      this.logger.log('收到注册请求，开始解密...');
+
+      const decryptedData = await this.authUtils.decryptWithKeyExchange(body);
+      const { username, passwordHash } = decryptedData;
+
+      if (
+        !username ||
+        typeof username !== 'string' ||
+        !passwordHash ||
+        typeof passwordHash !== 'string'
+      ) {
+        throw new HttpException(
+          { message: '注册数据不完整', success: false },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 调用注册服务
+      const result = await this.authService.registerWithHash(username, passwordHash);
+
+      if (!result.success) {
+        throw new HttpException(
+          { message: result.message, success: false },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // 自动登录
+      const user = await this.authService.validateUser(username);
+      if (user) {
+        const { access_token, refresh_token } = await this.authService.login(user);
+
+        response.cookie('refresh_token', refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: '/',
+        });
+
+        return { data: access_token, message: '注册成功并已自动登录', success: true };
+      }
+
+      return { message: '注册成功，请登录', success: true };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('注册失败:', error);
+      throw new HttpException(
+        { message: '注册失败', error: (error as Error).message, success: false },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -125,7 +226,6 @@ export class AuthController {
       await this.authService.revokeRefreshToken(refreshToken);
     }
     // 清除 cookie
-    // response.clearCookie('access_token', { path: '/' });
     response.clearCookie('refresh_token', { path: '/' });
 
     return { success: true };
@@ -235,20 +335,11 @@ export class AuthController {
     @Body() body: { email: string; code: string },
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { access_token, refresh_token } = await this.authService.verifyEmailCodeAndLogin(
+    const { access_token, refresh_token } = await this.authService.loginWithEmail(
       body.email,
       body.code,
     );
 
-    // 设置 access_token
-    // response.cookie('access_token', access_token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict', // 防御CSRF
-    //   maxAge: 15 * 60 * 1000, // 15分钟
-    //   path: '/',
-    //   domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
-    // });
     // 设置 refresh_token
     response.cookie('refresh_token', refresh_token, {
       httpOnly: true,
@@ -257,6 +348,66 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
       path: '/', // 只允许在刷新接口使用
       // domain: process.env.COOKIE_DOMAIN || 'localhost', // 限制作用域
+    });
+
+    return { data: access_token, message: '登录成功', success: true };
+  }
+
+  /**
+   * 发送短信验证码
+   * @param phone
+   * @returns
+   */
+  @Public()
+  @Post('send-sms-code')
+  async sendSmsCode(@Body('phone') phone: string) {
+    await this.authService['verificationCodeService'].sendCode(phone, 'sms');
+    return { success: true, message: '验证码发送成功' };
+  }
+
+  /**
+   * 手机号验证码登录
+   * @param body
+   * @param response
+   */
+  @Public()
+  @Post('phone-login')
+  async phoneLogin(
+    @Body() body: { phone: string; code: string },
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { access_token, refresh_token } = await this.authService.loginWithPhone(
+      body.phone,
+      body.code,
+    );
+
+    response.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    return { data: access_token, message: '登录成功', success: true };
+  }
+
+  /**
+   * 微信扫码登录 (回调接口)
+   * @param code
+   * @param response
+   */
+  @Public()
+  @Post('wechat-login')
+  async weChatLogin(@Body('code') code: string, @Res({ passthrough: true }) response: Response) {
+    const { access_token, refresh_token } = await this.authService.loginWithWeChat(code);
+
+    response.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
     });
 
     return { data: access_token, message: '登录成功', success: true };

@@ -7,6 +7,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from '../user/user.module';
 import { RoleModule } from '../role/role.module';
 import { UserEntity } from '../../entities/user.entity';
+import { UserOAuthEntity } from '../../entities/user-oauth.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
@@ -16,6 +17,9 @@ import { RedisModule } from '../redis/redis.module';
 import { TokenBlacklistService } from './token-backlist.service';
 import { MailModule } from '../mail/mail.module';
 import { LoginAttemptsService } from './login-attempts.service';
+import { VerificationCodeService } from './verification-code.service';
+import { SmsService } from './sms.service';
+import { WeChatService } from './wechat.service';
 
 @Module({
   imports: [
@@ -31,7 +35,7 @@ import { LoginAttemptsService } from './login-attempts.service';
     }),
     UserModule,
     RoleModule,
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity, UserOAuthEntity]),
     RedisModule,
     MailModule,
   ],
@@ -43,7 +47,10 @@ import { LoginAttemptsService } from './login-attempts.service';
     AuthUtils,
     TokenBlacklistService,
     LoginAttemptsService,
+    VerificationCodeService,
+    SmsService,
+    WeChatService,
   ],
-  exports: [AuthService, LoginAttemptsService],
+  exports: [AuthService, LoginAttemptsService, VerificationCodeService],
 })
 export class AuthModule {}
