@@ -10,9 +10,9 @@ import RegisterText from './components/RegisterText';
 import { useToast } from '@/components/Toast/useToast';
 import { ToastProvider } from '@/components/Toast';
 import { BASE_URL } from '@/config';
-import { emailLogin, login, register, sendCode } from '@/services';
+import { emailLogin, /* login, register, */ sendCode } from '@/services';
 import { useAuthStore } from '@/stores/zustand/auth.store';
-import { encrypt } from '@/utils/rsaEncrypt';
+import { initAuth, encryptedLogin, encryptedRegister } from '@/utils/hashEncrypt';
 import { useLoginForm } from './hooks/useLoginForm';
 import {
   AuthType,
@@ -28,7 +28,7 @@ import {
 import styles from './index.module.scss';
 
 const backgroundImageUrl = `${BASE_URL}/compressed/login-bg2.webp`;
-const api = { login, register };
+// const api = { login, register };
 
 interface ErrorResponse {
   response?: {
@@ -56,6 +56,11 @@ const LoginContent = () => {
     handleSubmit,
     formState: { errors },
   } = form;
+
+  // 初始化加密密钥
+  useEffect(() => {
+    initAuth().catch(err => console.error('初始化认证失败:', err));
+  }, []);
 
   // 获取表单字段错误信息
   const getFieldError = (fieldName: string): FieldError | undefined => {
@@ -134,15 +139,14 @@ const LoginContent = () => {
   };
 
   // 公共密码处理
-  // 使用RSA加密替代之前的argon2哈希
   const handleAccountOrRegister = async (
     data: LoginFormData | RegisterFormData,
   ): Promise<AuthResponse> => {
-    const encryptedPassword = await encrypt(data.password);
-    return await api[authType]({
-      username: data.username,
-      password: encryptedPassword,
-    });
+    if (authType === 'login') {
+      return await encryptedLogin(data.username, data.password);
+    } else {
+      return await encryptedRegister(data.username, data.password);
+    }
   };
 
   // 邮箱登录专用
