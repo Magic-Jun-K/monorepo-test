@@ -20,6 +20,8 @@ COPY packages/ui/tailwind/ ./packages/ui/tailwind/
 COPY packages/ui/antd/ ./packages/ui/antd/
 # 复制核心业务组件库代码
 COPY packages/core-business-components/ ./packages/core-business-components/
+# 复制共享组件库代码
+COPY packages/shared/crypto/ ./packages/shared/crypto/
 # 复制前端端应用代码
 COPY apps/frontend/react-webpack/ ./apps/frontend/react-webpack/
 # 安装所有依赖（包含 devDependencies）
@@ -36,6 +38,7 @@ FROM deps AS fe-build
 RUN pnpm --filter @eggshell/ui-tailwind build
 RUN pnpm --filter @eggshell/ui-antd build
 RUN pnpm --filter @eggshell/core-business-components build
+RUN pnpm --filter @eggshell/shared-crypto build
 # 切换到前端应用目录
 WORKDIR /app/apps/frontend/react-webpack
 # 清除 webpack 缓存
@@ -46,7 +49,6 @@ RUN pnpm build --stats=detailed
 FROM nginx:1.28.1-alpine
 # 复制构建好的前端文件到Nginx的默认目录
 COPY --from=fe-build /app/apps/frontend/react-webpack/build /usr/share/nginx/html
-# 复制Nginx配置文件
-# COPY apps/frontend/react-webpack/nginx.conf /etc/nginx/conf.d/default.conf
+
 # 暴露Nginx的默认端口
 EXPOSE 80
