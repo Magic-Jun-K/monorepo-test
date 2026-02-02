@@ -180,13 +180,13 @@ jobs:
 
             # 停止现有的后端容器
             echo "⏹️ Stopping existing backend containers..."
-            docker-compose -f docker-compose.backend.yml stop eggshell-bmap-backend || true
-            docker-compose -f docker-compose.backend.yml rm -f eggshell-bmap-backend || true
+            docker-compose -f docker-compose.backend.yml stop eggshell-backend || true
+            docker-compose -f docker-compose.backend.yml rm -f eggshell-backend || true
 
             # 拉取并启动后端容器
             echo "📦 Pulling and starting new backend containers..."
-            docker-compose -f docker-compose.backend.yml pull eggshell-bmap-backend
-            docker-compose -f docker-compose.backend.yml up -d eggshell-bmap-backend
+            docker-compose -f docker-compose.backend.yml pull eggshell-backend
+            docker-compose -f docker-compose.backend.yml up -d eggshell-backend
             
             # 等待服务启动
             echo "⏳ Waiting for backend service to start..."
@@ -194,14 +194,14 @@ jobs:
             
             # 验证部署
             echo "✅ Deployment completed! Verifying..."
-            docker-compose -f docker-compose.backend.yml ps eggshell-bmap-backend
+            docker-compose -f docker-compose.backend.yml ps eggshell-backend
             
             # 尝试健康检查（如果后端有健康检查端点）
-            if docker-compose -f docker-compose.backend.yml logs eggshell-bmap-backend | tail -10 | grep -q "Nest application successfully started"; then
+            if docker-compose -f docker-compose.backend.yml logs eggshell-backend | tail -10 | grep -q "Nest application successfully started"; then
               echo "🎉 Backend service is healthy!"
             else
               echo "⚠️ Backend service may not be fully ready, check logs:"
-              docker-compose -f docker-compose.backend.yml logs --tail=20 eggshell-bmap-backend
+              docker-compose -f docker-compose.backend.yml logs --tail=20 eggshell-backend
             fi
             
             echo "🎉 Backend deployment completed!"
