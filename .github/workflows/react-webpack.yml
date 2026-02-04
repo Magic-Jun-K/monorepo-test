@@ -230,17 +230,7 @@ jobs:
           skip-format-check: 'true'
           cache-turbo: 'false'
 
-      - name: Quality Checks(质量检查)
-        if: steps.check.outputs.should_run == 'true'
-        run: |
-          echo "🔍 Running quality checks..."
-          echo "Node.js: ${{ steps.common.outputs.node-version }}"
-          echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
-          pnpm --filter @frontend/react-webpack typecheck
-          pnpm --filter @frontend/react-webpack lint
-          echo "✅ Quality checks passed!"
-
-      # 构建依赖包
+      # 构建依赖包（必须在类型检查之前）
       - name: Build Dependencies(构建依赖包)
         if: steps.check.outputs.should_run == 'true'
         run: |
@@ -250,6 +240,16 @@ jobs:
           pnpm --filter @eggshell/ui-unocss build
           pnpm --filter @eggshell/core-business-components build
           echo "✅ Dependencies built!"
+
+      - name: Quality Checks(质量检查)
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "🔍 Running quality checks..."
+          echo "Node.js: ${{ steps.common.outputs.node-version }}"
+          echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
+          pnpm --filter @frontend/react-webpack typecheck
+          pnpm --filter @frontend/react-webpack lint
+          echo "✅ Quality checks passed!"
 
       # 构建应用
       - name: Build Application(构建应用)
