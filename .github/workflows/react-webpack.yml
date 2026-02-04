@@ -72,6 +72,17 @@ jobs:
           skip-security-audit: 'false'
           skip-format-check: 'true'
 
+      # 构建依赖包（必须在类型检查之前）
+      - name: Build Dependencies
+        run: |
+          echo "🏗️ Building dependency packages..."
+          pnpm --filter @eggshell/ui-antd build
+          pnpm --filter @eggshell/ui-tailwind build
+          pnpm --filter @eggshell/ui-unocss build
+          pnpm --filter @eggshell/core-business-components build
+          pnpm --filter @eggshell/shared-crypto build
+          echo "✅ Dependencies built!"
+
       # 类型检查
       - name: Type Check
         run: |
