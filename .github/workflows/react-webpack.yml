@@ -165,10 +165,13 @@ jobs:
     # 环境矩阵支持
     strategy:
       matrix:
-        environment: [production, staging]
+        environment: [production]
+        # 未来可扩展: [staging, production]
       fail-fast: false
 
-    environment: ${{ matrix.environment }}
+    # 注意：移除 environment 配置以避免产生大量 GitHub Deployments
+    # 如需环境保护规则，请重新添加
+    # environment: ${{ matrix.environment }}
 
     # 存储触发信息供步骤使用
     env:
