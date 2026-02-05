@@ -250,6 +250,7 @@ jobs:
           pnpm --filter @eggshell/ui-tailwind build
           pnpm --filter @eggshell/ui-unocss build
           pnpm --filter @eggshell/core-business-components build
+          pnpm --filter @eggshell/shared-crypto build
           echo "✅ Dependencies built!"
 
       - name: Quality Checks(质量检查)
