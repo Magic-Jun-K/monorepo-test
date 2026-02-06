@@ -1,9 +1,11 @@
+/* eslint-disable no-extend-native -- Educational code for demonstrating Function.prototype.myApply */
+
 declare global {
   interface Function {
     myApply<T, Args extends unknown[], Return>(
       this: (this: T, ...args: Args) => Return,
       context: T | null | undefined,
-      args?: Args
+      args?: Args,
     ): Return;
   }
 }
@@ -11,7 +13,7 @@ declare global {
 Function.prototype.myApply = function <T, Args extends unknown[], Return>(
   this: (this: T, ...args: Args) => Return,
   context: T | null | undefined,
-  args?: Args
+  args?: Args,
 ): Return {
   const ctx = context ?? globalThis;
   const safeContext = typeof ctx === 'object' ? ctx : Object(ctx);

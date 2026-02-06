@@ -3,6 +3,11 @@ import { useEffect } from 'react';
 import './myCall';
 import './myApply';
 import './myBind';
+import { Person, type PersonInstance } from './Person';
+
+interface ValueContext {
+  value?: string;
+}
 
 export default () => {
   // 测试 myCall 函数
@@ -24,7 +29,7 @@ export default () => {
     console.log('测试2 - 多参数:', multiply.myCall(obj2, 3, 4));
 
     // 测试3: null 上下文
-    function getValue(this: any) {
+    function getValue(this: ValueContext) {
       return this.value || 'default';
     }
 
@@ -74,21 +79,6 @@ export default () => {
     console.log('测试2 - 预设参数:', boundFuncWithArgs('second'));
 
     // 测试3: 作为构造函数使用
-    interface PersonInstance {
-      name: string;
-      age: number;
-    }
-
-    // 修正 Person 函数的类型
-    function Person(this: PersonInstance, name: string, age: number) {
-      if (!(this instanceof Person)) {
-        throw new Error('Must be called with new');
-      }
-      this.name = name;
-      this.age = age;
-    }
-
-    // 使用类型断言来解决类型不匹配问题
     const BoundPerson = Person.myBind({} as PersonInstance);
     const person = new BoundPerson('Charlie', 30);
     console.log('测试3 - 作为构造函数:', person);
