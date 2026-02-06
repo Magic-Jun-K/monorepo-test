@@ -10,7 +10,7 @@ import { setupErrorHandlers } from './utils/errorHandler';
 
 import '@/styles/index.scss';
 import '@/styles/font.scss';
-import '@eggshell/ui-antd/es/index.css';
+import '@eggshell/ui-antd/lib/index.css';
 import '@eggshell/ui-tailwind/lib/index.css';
 
 setupErrorHandlers(); // 设置错误处理器
