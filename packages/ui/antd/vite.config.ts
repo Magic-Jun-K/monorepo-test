@@ -13,13 +13,13 @@ export default defineConfig({
     dts({
       include: ['src'],
       exclude: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
-      outDir: 'es',
+      outDir: 'lib',
       rollupTypes: true, // 自动生成类型声明
       insertTypesEntry: true, // 自动插入类型声明
     }),
   ],
   build: {
-    outDir: 'es',
+    outDir: 'lib',
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
