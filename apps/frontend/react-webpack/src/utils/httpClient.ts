@@ -2,11 +2,10 @@ import axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
-  CreateAxiosDefaults
+  CreateAxiosDefaults,
 } from 'axios';
 
 import { useAuthStore } from '@/stores/zustand/auth.store';
-// import { reportError } from './monitor';
 
 interface CustomRequest extends AxiosInstance {
   get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
@@ -19,7 +18,7 @@ interface CustomRequest extends AxiosInstance {
 const config: CreateAxiosDefaults = {
   baseURL: '/api',
   timeout: 5000, // 超时时间
-  withCredentials: true // 允许跨域
+  withCredentials: true, // 允许跨域
 };
 
 // 创建axios实例
@@ -32,12 +31,12 @@ const MAX_RETRY_COUNT = 2; // 最大重试次数
 
 // 处理请求队列
 function processQueue(token: string) {
-  refreshSubscribers.forEach(callback => callback(token));
+  refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 }
 
 // 请求拦截器
-request.interceptors.request.use(config => {
+request.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().getAccessToken();
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -48,7 +47,7 @@ request.interceptors.request.use(config => {
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => response.data,
-  async error => {
+  async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retryCount?: number;
     };
@@ -107,7 +106,7 @@ request.interceptors.response.use(
     // 如果正在刷新Token，将请求加入队列
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
-        refreshSubscribers.push(token => {
+        refreshSubscribers.push((token) => {
           if (token) {
             originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -122,7 +121,7 @@ request.interceptors.response.use(
 
     try {
       // 发送刷新Token请求
-      const refreshResponse = await request.post('/auth/refresh') as {
+      const refreshResponse = (await request.post('/auth/refresh')) as {
         success: boolean;
         data: string;
       };
@@ -155,14 +154,5 @@ request.interceptors.response.use(
     } finally {
       isRefreshing = false;
     }
-
-    // 错误上报
-    // reportError(error, {
-    //   url: error.config?.url,
-    //   method: error.config?.method,
-    //   status: error.response?.status
-    // });
-
-    // return Promise.reject(error);
-  }
+  },
 );
