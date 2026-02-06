@@ -12,7 +12,8 @@
     ".": {
       "types": "./lib/index.d.mts",
       "import": "./lib/index.mjs"
-    }
+    },
+    "./lib/index.css": "./lib/index.css"
   },
   "scripts": {
     "dev": "vite build --watch",
