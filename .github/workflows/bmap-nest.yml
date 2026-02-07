@@ -60,14 +60,16 @@ jobs:
   build-and-deploy-backend:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+
     # 环境矩阵支持
     strategy:
       matrix:
         environment: [production]
         # 未来可扩展: [staging, production]
     
-    environment: ${{ matrix.environment }}
+    # 注意：移除 environment 配置以避免产生大量 GitHub Deployments
+    # 如需环境保护规则，请重新添加
+    # environment: ${{ matrix.environment }}
     
     steps:
       - uses: actions/checkout@v4
