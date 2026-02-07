@@ -8,7 +8,7 @@ interface FormInputProps {
   type: string;
   placeholder: string;
   rules: any;
-  error?: FieldError;
+  error?: FieldError | undefined;
 }
 
 export default function FormInput({

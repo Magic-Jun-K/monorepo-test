@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
-// import { Dropdown, Menu } from '@eggshell/ui-unocss-ie';
-// import type { MenuItemType } from '@eggshell/ui-unocss-ie';
+// import { Dropdown, Menu } from 'antd';
+// import type { MenuItemType } from 'antd';
 
 import styles from './index.module.scss';
 

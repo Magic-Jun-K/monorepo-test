@@ -1,6 +1,8 @@
-import { Input } from '@eggshell/ui-unocss-ie';
+import { Input } from 'antd';
+
 import MapCom from './components/MapCom/MapCom';
 import AutoCompleteCom from './components/AutoCompleteCom';
+
 import styles from './index.module.scss';
 
 export default () => {

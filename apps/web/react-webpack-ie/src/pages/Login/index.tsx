@@ -22,8 +22,15 @@ export default () => {
   const history = useHistory();
   const { addToast } = useToast();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const schema = (
+    authType === 'login'
+      ? (loginType === 'account' ? loginSchema : phoneLoginSchema)
+      : registerSchema
+  ) as any;
+
   const form = useForm<FormData>({
-    resolver: zodResolver(authType === 'login' ? (loginType === 'account' ? loginSchema : phoneLoginSchema) : registerSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       username: '',
       phone: '',
@@ -52,7 +59,7 @@ export default () => {
         return;
       }
 
-      const res: any = await api[authType]({ ...data, password: encryptedPassword });
+      const res: any = await api[authType]({ ...data, password: encryptedPassword } as any);
       console.log('测试onSubmit response', res);
 
       // Handle successful response(处理成功响应)

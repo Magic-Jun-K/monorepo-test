@@ -13,5 +13,4 @@ const LayoutBody: FC<LayoutBodyProps> = ({ children }) => {
   // return <div className={clsx(styles.layoutBody, { [styles.isPadding]: location.pathname === '/home' })}>{children}</div>;
   return <div className={clsx(styles.layoutBody)}>{children}</div>;
 };
-
 export default LayoutBody;

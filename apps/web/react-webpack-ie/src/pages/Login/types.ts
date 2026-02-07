@@ -24,7 +24,7 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type PhoneLoginFormData = z.infer<typeof phoneLoginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
-export type FormData = (LoginFormData & PhoneLoginFormData & RegisterFormData) & {
+export type FormData = {
   username?: string;
   phone?: string;
   password: string;

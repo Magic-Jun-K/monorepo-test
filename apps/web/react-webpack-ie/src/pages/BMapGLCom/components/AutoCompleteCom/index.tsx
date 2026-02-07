@@ -1,4 +1,4 @@
-import { AutoComplete } from '@eggshell/ui-unocss-ie';
+import { AutoComplete } from 'antd';
 
 export default () => {
   return (
@@ -13,9 +13,11 @@ export default () => {
         { label: '成都', value: 'cd' },
         { label: '重庆', value: 'cq' },
         { label: '西安', value: 'xa' },
-        { label: '武汉', value: 'wh' }
+        { label: '武汉', value: 'wh' },
       ]}
-      filterOption={(input, option) => (typeof option.label === 'string' ? option.label.includes(input) : false)}
+      filterOption={(input, option) =>
+        option && typeof option.label === 'string' ? option.label.includes(input) : false
+      }
       allowClear
       placeholder="请输入地址"
       style={{ width: '400px' }}

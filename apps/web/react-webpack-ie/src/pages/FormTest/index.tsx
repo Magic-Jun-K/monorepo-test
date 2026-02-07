@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Button } from '@eggshell/ui-unocss-ie';
-import { DataEditor, GridCell, GridCellKind } from '@glideapps/glide-data-grid';
+import { Button } from 'antd';
+import { DataEditor, GridCell, GridCellKind, type GridColumn } from '@glideapps/glide-data-grid';
 import '@glideapps/glide-data-grid/dist/index.css';
 
 import ImageTestModal from './components/ImageTestModal';
@@ -9,7 +9,8 @@ import EChartsTestModal from './components/EChartsTestModal';
 
 import styles from './index.module.scss';
 
-interface Column {
+// 使用类型别名代替接口继承
+ type Column = GridColumn & {
   title: string;
   width: number;
   id: string;
@@ -26,7 +27,7 @@ export default () => {
     { title: '姓名', width: 150, id: 'name' },
     { title: '年龄', width: 100, id: 'age' },
     { title: '地址', width: 300, id: 'address' },
-    { title: '电话', width: 200, id: 'phone' }
+    { title: '电话', width: 200, id: 'phone' },
   ]);
 
   // 生成随机数据并存储
@@ -54,7 +55,12 @@ export default () => {
       const city = cities[Math.floor(Math.random() * cities.length)];
       const district = districts[Math.floor(Math.random() * districts.length)];
 
-      const row = [firstName! + lastName!, String(Math.floor(Math.random() * 40 + 20)), `${city!}市${district!}`, generatePhone()];
+      const row = [
+        firstName! + lastName!,
+        String(Math.floor(Math.random() * 40 + 20)),
+        `${city!}市${district!}`,
+        generatePhone(),
+      ];
       result.push(row);
     }
     return result;
@@ -74,7 +80,7 @@ export default () => {
           allowOverlay: true,
           readonly: true,
           displayData: dataValue,
-          data: dataValue
+          data: dataValue,
         };
       } else {
         // 按照列索引直接从数据数组中获取数据
@@ -85,16 +91,16 @@ export default () => {
           readonly: false,
           displayData: dataValue,
           data: dataValue,
-          allowWrapping: true
+          allowWrapping: true,
         };
       }
     },
-    [data]
+    [data],
   );
 
   // 处理列宽调整
-  const handleColumnResize = useCallback((column, newSize: number, colIndex: number) => {
-    setColumns(prevColumns => {
+  const handleColumnResize = useCallback((_column: GridColumn, newSize: number, colIndex: number, _newSizeWithGrow: number) => {
+    setColumns((prevColumns) => {
       const newColumns = [...prevColumns] as Column[];
       newColumns[colIndex] = { ...prevColumns[colIndex], width: newSize } as Column;
       return newColumns;
@@ -104,7 +110,7 @@ export default () => {
   const [sortableCols, setSortableCols] = useState(columns);
 
   const onColMoved = useCallback((startIndex: number, endIndex: number): void => {
-    setSortableCols(old => {
+    setSortableCols((old) => {
       const newCols = [...old];
       const removed = newCols.splice(startIndex, 1);
       if (removed.length === 0) return old;
@@ -144,7 +150,7 @@ export default () => {
             fgIconHeader: '#FFF',
             baseFontStyle: '24px',
             headerFontStyle: '600 24px',
-            fontFamily: 'SmileySans-Oblique'
+            fontFamily: 'SmileySans-Oblique',
           }}
           fillHandle={false} // 不显示填充手柄
           verticalBorder={true} // 显示垂直边框
