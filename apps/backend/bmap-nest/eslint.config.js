@@ -6,7 +6,7 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   {
     // TypeScript 文件配置
-    files: ['**/*.ts'],
+    files: ['src/**/*.ts'],
     languageOptions: {
       parser: tsEslintParser, // 使用 TypeScript 解析器
       parserOptions: {
