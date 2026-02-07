@@ -37,12 +37,12 @@ jobs:
       - name: Type Check
         run: |
           echo "🔍 Running type check..."
-          pnpm typecheck
+          pnpm --filter @backend/bmap-nest typecheck
       
       - name: Lint Check
         run: |
           echo "✨ Running linting..."
-          pnpm lint
+          pnpm --filter @backend/bmap-nest lint
       
       - name: Unit Tests
         run: |
@@ -88,8 +88,8 @@ jobs:
       - name: Quality Checks(质量检查)
         run: |
           echo "🔍 Running quality checks..."
-          pnpm typecheck
-          pnpm lint
+          pnpm --filter @backend/bmap-nest typecheck
+          pnpm --filter @backend/bmap-nest lint
           echo "✅ Quality checks passed!"
 
       # 后端测试（增强版）
