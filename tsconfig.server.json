@@ -3,7 +3,9 @@
   "compilerOptions": {
     /* 基本选项 */
     "target": "ES2022", // 指定 ECMAScript 目标版本
-    "module": "commonjs", // 指定生成的模块格式
+    // "module": "commonjs",
+    "module": "preserve", // 让打包器决定输出格式
+    // "module": "ESNext", // 指定生成的模块格式
     "lib": ["ES2022"], // 指定要包含在编译中的库文件
     "noEmit": true, // 不生成输出文件（由构建工具处理）
     "allowJs": false, // 不允许编译 JavaScript 文件
@@ -16,7 +18,8 @@
     "emitDecoratorMetadata": true, // 启用对装饰器元数据的实验性支持
 
     /* 模块解析选项 */
-    "moduleResolution": "node", // 指定模块解析策略
+    // "moduleResolution": "node",
+    "moduleResolution": "bundler", // 指定模块解析策略（支持 exports 字段，由打包器处理）
     "baseUrl": ".", // 指定基础目录以解析非相对模块名
     "paths": {
       "@/*": ["./src/*"],
