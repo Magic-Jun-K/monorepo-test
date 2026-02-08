@@ -42,8 +42,9 @@ export class SuperAdminGuard implements CanActivate {
 
 /**
  * 权限守卫工厂
+ * @param permission 权限字符串
  */
-export const requirePermission = (_permission: string) => {
+export const requirePermission = (/* permission: string */) => {
   return (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) => {
     // 保存原始方法
     const originalMethod = descriptor.value;

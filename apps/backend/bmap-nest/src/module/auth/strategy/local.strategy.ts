@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Request } from 'express';
@@ -9,6 +15,8 @@ import { UserEntity } from '../../../entities/user.entity';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(LocalStrategy.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly loginAttemptsService: LoginAttemptsService,
@@ -125,8 +133,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     }
 
     // 只返回需要的用户信息，不包含密码
-    const { password: _password, ...userWithoutPassword } = user;
-    // console.log('测试local.strategy.ts validate _password', _password);
+    const { password: _, ...userWithoutPassword } = user;
+    this.logger.log('测试local.strategy.ts validate password', _);
     return userWithoutPassword;
   }
 

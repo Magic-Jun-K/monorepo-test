@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,6 +20,8 @@ interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
+
   constructor(
     // private readonly adminService: AdminService
     @InjectRepository(UserEntity)
@@ -79,8 +81,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // console.log('测试jwt validate user', user);
 
     // 返回包含用户类型和角色的完整用户信息
-    const { password: _password, ...userWithoutPassword } = user;
-    // console.log('测试jwt validate password', _password);
+    const { password, ...userWithoutPassword } = user;
+    this.logger.log('测试jwt validate password', password);
     // console.log('测试jwt validate payload.isSuperAdmin', payload.isSuperAdmin);
     // console.log('测试jwt validate user.isSuperAdmin', user.isSuperAdmin);
 

@@ -1,7 +1,7 @@
 /**
  * 权限管理服务
  */
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity, UserType } from '../../entities/user.entity';
@@ -14,6 +14,8 @@ import { AuditLogEntity, AuditAction } from '../../entities/audit-log.entity';
 
 @Injectable()
 export class PermissionService {
+  private readonly logger = new Logger(PermissionService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
@@ -163,11 +165,14 @@ export class PermissionService {
 
   /**
    * 执行权限变更
+   * @param permissionRequest 权限申请实体
+   * @param approvedById 审批人ID
    */
   private async executePermissionChange(
     permissionRequest: PermissionRequestEntity,
-    _approvedById: number,
+    approvedById: number,
   ): Promise<void> {
+    this.logger.log(`执行权限变更，审批人ID: ${approvedById}`);
     const { requestType, targetUser } = permissionRequest;
 
     switch (requestType) {
