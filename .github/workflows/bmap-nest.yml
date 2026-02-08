@@ -84,6 +84,13 @@ jobs:
           skip-tests: 'false'  # 后端测试很重要
           skip-security-audit: 'false'  # 后端安全审计很重要
 
+      # 构建依赖包（必须在类型检查之前）
+      - name: Build Dependencies(构建依赖包)
+        run: |
+          echo "🏗️ Building dependency packages..."
+          pnpm --filter @eggshell/shared-crypto build
+          echo "✅ Dependencies built!"
+
       # 类型检查和代码质量
       - name: Quality Checks(质量检查)
         run: |
