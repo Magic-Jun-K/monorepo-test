@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Post, Put, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { nanoid } from 'nanoid';
+import { randomBytes } from 'node:crypto';
 
 import { UserEntity } from '../../entities/user.entity';
 import { ApplicationEntity } from '../../entities/application.entity';
@@ -26,7 +26,10 @@ export class ApplicationController {
     const user = new UserEntity();
     user.id = req.user.id;
     const application = new ApplicationEntity(body);
-    Reflect.set<ApplicationEntity, 'appId'>(application, 'appId', application.type + nanoid(6));
+    // 使用 randomBytes 生成 5 字节(40位)随机数，转为 base64url 并截取前 6 位
+    // 熵值 > 36位 (64^6)，组合数 > 680亿，等效于 nanoid(6)
+    const suffix = randomBytes(5).toString('base64url').slice(0, 6);
+    Reflect.set<ApplicationEntity, 'appId'>(application, 'appId', application.type + suffix);
 
     const newUser = await this.applicationService.create({
       ...application,
