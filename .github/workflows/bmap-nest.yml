@@ -33,6 +33,13 @@ jobs:
         uses: ./.github/actions/common-steps
         with:
           skip-security-audit: 'false'  # 后端项目的安全审计很重要
+
+      # 构建依赖包（必须在类型检查之前）
+      - name: Build Dependencies(构建依赖包)
+        run: |
+          echo "🏗️ Building dependency packages..."
+          pnpm --filter @eggshell/shared-crypto build
+          echo "✅ Dependencies built!"
       
       - name: Type Check
         run: |
