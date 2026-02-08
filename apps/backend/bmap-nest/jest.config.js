@@ -1,6 +1,6 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
 
-import { compilerOptions } from './tsconfig.json';
+import { compilerOptions } from './tsconfig.json' with { type: 'json' };
 
 /** @type {import('jest').Config} */
 module.exports = {
