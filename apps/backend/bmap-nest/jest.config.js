@@ -1,7 +1,12 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
 import tsconfig from './tsconfig.json' with { type: 'json' };
 
 const { compilerOptions } = tsconfig;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /** @type {import('jest').Config} */
 export default {
@@ -12,7 +17,7 @@ export default {
   // 测试文件匹配
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
   // 测试环境设置
-  setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+  setupFilesAfterEnv: [join(__dirname, 'src/test/setup.ts')],
   // 模块名映射（支持路径别名）
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
     prefix: '<rootDir>/',
