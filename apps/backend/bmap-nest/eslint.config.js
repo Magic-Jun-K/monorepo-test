@@ -40,6 +40,9 @@ export default defineConfig(
   {
     // JavaScript 文件配置
     files: ['**/*.js'],
+    plugins: {
+      prettier: prettierPlugin,
+    },
     languageOptions: {
       ecmaVersion: 'latest', // 使用最新的 ECMAScript 版本
       sourceType: 'module', // 使用 ES 模块
