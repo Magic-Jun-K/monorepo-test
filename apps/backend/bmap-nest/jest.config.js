@@ -1,9 +1,10 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
+import tsconfig from './tsconfig.json' with { type: 'json' };
 
-import { compilerOptions } from './tsconfig.json' with { type: 'json' };
+const { compilerOptions } = tsconfig;
 
 /** @type {import('jest').Config} */
-module.exports = {
+export default {
   displayName: 'bmap-nest',
   preset: 'ts-jest',
   testEnvironment: 'node', // 测试环境
