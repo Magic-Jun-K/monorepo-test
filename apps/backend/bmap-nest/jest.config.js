@@ -1,6 +1,6 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
 import tsconfig from './tsconfig.json' with { type: 'json' };
 
@@ -11,13 +11,15 @@ const __dirname = dirname(__filename);
 /** @type {import('jest').Config} */
 export default {
   displayName: 'bmap-nest',
-  preset: 'ts-jest',
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node', // 测试环境
   rootDir: '.', // 根目录
+  // ESM 支持
+  extensionsToTreatAsEsm: ['.ts'],
   // 测试文件匹配
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
   // 测试环境设置
-  setupFilesAfterEnv: [join(__dirname, 'src/test/setup.ts')],
+  setupFilesAfterEnv: ['<rootDir>/src/setup.ts'],
   // 模块名映射（支持路径别名）
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
     prefix: '<rootDir>/',
@@ -27,6 +29,7 @@ export default {
     '^.+\\.(t|j)s$': [
       'ts-jest',
       {
+        useESM: true,
         tsconfig: 'tsconfig.json',
       },
     ],
