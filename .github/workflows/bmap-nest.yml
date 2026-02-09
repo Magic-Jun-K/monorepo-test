@@ -186,16 +186,17 @@ jobs:
 
             # 确保基础设施服务正在运行
             echo "🏗️ Starting infrastructure services..."
-            docker-compose -f docker-compose.infra.yml up -d
+            docker-compose -f docker-compose.db.yml up -d
+            docker-compose -f docker-compose.redis.yml up -d
 
             # 健康检查 - 等待数据库和缓存服务就绪
             echo "🚑 Waiting for infrastructure services..."
             sleep 10
             
             # 检查数据库连接（如果配置了的话）
-            if docker-compose -f docker-compose.infra.yml ps | grep -q postgres; then
+            if docker-compose -f docker-compose.db.yml ps | grep -q postgres; then
               echo "📋 Checking database connection..."
-              timeout 30 docker-compose -f docker-compose.infra.yml exec -T postgres pg_isready || echo "⚠️ Database not ready, but continuing..."
+              timeout 30 docker-compose -f docker-compose.db.yml exec -T postgres pg_isready || echo "⚠️ Database not ready, but continuing..."
             fi
 
             # 停止现有的后端容器
