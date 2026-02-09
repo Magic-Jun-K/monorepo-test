@@ -194,9 +194,9 @@ jobs:
             sleep 10
             
             # 检查数据库连接（如果配置了的话）
-            if docker-compose -f docker-compose.db.yml ps | grep -q postgres; then
+            if docker-compose -f docker-compose.db.yml ps | grep -q eggshell-postgresql; then
               echo "📋 Checking database connection..."
-              timeout 30 docker-compose -f docker-compose.db.yml exec -T postgres pg_isready || echo "⚠️ Database not ready, but continuing..."
+              timeout 30 docker-compose -f docker-compose.db.yml exec -T eggshell-postgresql pg_isready -U postgres || echo "⚠️ Database not ready, but continuing..."
             fi
 
             # 停止现有的后端容器
