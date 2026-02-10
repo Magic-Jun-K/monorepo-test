@@ -6,7 +6,7 @@ import { createReadStream, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path';
 import { Response } from 'express';
 
-import { File } from '../../entities/file.entity';
+import { FileEntity } from '../../entities/file.entity';
 
 @Injectable()
 export class FileService {
@@ -14,7 +14,7 @@ export class FileService {
   private readonly uploadDir: string;
 
   constructor(
-    @InjectRepository(File) private readonly fileRepository: Repository<File>,
+    @InjectRepository(FileEntity) private readonly fileRepository: Repository<FileEntity>,
     private readonly configService: ConfigService,
   ) {
     // 根据环境变量动态选择存储路径
@@ -25,7 +25,7 @@ export class FileService {
   }
 
   // 上传文件
-  async uploadFile(file: Express.Multer.File): Promise<File> {
+  async uploadFile(file: Express.Multer.File): Promise<FileEntity> {
     if (!existsSync(this.uploadDir)) {
       mkdirSync(this.uploadDir, { recursive: true });
     }
@@ -44,7 +44,7 @@ export class FileService {
   }
 
   // 获取文件
-  async getFileById(id: number): Promise<File> {
+  async getFileById(id: number): Promise<FileEntity | null> {
     return this.fileRepository.findOne({ where: { id } });
   }
 
