@@ -1,18 +1,30 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
-export class File {
+export class FileEntity {
+  /**
+   * 文件ID
+   */
   @PrimaryGeneratedColumn()
-  id: number; // 文件ID
+  id: number;
 
+  /**
+   * 文件名
+   */
   @Column()
-  filename: string; // 文件名
+  filename: string;
 
+  /**
+   * 文件类型
+   */
   @Column()
-  mimetype: string; // 文件类型
+  mimetype: string;
 
+  /**
+   * 存储文件路径
+   */
   @Column()
-  path: string; // 存储文件路径
+  path: string;
   // @Column('bytea') // 存储二进制数据
   // data: Buffer;
 }

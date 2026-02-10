@@ -10,7 +10,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-import { UserEntity } from './user.entity';
+import type { UserEntity } from './user.entity';
 
 export enum AuditAction {
   PROMOTE_TO_ADMIN = 'PROMOTE_TO_ADMIN', // 管理员晋升
@@ -58,7 +58,7 @@ export class AuditLogEntity {
   /**
    * 审计操作用户
    */
-  @ManyToOne(() => UserEntity, { nullable: true })
+  @ManyToOne('UserEntity', { nullable: true })
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
@@ -71,7 +71,7 @@ export class AuditLogEntity {
   /**
    * 审计操作目标用户
    */
-  @ManyToOne(() => UserEntity, { nullable: true })
+  @ManyToOne('UserEntity', { nullable: true })
   @JoinColumn({ name: 'target_user_id' })
   targetUser: UserEntity;
 

@@ -11,8 +11,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { RoleEntity } from './role.entity';
-import { PermissionEntity } from './permission.entity';
+import type { RoleEntity } from './role.entity';
+import type { PermissionEntity } from './permission.entity';
 
 /**
  * 权限分配状态
@@ -31,7 +31,7 @@ export class RolePermissionEntity {
   /**
    * 关联的角色
    */
-  @ManyToOne(() => RoleEntity, (role) => role.rolePermissions)
+  @ManyToOne('RoleEntity', 'rolePermissions')
   @JoinColumn({ name: 'role_id' })
   role: RoleEntity;
 
@@ -44,7 +44,7 @@ export class RolePermissionEntity {
   /**
    * 关联的权限
    */
-  @ManyToOne(() => PermissionEntity, (permission) => permission.roles)
+  @ManyToOne('PermissionEntity', 'roles')
   @JoinColumn({ name: 'permission_id' })
   permission: PermissionEntity;
 

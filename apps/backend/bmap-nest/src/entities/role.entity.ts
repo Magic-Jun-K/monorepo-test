@@ -9,11 +9,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  type Relation,
 } from 'typeorm';
 
-import { UserEntity } from './user.entity';
-import { PermissionEntity } from './permission.entity';
-import { RolePermissionEntity } from './role-permission.entity';
+import type { UserEntity } from './user.entity';
+import type { PermissionEntity } from './permission.entity';
+import type { RolePermissionEntity } from './role-permission.entity';
 
 /**
  * 角色类型枚举
@@ -110,20 +111,20 @@ export class RoleEntity {
   /**
    * 关联的用户
    */
-  @ManyToMany(() => UserEntity, (user) => user.roles)
-  users: UserEntity[];
+  @ManyToMany('UserEntity', 'roles')
+  users: Relation<UserEntity[]>;
 
   /**
    * 关联的权限
    */
-  @ManyToMany(() => PermissionEntity, (permission) => permission.roles)
-  permissions: PermissionEntity[];
+  @ManyToMany('PermissionEntity', 'roles')
+  permissions: Relation<PermissionEntity[]>;
 
   /**
    * 角色权限关联
    */
-  @OneToMany(() => RolePermissionEntity, (rolePermission) => rolePermission.role)
-  rolePermissions: RolePermissionEntity[];
+  @OneToMany('RolePermissionEntity', 'role')
+  rolePermissions: Relation<RolePermissionEntity[]>;
 
   /**
    * 创建时间

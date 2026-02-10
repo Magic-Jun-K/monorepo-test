@@ -11,7 +11,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
-import { UserEntity } from './user.entity';
+import type { UserEntity } from './user.entity';
 
 export enum RequestStatus {
   PENDING = 'PENDING', // 待处理
@@ -71,7 +71,7 @@ export class PermissionRequestEntity {
   /**
    * 权限申请请求者
    */
-  @ManyToOne(() => UserEntity)
+  @ManyToOne('UserEntity')
   @JoinColumn({ name: 'requested_by' })
   requestedBy: UserEntity;
 
@@ -84,7 +84,7 @@ export class PermissionRequestEntity {
   /**
    * 权限申请审批者
    */
-  @ManyToOne(() => UserEntity, { nullable: true })
+  @ManyToOne('UserEntity', { nullable: true })
   @JoinColumn({ name: 'approved_by' })
   approvedBy: UserEntity;
 
@@ -109,7 +109,7 @@ export class PermissionRequestEntity {
   /**
    * 权限申请目标用户
    */
-  @ManyToOne(() => UserEntity)
+  @ManyToOne('UserEntity')
   @JoinColumn({ name: 'target_user_id' })
   targetUser: UserEntity;
 

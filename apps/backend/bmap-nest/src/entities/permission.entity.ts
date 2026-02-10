@@ -8,9 +8,10 @@ import {
   ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  type Relation,
 } from 'typeorm';
 
-import { RoleEntity } from './role.entity';
+import type { RoleEntity } from './role.entity';
 
 /**
  * 权限类型枚举
@@ -143,8 +144,8 @@ export class PermissionEntity {
   /**
    * 关联的角色
    */
-  @ManyToMany(() => RoleEntity, (role) => role.permissions)
-  roles: RoleEntity[];
+  @ManyToMany('RoleEntity', 'permissions')
+  roles: Relation<RoleEntity[]>;
 
   /**
    * 权限创建时间

@@ -11,12 +11,13 @@ import {
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
+  type Relation,
 } from 'typeorm';
 
-import { UserProfileEntity } from './user-profile.entity';
-import { RoleEntity } from './role.entity';
-import { UserOAuthEntity } from './user-oauth.entity';
-import { PhotoEntity } from './photo.entity';
+import type { UserProfileEntity } from './user-profile.entity';
+import type { RoleEntity } from './role.entity';
+import type { UserOAuthEntity } from './user-oauth.entity';
+import type { PhotoEntity } from './photo.entity';
 
 /**
  * 用户状态枚举
@@ -97,6 +98,18 @@ export class UserEntity {
   isSuperAdmin: boolean;
 
   /**
+   * 用户资料
+   */
+  @OneToOne('UserProfileEntity', 'user', { cascade: true })
+  profile: Relation<UserProfileEntity>;
+
+  /**
+   * 第三方登录关联
+   */
+  @OneToMany('UserOAuthEntity', 'user', { cascade: true })
+  oAuths: Relation<UserOAuthEntity[]>;
+
+  /**
    * 最后登录时间
    */
   @Column({ name: 'last_login_at', nullable: true })
@@ -132,22 +145,16 @@ export class UserEntity {
   @Column({ name: 'password_change_required', default: false })
   passwordChangeRequired: boolean;
 
-  @OneToOne(() => UserProfileEntity, (profile) => profile.user)
-  profile: UserProfileEntity;
+  @OneToMany('PhotoEntity', 'user')
+  photos: Relation<PhotoEntity[]>;
 
-  @OneToMany(() => UserOAuthEntity, (oauth) => oauth.user)
-  oAuths: UserOAuthEntity[];
-
-  @OneToMany(() => PhotoEntity, (photo) => photo.user)
-  photos: PhotoEntity[];
-
-  @ManyToMany(() => RoleEntity, (role) => role.users)
+  @ManyToMany('RoleEntity', 'users')
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  roles: RoleEntity[];
+  roles: Relation<RoleEntity[]>;
 
   /**
    * 创建时间
