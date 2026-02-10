@@ -65,5 +65,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # 暴露端口
 EXPOSE 7000
+
+# 确保生产环境 package.json 不强制 ESM (如果存在 type: module 则移除)
+RUN sed -i '/"type": "module"/d' ./package.json || true
+
 # 启动应用
-CMD ["node", "--experimental-specifier-resolution=node", "dist/main.js"]
+CMD ["node", "dist/main.js"]
