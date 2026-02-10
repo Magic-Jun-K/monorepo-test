@@ -11,7 +11,7 @@
     "baseUrl": "./"
   },
   "module": {
-    "type": "commonjs",
+    "type": "es6",
     "strict": true
   },
   "minify": false

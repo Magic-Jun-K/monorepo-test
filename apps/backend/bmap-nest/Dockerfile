@@ -30,8 +30,8 @@ WORKDIR /app/apps/backend/bmap-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 # 清理可能存在的 dist 目录
 RUN rm -rf dist || true
-# 使用 tsconfig.build.json 来构建
-RUN npx tsc --project tsconfig.build.json
+# 使用 nest build (swc) 来构建
+RUN pnpm build
 
 # 阶段4：生产环境
 FROM node:22-alpine AS production
