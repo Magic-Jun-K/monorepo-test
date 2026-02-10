@@ -3,12 +3,14 @@ import { HttpException, Injectable, BadRequestException, Logger } from '@nestjs/
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { AuthUtils } from '../../common/utils/auth.utils';
-import { UserEntity, UserType, UserStatus } from '../../entities/user.entity';
 import { PermissionService } from './permission.service';
-import { RequestType } from '../../entities/permission-request.entity';
-import { AuditAction } from '../../entities/audit-log.entity';
 import { RoleService } from '../role/role.service';
+
+import { AuditAction } from '../../entities/audit-log.entity';
+import { RequestType } from '../../entities/permission-request.entity';
+import { UserEntity, UserType, UserStatus } from '../../entities/user.entity';
+
+import { AuthUtils } from '../../common/utils/auth.utils';
 
 declare const process: {
   env: Record<string, string | undefined>;

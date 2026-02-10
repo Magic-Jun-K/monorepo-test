@@ -8,24 +8,29 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'node:path';
 
-import { AppController } from './app.controller';
-import { AppService, PgService } from './app.service';
 import { AdminModule } from './module/admin/admin.module';
 import { AuthModule } from './module/auth/auth.module';
-import { UserModule } from './module/user/user.module';
-import { ImageModule } from './module/image/image.module';
-import { TableModule } from './module/table/table.module';
 import { DetailModule } from './module/detail/detail.module';
-import { FileModule } from './module/file/file.module';
 import { ExampleModule } from './module/example/example.module';
-import { AuthUtils } from './common/utils/auth.utils';
+import { FileModule } from './module/file/file.module';
+import { ImageModule } from './module/image/image.module';
+import { PermissionModule } from './module/permission/permission.module';
+import { RoleModule } from './module/role/role.module';
+import { TableModule } from './module/table/table.module';
+import { UserModule } from './module/user/user.module';
+
+import { AppController } from './app.controller';
+
+import { AppService, PgService } from './app.service';
 import { InitService } from './module/permission/init.service';
+
 import { PermissionEntity } from './entities/permission.entity';
 import { RoleEntity } from './entities/role.entity';
 import { RolePermissionEntity } from './entities/role-permission.entity';
 import { UserEntity } from './entities/user.entity';
-import { PermissionModule } from './module/permission/permission.module';
-import { RoleModule } from './module/role/role.module';
+
+import { AuthUtils } from './common/utils/auth.utils';
+
 import database from './config/database';
 
 @Module({

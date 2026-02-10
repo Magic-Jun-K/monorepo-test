@@ -6,10 +6,11 @@ import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { PermissionEntity, PermissionType } from '../../entities/permission.entity';
-import { UserEntity } from '../../entities/user.entity';
-import { RoleEntity, RoleLevel } from '../../entities/role.entity';
 import { PermissionService } from '../../module/permission/permission.service';
+
+import type { PermissionEntity, PermissionType } from '../../entities/permission.entity';
+import type { RoleEntity, RoleLevel } from '../../entities/role.entity';
+import { UserEntity } from '../../entities/user.entity';
 
 /**
  * 权限检查装饰器

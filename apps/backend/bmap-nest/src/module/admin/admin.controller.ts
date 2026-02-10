@@ -12,8 +12,10 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AdminService } from './admin.service';
+
+import type { AuditAction } from '../../entities/audit-log.entity';
+
 import { AdminGuard, SuperAdminGuard } from '../../common/guards/admin.guard';
-import { AuditAction } from '../../entities/audit-log.entity';
 
 @ApiTags('管理员')
 @Controller('admin')

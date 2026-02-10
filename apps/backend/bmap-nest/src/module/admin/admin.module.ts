@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserEntity } from '../../entities/user.entity';
-import { PermissionRequestEntity } from '../../entities/permission-request.entity';
-import { AuditLogEntity } from '../../entities/audit-log.entity';
+import { RoleModule } from '../role/role.module';
+
 import { AdminController } from './admin.controller';
+
 import { AdminService } from './admin.service';
 import { PermissionService } from './permission.service';
+
+import { AuditLogEntity } from '../../entities/audit-log.entity';
+import { PermissionRequestEntity } from '../../entities/permission-request.entity';
+import { UserEntity } from '../../entities/user.entity';
+
 import { AuthUtils } from '../../common/utils/auth.utils';
-import { RoleModule } from '../role/role.module';
 
 @Module({
   imports: [
