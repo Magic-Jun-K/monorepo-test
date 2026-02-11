@@ -438,7 +438,7 @@ export class AuthService {
     const weChatToken = await this.weChatService.getAccessToken(code);
 
     // 2. 查找是否已绑定用户
-    let userOAuth = await this.userOAuthRepository.findOne({
+    const userOAuth = await this.userOAuthRepository.findOne({
       where: {
         provider: 'wechat',
         openid: weChatToken.openid,
