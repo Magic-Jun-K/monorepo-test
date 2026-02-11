@@ -8,6 +8,7 @@ export default registerAs('redis', () => ({
   connection: {
     url: process.env.REDIS_URL || 'localhost',
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    username: process.env.REDIS_USERNAME || undefined,
     password: process.env.REDIS_PASSWORD || undefined,
     db: Number.parseInt(process.env.REDIS_DB || '0', 10),
   },
