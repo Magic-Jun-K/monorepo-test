@@ -28,6 +28,15 @@ import { PermissionType } from '../../entities/permission.entity';
 import { RoleLevel } from '../../entities/role.entity';
 import { AuthUser } from '../../module/auth/types/user.interface';
 
+import { FileService } from '../file/file.service';
+import { UpdateProfileDto, UpdateProfileSchema } from './dto/update-profile.dto';
+import {
+  ChangePasswordDto,
+  ChangePasswordSchema,
+  SetPasswordDto,
+  SetPasswordSchema,
+} from './dto/change-password.dto';
+
 @Controller('users')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
@@ -35,6 +44,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly roleService: RoleService,
+    private readonly fileService: FileService,
   ) {}
 
   /**
@@ -51,6 +61,123 @@ export class UserController {
     return {
       success: true,
       data: result,
+    };
+  }
+
+  /**
+   * 获取当前登录用户个人信息
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Get('profile')
+  async getProfile(@Req() req: { user: AuthUser }) {
+    const result = await this.userService.getProfile(req.user.id);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  /**
+   * 更新当前登录用户个人信息
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Put('profile')
+  async updateProfile(
+    @Req() req: { user: AuthUser },
+    @Body(new ZodValidationPipe(UpdateProfileSchema)) dto: UpdateProfileDto,
+  ) {
+    const result = await this.userService.updateProfile(req.user.id, dto);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  /**
+   * 修改密码
+   */
+  @UseGuards(AuthGuard('jwt'))
+  // @Put('profile/password')
+  @Put('password')
+  async changePassword(
+    @Req() req: { user: AuthUser },
+    @Body(new ZodValidationPipe(ChangePasswordSchema)) dto: ChangePasswordDto,
+  ) {
+    await this.userService.changePassword(req.user.id, dto);
+    return {
+      success: true,
+      message: '密码修改成功',
+    };
+  }
+
+  /**
+   * 设置密码（针对无密码用户）
+   */
+  @UseGuards(AuthGuard('jwt'))
+  // @Post('profile/password')
+  @Post('password')
+  async setPassword(
+    @Req() req: { user: AuthUser },
+    @Body(new ZodValidationPipe(SetPasswordSchema)) dto: SetPasswordDto,
+  ) {
+    await this.userService.setPassword(req.user.id, dto);
+    return {
+      success: true,
+      message: '密码设置成功',
+    };
+  }
+
+  /**
+   * 上传头像
+   */
+  @UseGuards(AuthGuard('jwt'))
+  // @Post('profile/avatar')
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadAvatar(@Req() req: { user: AuthUser }, @UploadedFile() file: Express.Multer.File) {
+    const result = await this.userService.uploadAvatar(req.user.id, file);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  /**
+   * 获取登录方式
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Get('auth-methods')
+  async getAuthMethods(@Req() req: { user: AuthUser }) {
+    const result = await this.userService.getAuthMethods(req.user.id);
+    return {
+      success: true,
+      data: result,
+    };
+  }
+
+  /**
+   * 绑定第三方登录（示例接口，实际需要根据OAuth流程实现）
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Post('bind-auth')
+  async bindAuth(/* @Req() req: { user: AuthUser }, @Body() body: any */) {
+    // 这里需要具体的绑定逻辑，通常涉及验证第三方token
+    return {
+      success: false,
+      message: '暂未实现具体绑定逻辑',
+    };
+  }
+
+  /**
+   * 解绑登录方式
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('unbind-auth')
+  async unbindAuth(@Req() req: { user: AuthUser }, @Body() body: { provider: string }) {
+    await this.userService.unbindAuth(req.user.id, body.provider);
+    return {
+      success: true,
+      message: '解绑成功',
     };
   }
 

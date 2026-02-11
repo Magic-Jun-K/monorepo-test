@@ -1,14 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In, Between } from 'typeorm';
 import { Response } from 'express';
 import { read, utils, write } from 'xlsx';
 
 import { UserEntity, UserStatus } from '../../entities/user.entity';
+import { UserProfileEntity } from '../../entities/user-profile.entity';
+import { UserOAuthEntity } from '../../entities/user-oauth.entity';
+import { AuthUtils } from '../../common/utils/auth.utils';
+import { FileService } from '../file/file.service';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { RoleService } from '../role/role.service';
 import { AuthUser } from '../../module/auth/types/user.interface';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto, SetPasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UserService {
@@ -17,11 +23,19 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(UserProfileEntity)
+    private readonly userProfileRepo: Repository<UserProfileEntity>,
+    @InjectRepository(UserOAuthEntity)
+    private readonly userOAuthRepo: Repository<UserOAuthEntity>,
     private readonly roleService: RoleService,
+    private readonly authUtils: AuthUtils,
+    private readonly fileService: FileService,
   ) {}
 
   /**
    * 获取用户角色
+   * @param userId 用户ID
+   * @returns 用户角色列表
    */
   private async getUserRoles(userId: number): Promise<Array<Record<string, unknown>>> {
     const query = `
@@ -33,7 +47,232 @@ export class UserService {
     return this.userRepo.manager.query(query, [userId]);
   }
 
-  // 用户列表（带搜索、分页）
+  /**
+   * 上传头像
+   * @param userId 用户ID
+   * @param file 上传的头像文件
+   * @returns 头像存储路径
+   */
+  async uploadAvatar(userId: number, file: Express.Multer.File) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['profile'],
+    });
+
+    if (!user) throw new BadRequestException('用户不存在');
+
+    // 上传文件
+    const savedFile = await this.fileService.uploadFile(file);
+
+    // 更新 Profile
+    if (!user.profile) {
+      user.profile = this.userProfileRepo.create({
+        user: user,
+      });
+    }
+
+    // 这里假设 fileService 返回的 path 可以直接访问，或者需要转换成 url
+    // 简单起见，存储 path
+    user.profile.avatar = savedFile.path;
+    await this.userProfileRepo.save(user.profile);
+
+    return savedFile.path;
+  }
+
+  /**
+   * 获取登录方式（密码 + 第三方）
+   * @param userId 用户ID
+   * @returns 用户登录方式信息
+   */
+  async getAuthMethods(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['oAuths'],
+    });
+
+    if (!user) throw new BadRequestException('用户不存在');
+
+    return {
+      hasPassword: !!user.password,
+      oAuths: user.oAuths.map((oauth) => ({
+        id: oauth.id,
+        provider: oauth.provider,
+        nickname: oauth.nickname,
+        avatar: oauth.avatar,
+        createdAt: new Date(), // 暂时 mock
+      })),
+    };
+  }
+
+  /**
+   * 解绑登录方式
+   * @param userId 用户ID
+   * @param provider 登录方式提供者（如 'google', 'github' 等）
+   * @returns 解绑成功的确认信息
+   */
+  async unbindAuth(userId: number, provider: string) {
+    // 检查是否只有一种登录方式 (如果有密码，则可以解绑所有第三方；如果没有密码，至少保留一个第三方)
+    // 这里逻辑比较复杂，简单实现
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['oAuths'],
+    });
+
+    if (!user) throw new BadRequestException('用户不存在');
+
+    const hasPassword = !!user.password;
+    const oauthCount = user.oAuths.length;
+
+    if (!hasPassword && oauthCount <= 1) {
+      // 检查要解绑的是否是最后一个
+      const target = user.oAuths.find((o) => o.provider === provider);
+      if (target) {
+        throw new BadRequestException('未设置密码且仅剩一种登录方式，无法解绑');
+      }
+    }
+
+    await this.userOAuthRepo.delete({ user: { id: userId }, provider });
+  }
+
+  /**
+   * 获取用户个人资料
+   * @param userId 用户ID
+   * @returns 用户个人资料
+   */
+  async getProfile(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['profile', 'oAuths', 'roles'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      roles: user.roles,
+      profile: user.profile,
+      hasPassword: !!user.password,
+      oAuths:
+        user.oAuths?.map((oauth) => ({
+          id: oauth.id,
+          provider: oauth.provider,
+          providerId: oauth.openid,
+          createdAt: oauth.createdAt,
+        })) || [],
+    };
+  }
+
+  /**
+   * 更新用户个人资料
+   * @param userId 用户ID
+   * @param dto 更新个人资料DTO
+   * @returns 更新后的用户个人资料
+   */
+  async updateProfile(userId: number, dto: UpdateProfileDto) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['profile'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // 更新 UserEntity 字段
+    if (dto.email !== undefined) user.email = dto.email;
+    if (dto.phone !== undefined) user.phone = dto.phone;
+
+    // 更新 UserProfileEntity 字段
+    if (user.profile) {
+      if (dto.nickname !== undefined) user.profile.nickname = dto.nickname;
+      if (dto.bio !== undefined) user.profile.bio = dto.bio;
+      if (dto.avatar !== undefined) user.profile.avatar = dto.avatar;
+    } else {
+      // 如果没有 profile，创建新的
+      // 注意：这里需要确保 UserProfileEntity 已被导入或使用 DeepPartial
+      // 使用 any 绕过类型检查，实际运行时 TypeORM 会处理 cascade
+      user.profile = {
+        nickname: dto.nickname,
+        bio: dto.bio,
+        avatar: dto.avatar,
+        user: user,
+      } as any;
+    }
+
+    await this.userRepo.save(user);
+    return this.getProfile(userId);
+  }
+
+  /**
+   * 修改密码
+   * @param userId 用户ID
+   * @param dto 修改密码DTO
+   * @returns 修改密码结果
+   */
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'password'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.password) {
+      throw new Error('User has no password set. Please use setPassword instead.');
+    }
+
+    // 验证旧密码
+    const isValid = await this.authUtils.verifyPasswordHash(user.password, dto.oldPassword);
+    if (!isValid) {
+      throw new Error('Invalid old password');
+    }
+
+    // 哈希新密码
+    const newPasswordHash = await this.authUtils.hashPassword(dto.newPassword);
+    user.password = newPasswordHash;
+    await this.userRepo.save(user);
+    return { success: true };
+  }
+
+  /**
+   * 设置初始密码
+   * @param userId 用户ID
+   * @param dto 设置密码DTO
+   * @returns 设置密码结果
+   */
+  async setPassword(userId: number, dto: SetPasswordDto) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: ['id', 'password'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.password) {
+      throw new Error('User already has a password. Please use changePassword instead.');
+    }
+
+    const newPasswordHash = await this.authUtils.hashPassword(dto.newPassword);
+    user.password = newPasswordHash;
+    await this.userRepo.save(user);
+    return { success: true };
+  }
+
+  /**
+   * 用户列表（带搜索、分页）
+   * @param query 查询参数
+   * @param currentUser 当前登录用户
+   * @returns 用户列表和总数
+   */
   async findAll(query: Record<string, unknown>, currentUser: AuthUser) {
     const {
       page = 1,
@@ -260,7 +499,11 @@ export class UserService {
     return { list: processedList, total };
   }
 
-  // 新增用户
+  /**
+   * 新增用户
+   * @param dto 创建用户DTO
+   * @returns 创建的用户实体
+   */
   async create(dto: CreateUserDto) {
     // 检查用户名是否已存在
     if (dto.username) {
@@ -341,7 +584,11 @@ export class UserService {
     };
   }
 
-  // 导入用户（使用SheetJS/xlsx实现Excel文件解析）
+  /**
+   * 导入用户（使用SheetJS/xlsx实现Excel文件解析）
+   * @param file 上传的Excel文件
+   * @returns 导入结果
+   */
   async importUsers(file: Express.Multer.File) {
     try {
       // 读取Excel文件
@@ -424,7 +671,13 @@ export class UserService {
     }
   }
 
-  // 导出用户（使用SheetJS/xlsx实现Excel文件生成）
+  /**
+   * 导出用户（使用SheetJS/xlsx实现Excel文件生成）
+   * @param query 查询参数
+   * @param res HTTP响应对象
+   * @param currentUser 当前登录用户
+   * @returns 导出的Excel文件
+   */
   async exportUsers(query: Record<string, unknown>, res: Response, currentUser: AuthUser) {
     try {
       // 获取用户数据
@@ -528,7 +781,13 @@ export class UserService {
     }
   }
 
-  // 批量导出用户（根据ID列表）
+  /**
+   * 批量导出用户（根据ID列表）
+   * @param ids 用户ID列表
+   * @param res HTTP响应对象
+   * @param currentUser 当前登录用户
+   * @returns 导出的Excel文件
+   */
   async batchExportUsers(ids: number[], res: Response, currentUser: AuthUser) {
     try {
       // 根据ID列表查询用户
@@ -616,7 +875,12 @@ export class UserService {
     }
   }
 
-  // 更新用户
+  /**
+   * 更新用户
+   * @param id 用户ID
+   * @param updateUserDto 更新用户DTO
+   * @returns 更新后的用户实体
+   */
   async update(id: number, updateUserDto: Record<string, unknown>) {
     const user = await this.userRepo.findOne({
       where: { id },
@@ -652,7 +916,11 @@ export class UserService {
     };
   }
 
-  // 删除用户
+  /**
+   * 删除用户
+   * @param id 用户ID
+   * @returns 删除成功的确认信息
+   */
   async delete(id: number) {
     const user = await this.userRepo.findOne({
       where: { id },
@@ -677,7 +945,12 @@ export class UserService {
     };
   }
 
-  // 设置用户为超级管理员
+  /**
+   * 设置用户为超级管理员
+   * @param userId 用户ID
+   * @param isSuperAdmin 是否设置为超级管理员
+   * @returns 更新后的用户实体
+   */
   async setSuperAdmin(userId: number, isSuperAdmin: boolean) {
     const user = await this.userRepo.findOne({
       where: { id: userId },
@@ -691,7 +964,11 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
-  // 批量删除用户
+  /**
+   * 批量删除用户
+   * @param ids 用户ID列表
+   * @returns 删除成功的确认信息
+   */
   async batchDelete(ids: number[]) {
     const users = await this.userRepo.find({
       where: { id: In(ids) },
