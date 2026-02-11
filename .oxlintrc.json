@@ -21,7 +21,8 @@
     "**/*/dist/**/*",
     "apps/**/*/public/**/*",
     "node_modules/**/*",
-    "**/*.d.ts"
+    "**/*.d.ts",
+    "apps/web/react-webpack-ie/**/*"
   ],
   "overrides": [
     {
