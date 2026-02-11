@@ -1,7 +1,11 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'node:path';
 import type { ViteUserConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Vitest 配置 - 专用于所有前端项目的测试
@@ -25,7 +29,7 @@ export default defineConfig({
       'packages/unocss-ui/**/*.{test,spec}.{js,ts,jsx,tsx}',
       'packages/unocss-ui-ie/**/*.{test,spec}.{js,ts,jsx,tsx}',
       // 核心业务组件
-      'packages/core-business-components/**/*.{test,spec}.{js,ts,jsx,tsx}'
+      'packages/core-business-components/**/*.{test,spec}.{js,ts,jsx,tsx}',
     ],
     // 排除文件
     exclude: [
@@ -37,7 +41,7 @@ export default defineConfig({
       // 排除后端项目
       'apps/backend/**/*',
       // 排除node_modules中的所有测试文件
-      '**/node_modules/**'
+      '**/node_modules/**',
     ],
     // 覆盖率配置
     coverage: {
@@ -50,7 +54,7 @@ export default defineConfig({
         'packages/antd-ui/**/*.{js,ts,jsx,tsx}',
         'packages/unocss-ui/**/*.{js,ts,jsx,tsx}',
         'packages/unocss-ui-ie/**/*.{js,ts,jsx,tsx}',
-        'packages/core-business-components/**/*.{js,ts,jsx,tsx}'
+        'packages/core-business-components/**/*.{js,ts,jsx,tsx}',
       ],
       exclude: [
         'node_modules/',
@@ -60,23 +64,23 @@ export default defineConfig({
         '**/*.config.*',
         '**/*.setup.*',
         '**/index.ts',
-        '**/*.stories.*'
+        '**/*.stories.*',
       ],
       thresholds: {
         global: {
           branches: 70,
           functions: 70,
           lines: 70,
-          statements: 70
+          statements: 70,
         },
         // UI包要求更高覆盖率
         'packages/**/src/**/*.{js,jsx,ts,tsx}': {
           branches: 80,
           functions: 80,
           lines: 80,
-          statements: 80
-        }
-      }
+          statements: 80,
+        },
+      },
     },
     // 超时配置
     testTimeout: 15000,
@@ -85,7 +89,7 @@ export default defineConfig({
     pool: 'threads',
     maxConcurrency: 4,
     silent: false,
-    reporters: ['verbose']
+    reporters: ['verbose'],
   },
   // 监听模式配置 - 排除文件
   watchExclude: ['node_modules', 'dist', 'build', 'coverage'],
@@ -95,7 +99,7 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
       '@eggshell': resolve(__dirname, './packages'),
       '@frontend': resolve(__dirname, './apps/frontend'),
-      '@web': resolve(__dirname, './apps/web')
-    }
-  }
+      '@web': resolve(__dirname, './apps/web'),
+    },
+  },
 } as ViteUserConfig);

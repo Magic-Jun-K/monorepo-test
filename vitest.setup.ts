@@ -33,19 +33,19 @@ beforeAll(() => {
   // 配置 URL.createObjectURL
   Object.defineProperty(global.URL, 'createObjectURL', {
     writable: true,
-    value: vi.fn(() => 'mocked-object-url')
+    value: vi.fn(() => 'mocked-object-url'),
   });
 
   // 配置 URL.revokeObjectURL
   Object.defineProperty(global.URL, 'revokeObjectURL', {
     writable: true,
-    value: vi.fn()
+    value: vi.fn(),
   });
 
   // 配置 window.matchMedia
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -53,8 +53,8 @@ beforeAll(() => {
       removeListener: vi.fn(), // Deprecated
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    }))
+      dispatchEvent: vi.fn(),
+    })),
   });
 
   // 配置 localStorage
@@ -64,10 +64,10 @@ beforeAll(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
     length: 0,
-    key: vi.fn()
+    key: vi.fn(),
   };
   Object.defineProperty(window, 'localStorage', {
-    value: localStorageMock
+    value: localStorageMock,
   });
 
   // 配置 sessionStorage
@@ -77,10 +77,10 @@ beforeAll(() => {
     removeItem: vi.fn(),
     clear: vi.fn(),
     length: 0,
-    key: vi.fn()
+    key: vi.fn(),
   };
   Object.defineProperty(window, 'sessionStorage', {
-    value: sessionStorageMock
+    value: sessionStorageMock,
   });
 
   // 配置 fetch mock
