@@ -273,6 +273,7 @@ jobs:
 
       # 构建并推送前端镜像
       - name: Build and push frontend image(构建并推送前端镜像)
+        id: build-image
         if: steps.check.outputs.should_run == 'true'
         uses: docker/build-push-action@v6
         with:
@@ -292,6 +293,24 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+      # 验证镜像是否成功推送
+      - name: Verify image pushed(验证镜像推送)
+        id: verify-image
+        if: steps.check.outputs.should_run == 'true'
+        run: |
+          echo "🔍 Verifying image was pushed successfully..."
+          IMAGE="${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.sha }}"
+          echo "📦 Checking image: $IMAGE"
+          
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "✅ Image verified successfully!"
+            echo "image_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Image not found in registry!"
+            echo "image_exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       # 部署前端到服务器（使用 SSH）
       - name: Deploy to server(部署前端到服务器)
@@ -470,7 +489,7 @@ jobs:
             DEPLOY_DIR="/var/www/eggshell"
             CONTAINER_NAME="eggshell-react-webpack"
             REGISTRY="${{ secrets.ALIYUN_ACR_REGISTRY }}"
-            ROLLBACK_IMAGE="${{ needs.build-and-deploy.outputs.rollback_image }}"
+            IMAGE_NAME="${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}"
 
             echo "🔄 Starting rollback..."
             cd "$DEPLOY_DIR"
@@ -482,10 +501,38 @@ jobs:
             docker-compose -f docker-compose.react-webpack.yml stop "$CONTAINER_NAME" || true
             docker-compose -f docker-compose.react-webpack.yml rm -f "$CONTAINER_NAME" || true
 
-            echo "📦 Rolling back to previous version..."
-            IMAGE_TAG="$(grep 'IMAGE_TAG=' .env.deploy 2>/dev/null | cut -d'=' -f2)"
-            if [ -n "$IMAGE_TAG" ]; then
-              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=$ROLLBACK_IMAGE/" .env.deploy
+            echo "📦 Finding available rollback image..."
+            ROLLBACK_TAG=""
+            
+            # 优先使用 production 标签（上一次成功部署的镜像）
+            if docker manifest inspect "$REGISTRY/$IMAGE_NAME:production" > /dev/null 2>&1; then
+              ROLLBACK_TAG="production"
+              echo "✅ Found production image"
+            # 其次尝试 latest 标签
+            elif docker manifest inspect "$REGISTRY/$IMAGE_NAME:latest" > /dev/null 2>&1; then
+              ROLLBACK_TAG="latest"
+              echo "✅ Found latest image"
+            else
+              echo "❌ No rollback image found!"
+              echo "⚠️ Both 'production' and 'latest' tags are missing from registry"
+              echo "💡 Please manually deploy a known good image"
+              exit 1
+            fi
+
+            echo "🔄 Rolling back to image with tag: $ROLLBACK_TAG"
+            
+            # 更新 .env.deploy 文件
+            if [ -f ".env.deploy" ]; then
+              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=$ROLLBACK_TAG/" .env.deploy
+            else
+              cat > .env.deploy << EOF
+            ALIYUN_REGISTRY=$REGISTRY
+            IMAGE_TAG=$ROLLBACK_TAG
+            ENVIRONMENT=production
+            DEPLOY_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            DEPLOY_USER=${{ secrets.SERVER_USERNAME }}
+            EOF
+              chmod 600 .env.deploy
             fi
 
             docker-compose -f docker-compose.react-webpack.yml pull "$CONTAINER_NAME"
