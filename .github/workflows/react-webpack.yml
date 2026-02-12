@@ -344,7 +344,16 @@ jobs:
             echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "$REGISTRY" && echo "✅ Login successful" || (echo "❌ Login failed" && exit 1)
 
             echo "📝 Setting environment configuration..."
-            cat > .env.deploy << 'EOF'
+            
+            # 创建 .env 文件（docker-compose 默认读取此文件）
+            cat > .env << EOF
+            ALIYUN_REGISTRY=$REGISTRY
+            IMAGE_TAG=$IMAGE_TAG
+            ENVIRONMENT=$ENVIRONMENT
+            EOF
+            
+            # 同时创建 .env.deploy 文件（用于记录详细部署信息）
+            cat > .env.deploy << EOF
             ALIYUN_REGISTRY=$REGISTRY
             IMAGE_TAG=$IMAGE_TAG
             ENVIRONMENT=$ENVIRONMENT
@@ -352,6 +361,9 @@ jobs:
             DEPLOY_USER=$DEPLOY_USER
             EOF
             chmod 600 .env.deploy
+            
+            echo "📋 Current .env content:"
+            cat .env
 
             echo "🏗️ Starting infrastructure services..."
             docker-compose -f docker-compose.db.yml up -d
@@ -521,19 +533,30 @@ jobs:
 
             echo "🔄 Rolling back to image with tag: $ROLLBACK_TAG"
             
-            # 更新 .env.deploy 文件
-            if [ -f ".env.deploy" ]; then
-              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=$ROLLBACK_TAG/" .env.deploy
+            # 更新 .env 文件（docker-compose 默认读取此文件）
+            if [ -f ".env" ]; then
+              sed -i "s/IMAGE_TAG=.*/IMAGE_TAG=$ROLLBACK_TAG/" .env
             else
-              cat > .env.deploy << EOF
+              cat > .env << EOF
+            ALIYUN_REGISTRY=$REGISTRY
+            IMAGE_TAG=$ROLLBACK_TAG
+            ENVIRONMENT=production
+            EOF
+            fi
+            
+            # 同时更新 .env.deploy 文件（用于记录部署信息）
+            cat > .env.deploy << EOF
             ALIYUN_REGISTRY=$REGISTRY
             IMAGE_TAG=$ROLLBACK_TAG
             ENVIRONMENT=production
             DEPLOY_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
             DEPLOY_USER=${{ secrets.SERVER_USERNAME }}
+            ROLLBACK=true
             EOF
-              chmod 600 .env.deploy
-            fi
+            chmod 600 .env.deploy
+
+            echo "📋 Current .env content:"
+            cat .env
 
             docker-compose -f docker-compose.react-webpack.yml pull "$CONTAINER_NAME"
             docker-compose -f docker-compose.react-webpack.yml up -d "$CONTAINER_NAME"
