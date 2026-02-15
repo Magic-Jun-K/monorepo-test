@@ -10,7 +10,7 @@ export default getBaseJestConfig({
   displayName: 'eggshell-nest',
   rootDir: '.',
   preset: 'ts-jest/presets/default-esm',
-  extensionsToTreatAsEsm: ['.ts', '.mjs'],
+  extensionsToTreatAsEsm: ['.ts'],
   // 测试文件匹配
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
   // 测试环境设置
