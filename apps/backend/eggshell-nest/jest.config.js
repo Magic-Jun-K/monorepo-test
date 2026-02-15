@@ -16,9 +16,14 @@ export default getBaseJestConfig({
   // 测试环境设置
   setupFilesAfterEnv: ['<rootDir>/src/setup.ts'],
   // 模块名映射（支持路径别名）
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
-    prefix: '<rootDir>/',
-  }),
+  moduleNameMapper: {
+    ...pathsToModuleNameMapper(compilerOptions.paths || {}, {
+      prefix: '<rootDir>/',
+    }),
+    '^(..?/.*).js$': '$1',
+  },
+  // 转换忽略模式 - 允许转换 ESM 模块
+  transformIgnorePatterns: ['node_modules/(?!(@eggshell/shared-crypto)/)'],
   // 转换配置
   transform: {
     '^.+\\.(t|j)s$': [
