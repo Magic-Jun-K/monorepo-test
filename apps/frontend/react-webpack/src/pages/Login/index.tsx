@@ -329,7 +329,7 @@ const FooterRecord = memo(() => {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <span>粤ICP备2025421349号-1</span>
+      <span>粤ICP备2026012481号-1</span>
     </a>
   );
 });
