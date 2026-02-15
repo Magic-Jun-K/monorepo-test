@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { Readable } from 'node:stream';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
 import { RoleService } from '../../role/role.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { PermissionGuard } from '../../../common/guards/permission.guard';
+import { AuthUser } from '../../auth/types/user.interface';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -15,21 +17,30 @@ describe('UserController', () => {
   let roleService: RoleService;
 
   const mockUserService = {
-    findAll: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    importUsers: jest.fn(),
-    exportUsers: jest.fn(),
-    batchExportUsers: jest.fn(),
-    setSuperAdmin: jest.fn(),
-    batchDelete: jest.fn(),
+    findAll:
+      jest.fn<
+        (
+          query: Record<string, unknown>,
+          currentUser: AuthUser,
+        ) => Promise<{ list: unknown[]; total: number }>
+      >(),
+    create: jest.fn<(dto: CreateUserDto) => Promise<unknown>>(),
+    update: jest.fn<(userId: number, dto: unknown) => Promise<unknown>>(),
+    delete: jest.fn<(userId: number) => Promise<{ affected: number }>>(),
+    importUsers:
+      jest.fn<(file: Express.Multer.File) => Promise<{ imported: number; failed: number }>>(),
+    exportUsers:
+      jest.fn<(query: unknown, response: Response, currentUser: AuthUser) => Promise<void>>(),
+    batchExportUsers:
+      jest.fn<(userIds: number[], response: Response, currentUser: AuthUser) => Promise<void>>(),
+    setSuperAdmin: jest.fn<(userId: number, isSuperAdmin: boolean) => Promise<unknown>>(),
+    batchDelete: jest.fn<(userIds: number[]) => Promise<{ deleted: number; failed: number }>>(),
   };
 
   const mockRoleService = {
-    batchAssignRolesToUser: jest.fn(),
-    batchRemoveRolesFromUser: jest.fn(),
-    getUserRoles: jest.fn(),
+    batchAssignRolesToUser: jest.fn<(userId: number, roleIds: number[]) => Promise<void>>(),
+    batchRemoveRolesFromUser: jest.fn<(userId: number, roleIds: number[]) => Promise<void>>(),
+    getUserRoles: jest.fn<(userId: number) => Promise<unknown[]>>(),
   };
 
   const mockRequest = {
@@ -89,27 +100,28 @@ describe('UserController', () => {
         { id: 2, username: 'user2', email: 'user2@example.com' },
       ];
       const mockQuery = { page: 1, limit: 10 };
+      const mockResult = { list: mockUsers, total: 2 };
 
-      mockUserService.findAll.mockResolvedValue(mockUsers);
+      mockUserService.findAll.mockResolvedValue(mockResult);
 
       const result = await controller.findAll(mockQuery, mockRequest);
 
       expect(result).toEqual({
         success: true,
-        data: mockUsers,
+        data: mockResult,
       });
       expect(userService.findAll).toHaveBeenCalledWith(mockQuery, mockRequest.user);
     });
 
     it('should handle empty query', async () => {
-      const mockUsers = [];
-      mockUserService.findAll.mockResolvedValue(mockUsers);
+      const mockResult = { list: [], total: 0 };
+      mockUserService.findAll.mockResolvedValue(mockResult);
 
       const result = await controller.findAll(null, mockRequest);
 
       expect(result).toEqual({
         success: true,
-        data: mockUsers,
+        data: mockResult,
       });
       expect(userService.findAll).toHaveBeenCalledWith({}, mockRequest.user);
     });
@@ -257,15 +269,14 @@ describe('UserController', () => {
     it('should assign roles to user successfully', async () => {
       const userId = 1;
       const roleIds = [1, 2];
-      const assignResult = { assigned: 2 };
 
-      mockRoleService.batchAssignRolesToUser.mockResolvedValue(assignResult);
+      mockRoleService.batchAssignRolesToUser.mockResolvedValue(undefined);
 
       const result = await controller.assignRoles(userId, roleIds);
 
       expect(result).toEqual({
         success: true,
-        data: assignResult,
+        data: undefined,
       });
       expect(roleService.batchAssignRolesToUser).toHaveBeenCalledWith(userId, roleIds);
     });
@@ -275,15 +286,14 @@ describe('UserController', () => {
     it('should remove roles from user successfully', async () => {
       const userId = 1;
       const roleIds = [1, 2];
-      const removeResult = { removed: 2 };
 
-      mockRoleService.batchRemoveRolesFromUser.mockResolvedValue(removeResult);
+      mockRoleService.batchRemoveRolesFromUser.mockResolvedValue(undefined);
 
       const result = await controller.removeRoles(userId, roleIds);
 
       expect(result).toEqual({
         success: true,
-        data: removeResult,
+        data: undefined,
       });
       expect(roleService.batchRemoveRolesFromUser).toHaveBeenCalledWith(userId, roleIds);
     });
