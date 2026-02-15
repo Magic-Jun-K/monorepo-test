@@ -1,6 +1,6 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
 
-import { getBaseJestConfig } from '../../../jest.config.js';
+import { getBaseJestConfig } from '../../../jest.config.mjs';
 import tsconfig from './tsconfig.json' with { type: 'json' };
 
 const { compilerOptions } = tsconfig;
