@@ -7,6 +7,7 @@ import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
 import { RoleService } from '../../role/role.service';
+import { FileService } from '../../file/file.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { PermissionGuard } from '../../../common/guards/permission.guard';
 import { AuthUser } from '../../auth/types/user.interface';
@@ -43,6 +44,12 @@ describe('UserController', () => {
     getUserRoles: jest.fn<(userId: number) => Promise<unknown[]>>(),
   };
 
+  const mockFileService = {
+    uploadFile: jest.fn<(file: Express.Multer.File) => Promise<{ path: string }>>(),
+    getFile: jest.fn<(filename: string) => Promise<Buffer>>(),
+    deleteFile: jest.fn<(filename: string) => Promise<void>>(),
+  };
+
   const mockRequest = {
     user: {
       id: 1,
@@ -71,6 +78,10 @@ describe('UserController', () => {
         {
           provide: RoleService,
           useValue: mockRoleService,
+        },
+        {
+          provide: FileService,
+          useValue: mockFileService,
         },
       ],
     })
