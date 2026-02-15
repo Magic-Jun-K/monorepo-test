@@ -1,23 +1,23 @@
-name: 后端bmap-nest部署流程
+name: 后端eggshell-nest部署流程
 
 # 环境变量
 env:
   NODE_VERSION: '22'
   PNPM_VERSION: 'latest'
   REGISTRY_NAME: 'eggshell'
-  APP_NAME: 'bmap-nest'
+  APP_NAME: 'eggshell-nest'
 
 on:
   push:
     branches: [main, master]
     paths:
-      - 'apps/backend/bmap-nest/**' # 只在 apps/backend/bmap-nest 目录下的文件发生变化时触发
+      - 'apps/backend/eggshell-nest/**' # 只在 apps/backend/eggshell-nest 目录下的文件发生变化时触发
       # - 'packages/**' # 共享包变化也需要重新部署
-      - '.github/workflows/bmap-nest.yml' # 只在该工作流文件发生变化时触发
+      - '.github/workflows/eggshell-nest.yml' # 只在该工作流文件发生变化时触发
   pull_request:
     branches: [main, master]
     paths:
-      - 'apps/backend/bmap-nest/**'
+      - 'apps/backend/eggshell-nest/**'
       # - 'packages/**'
 
 jobs:
@@ -44,23 +44,23 @@ jobs:
       - name: Type Check
         run: |
           echo "🔍 Running type check..."
-          pnpm --filter @backend/bmap-nest typecheck
+          pnpm --filter @backend/eggshell-nest typecheck
       
       - name: Lint Check
         run: |
           echo "✨ Running linting..."
-          pnpm --filter @backend/bmap-nest lint
+          pnpm --filter @backend/eggshell-nest lint
       
       - name: Unit Tests
         run: |
           echo "🧪 Running unit tests..."
-          cd apps/backend/bmap-nest
+          cd apps/backend/eggshell-nest
           pnpm test
       
       - name: Build Test
         run: |
           echo "🏗️ Testing build..."
-          cd apps/backend/bmap-nest
+          cd apps/backend/eggshell-nest
           pnpm build
 
   # 构建和部署阶段
@@ -102,15 +102,15 @@ jobs:
       - name: Quality Checks(质量检查)
         run: |
           echo "🔍 Running quality checks..."
-          pnpm --filter @backend/bmap-nest typecheck
-          pnpm --filter @backend/bmap-nest lint
+          pnpm --filter @backend/eggshell-nest typecheck
+          pnpm --filter @backend/eggshell-nest lint
           echo "✅ Quality checks passed!"
 
       # 后端测试（增强版）
       - name: Backend Tests(后端测试)
         run: |
           echo "🧪 Running comprehensive backend tests..."
-          cd apps/backend/bmap-nest
+          cd apps/backend/eggshell-nest
           
           # 单元测试
           echo "📝 Running unit tests..."
@@ -131,8 +131,8 @@ jobs:
       # 构建应用
       - name: Build Application(构建应用)
         run: |
-          echo "🏗️ Building bmap-nest application..."
-          cd apps/backend/bmap-nest
+          echo "🏗️ Building eggshell-nest application..."
+          cd apps/backend/eggshell-nest
           pnpm build
           echo "✅ Build completed!"
 
@@ -145,7 +145,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/backend/bmap-nest/Dockerfile
+          file: ./apps/backend/eggshell-nest/Dockerfile
           push: true
           tags: |
             ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.sha }}
