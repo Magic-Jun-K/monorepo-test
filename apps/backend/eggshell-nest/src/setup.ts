@@ -1,6 +1,7 @@
 // Jest 类型声明
 /// <reference types="jest" />
 import 'reflect-metadata';
+import { jest, afterEach } from '@jest/globals';
 
 // 设置测试环境变量
 process.env.NODE_ENV = 'test';
@@ -21,7 +22,7 @@ afterEach(() => {
 
 // 模拟常用的外部依赖
 jest.mock('typeorm', () => {
-  const actual = jest.requireActual('typeorm');
+  const actual = jest.requireActual('typeorm') as Record<string, unknown>;
   return {
     ...actual,
     createConnection: jest.fn(),
