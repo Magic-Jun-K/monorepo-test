@@ -9,7 +9,7 @@
 首先运行初始化脚本创建超级管理员：
 
 ```bash
-cd d:/Files/VSCode/BaiduMap/canvaskit-test/apps/backend/bmap-nest
+cd d:/Files/VSCode/BaiduMap/canvaskit-test/apps/backend/eggshell-nest
 npm run ts-node scripts/init-super-admin.ts
 ```
 

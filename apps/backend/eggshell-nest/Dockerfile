@@ -17,7 +17,7 @@ COPY tsconfig* ./
 # 复制共享组件库代码
 COPY packages/shared/crypto/ ./packages/shared/crypto/
 # 复制后端应用代码
-COPY apps/backend/bmap-nest/ ./apps/backend/bmap-nest/
+COPY apps/backend/eggshell-nest/ ./apps/backend/eggshell-nest/
 # 安装所有依赖（包含 devDependencies）
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --prefer-offline
@@ -26,7 +26,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM deps AS builder
 # 构建共享依赖
 RUN pnpm --filter @eggshell/shared-crypto build
-WORKDIR /app/apps/backend/bmap-nest
+WORKDIR /app/apps/backend/eggshell-nest
 ENV NODE_OPTIONS="--experimental-vm-modules"
 # 清理可能存在的 dist 目录
 RUN rm -rf dist || true
@@ -43,14 +43,14 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 WORKDIR /app
 # 复制构建产物
-COPY --from=builder /app/apps/backend/bmap-nest/dist ./dist
-COPY --from=builder /app/apps/backend/bmap-nest/public ./public
+COPY --from=builder /app/apps/backend/eggshell-nest/dist ./dist
+COPY --from=builder /app/apps/backend/eggshell-nest/public ./public
 # 复制 monorepo 配置文件（用于 pnpm 解析依赖）
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
 # 复制子包 package.json（用于 workspace 解析）
-COPY --from=builder /app/apps/backend/bmap-nest/package.json ./apps/backend/bmap-nest/
+COPY --from=builder /app/apps/backend/eggshell-nest/package.json ./apps/backend/eggshell-nest/
 # 复制并安装 workspace 依赖
 COPY --from=builder /app/packages/shared/crypto ./packages/shared/crypto
 

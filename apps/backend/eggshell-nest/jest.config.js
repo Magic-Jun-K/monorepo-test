@@ -1,20 +1,15 @@
 import { pathsToModuleNameMapper } from 'ts-jest';
-import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
 
+import { getBaseJestConfig } from '../../../jest.config.js';
 import tsconfig from './tsconfig.json' with { type: 'json' };
 
 const { compilerOptions } = tsconfig;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /** @type {import('jest').Config} */
-export default {
-  displayName: 'bmap-nest',
+export default getBaseJestConfig({
+  displayName: 'eggshell-nest',
+  rootDir: '.',
   preset: 'ts-jest/presets/default-esm',
-  testEnvironment: 'node', // 测试环境
-  rootDir: '.', // 根目录
-  // ESM 支持
   extensionsToTreatAsEsm: ['.ts'],
   // 测试文件匹配
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
@@ -47,8 +42,6 @@ export default {
     '!src/**/*.test.ts',
   ],
   coverageDirectory: '<rootDir>/coverage',
-  coverageReporters: ['text', 'html', 'lcov'],
-  // 覆盖率阈值
   coverageThreshold: {
     global: {
       branches: 70,
@@ -57,11 +50,4 @@ export default {
       statements: 70,
     },
   },
-  // 忽略模式
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/dist/'],
-  // 模块文件扩展名
-  moduleFileExtensions: ['js', 'json', 'ts'],
-  testTimeout: 30000, // 测试超时
-  clearMocks: true, // 清理模拟
-  verbose: true, // 详细输出
-};
+});

@@ -1,5 +1,5 @@
 {
-  "name": "@backend/bmap-nest",
+  "name": "@backend/eggshell-nest",
   "version": "0.0.0",
   "description": "",
   "author": "",
@@ -43,7 +43,7 @@
     "crystals-kyber-js": "2.5.0",
     "express": "5.2.1",
     "file-type": "21.3.0",
-    "ioredis": "5.9.2",
+    "ioredis": "5.9.3",
     "multer": "2.0.2",
     "nodemailer": "8.0.1",
     "passport": "0.7.0",

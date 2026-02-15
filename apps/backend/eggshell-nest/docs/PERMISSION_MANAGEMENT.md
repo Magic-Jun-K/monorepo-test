@@ -47,7 +47,7 @@ SUPER_ADMIN_EMAIL=admin@example.com
 
 ```bash
 # 在项目根目录运行
-cd apps/backend/bmap-nest
+cd apps/backend/eggshell-nest
 npm run build
 npx ts-node src/scripts/init-super-admin.ts
 ```
