@@ -10,7 +10,7 @@ export default getBaseJestConfig({
   displayName: 'eggshell-nest',
   rootDir: '.',
   preset: 'ts-jest/presets/default-esm',
-  extensionsToTreatAsEsm: ['.ts'],
+  extensionsToTreatAsEsm: ['.ts', '.mjs'],
   // 测试文件匹配
   testMatch: ['<rootDir>/src/**/*.spec.ts', '<rootDir>/src/**/*.test.ts'],
   // 测试环境设置
@@ -26,13 +26,14 @@ export default getBaseJestConfig({
   transformIgnorePatterns: ['node_modules/(?!(@eggshell/shared-crypto)/)'],
   // 转换配置
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+.(t|j)s$': [
       'ts-jest',
       {
         useESM: true,
         tsconfig: 'tsconfig.json',
       },
     ],
+    '^.+.mjs$': 'ts-jest',
   },
   // 覆盖率配置
   collectCoverageFrom: [
