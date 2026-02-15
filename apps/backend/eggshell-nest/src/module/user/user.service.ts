@@ -201,7 +201,7 @@ export class UserService {
         bio: dto.bio,
         avatar: dto.avatar,
         user: user,
-      } as any;
+      } as unknown as UserProfileEntity;
     }
 
     await this.userRepo.save(user);

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { Readable } from 'node:stream';
 
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
@@ -36,6 +37,9 @@ describe('UserController', () => {
       id: 1,
       username: 'testuser',
       email: 'test@example.com',
+      userType: 'USER',
+      status: 'ACTIVE',
+      isSuperAdmin: false,
     },
   };
 
@@ -191,7 +195,18 @@ describe('UserController', () => {
 
   describe('import', () => {
     it('should import users from file successfully', async () => {
-      const mockFile = { originalname: 'users.xlsx', buffer: Buffer.from('test') };
+      const mockFile: Express.Multer.File = {
+        fieldname: 'file',
+        originalname: 'users.xlsx',
+        encoding: '7bit',
+        mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        buffer: Buffer.from('test'),
+        size: 1024,
+        destination: '',
+        filename: 'users.xlsx',
+        path: '',
+        stream: new Readable(),
+      };
       const importResult = { imported: 5, failed: 0 };
 
       mockUserService.importUsers.mockResolvedValue(importResult);
