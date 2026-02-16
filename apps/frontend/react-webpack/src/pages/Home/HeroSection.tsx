@@ -1,7 +1,9 @@
 import { FC, useEffect, useRef } from 'react';
 // import { Canvas } from '@react-three/fiber';
-import * as THREE from 'three';
+import * as Three from 'three';
 import { motion } from 'framer-motion';
+
+// import { loadScript } from '@/utils/loadScript';
 
 // Hero Section Component
 // 实现类似Dora官网的3D效果
@@ -9,37 +11,47 @@ const HeroSection: FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // useEffect(() => {
+  //   loadScript({
+  //     // src: 'https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.min.js',
+  //     // integrity: 'sha256-l5wa5LBXnJkB6s95dgLAtG3xKdhxAsZEPRS+Sh95C3A=',
+  //     // crossorigin: 'anonymous',
+  //     src: 'https://cdn.jsdelivr.net/npm/three@0.182.0/+esm',
+  //     type: 'module',
+  //   });
+  // }, []);
+
   useEffect(() => {
     if (!heroRef.current || !canvasRef.current) return;
 
     // 创建3D场景
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(
+    const scene = new Three.Scene();
+    const camera = new Three.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      1000,
     );
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
+    const renderer = new Three.WebGLRenderer({ canvas: canvasRef.current, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0xffffff);
 
     // 添加灯光
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new Three.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new Three.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
 
     // 创建3D元素
     const create3DElement = (
-      geometry: THREE.BufferGeometry,
-      material: THREE.Material,
+      geometry: Three.BufferGeometry,
+      material: Three.Material,
       position: [number, number, number],
-      rotation: [number, number, number]
+      rotation: [number, number, number],
     ) => {
-      const mesh = new THREE.Mesh(geometry, material);
+      const mesh = new Three.Mesh(geometry, material);
       mesh.position.set(...position);
       mesh.rotation.set(...rotation);
       scene.add(mesh);
@@ -47,47 +59,47 @@ const HeroSection: FC = () => {
     };
 
     // 创建前端技术图标（React）
-    const reactGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const reactMaterial = new THREE.MeshPhongMaterial({
+    const reactGeometry = new Three.BoxGeometry(1, 1, 1);
+    const reactMaterial = new Three.MeshPhongMaterial({
       color: 0x61dafb,
       emissive: 0x1b4d8c,
-      shininess: 100
+      shininess: 100,
     });
     const react = create3DElement(reactGeometry, reactMaterial, [-2, 0, 0], [0, 0, 0]);
 
     // 创建后端技术图标（Node.js）
-    const nodeGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 8);
-    const nodeMaterial = new THREE.MeshPhongMaterial({
+    const nodeGeometry = new Three.CylinderGeometry(0.5, 0.5, 1, 8);
+    const nodeMaterial = new Three.MeshPhongMaterial({
       color: 0x8bc53f,
       emissive: 0x5a8c2b,
-      shininess: 100
+      shininess: 100,
     });
     const node = create3DElement(nodeGeometry, nodeMaterial, [2, 0, 0], [0, 0, 0]);
 
     // 创建数据库图标（PostgreSQL）
-    const dbGeometry = new THREE.SphereGeometry(0.8, 32, 32);
-    const dbMaterial = new THREE.MeshPhongMaterial({
+    const dbGeometry = new Three.SphereGeometry(0.8, 32, 32);
+    const dbMaterial = new Three.MeshPhongMaterial({
       color: 0x0000ff,
       emissive: 0x00008b,
-      shininess: 100
+      shininess: 100,
     });
     const db = create3DElement(dbGeometry, dbMaterial, [0, 2, 0], [0, 0, 0]);
 
     // 创建AI图标
-    const aiGeometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
-    const aiMaterial = new THREE.MeshPhongMaterial({
+    const aiGeometry = new Three.TorusGeometry(0.5, 0.2, 16, 32);
+    const aiMaterial = new Three.MeshPhongMaterial({
       color: 0xff6b6b,
       emissive: 0x9e3c3c,
-      shininess: 100
+      shininess: 100,
     });
     const ai = create3DElement(aiGeometry, aiMaterial, [0, -2, 0], [0, 0, 0]);
 
     // 创建云服务图标
-    const cloudGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-    const cloudMaterial = new THREE.MeshPhongMaterial({
+    const cloudGeometry = new Three.SphereGeometry(0.6, 32, 32);
+    const cloudMaterial = new Three.MeshPhongMaterial({
       color: 0x4ecdc4,
       emissive: 0x2a8b8b,
-      shininess: 100
+      shininess: 100,
     });
     const cloud = create3DElement(cloudGeometry, cloudMaterial, [0, 0, 2], [0, 0, 0]);
 
