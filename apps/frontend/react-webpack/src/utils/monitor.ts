@@ -28,10 +28,6 @@ interface PerformanceData {
   [key: string]: unknown;
 }
 
-const generatePageId = () => {
-  return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
-};
-
 interface ResourceData {
   name: string;
   type: string;
@@ -46,6 +42,12 @@ interface NavigationData {
   resourceCount: number;
 }
 
+// 生成唯一页面ID
+const generatePageId = () => {
+  return 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+};
+
+// 获取浏览器名称
 const getBrowserName = () => {
   const userAgent = navigator.userAgent;
   if (userAgent.includes('Firefox')) return 'Firefox';
@@ -67,11 +69,10 @@ export class Monitor {
     this.initPerformanceObserver();
     // 页面加载完成后收集导航和资源数据
     if (document.readyState === 'complete') {
-      this.collectWindowPerformance();
+      this.scheduleCollectWindowPerformance();
     } else {
       window.addEventListener('load', () => {
-        // 稍微延迟以确保 load 事件处理完成
-        setTimeout(() => this.collectWindowPerformance(), 0);
+        this.scheduleCollectWindowPerformance();
       });
     }
   }
@@ -83,6 +84,19 @@ export class Monitor {
     onCLS(this.handleMetric);
     onTTFB(this.handleMetric);
     onINP(this.handleMetric);
+  }
+
+  // 调度性能数据采集（使用空闲时间）
+  private scheduleCollectWindowPerformance() {
+    // 延迟采集，避免阻塞主线程
+    const collect = () => this.collectWindowPerformance();
+
+    // 对于不支持 requestIdleCallback 的浏览器降级到 setTimeout
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(collect, { timeout: 5000 });
+    } else {
+      setTimeout(collect, 100);
+    }
   }
 
   // 收集 Navigation Timing 和 Resource Timing
@@ -164,14 +178,21 @@ export class Monitor {
       setTag(`web-vital-${name}`, metric.rating);
     }
 
+    // 每次收集到指标后调度上报（防抖）
     this.scheduleReport();
   };
 
+  // 调度上报（防抖 + 空闲时间）
   private scheduleReport() {
     if (this.reportTimeout) clearTimeout(this.reportTimeout);
     // 防抖上报，避免过于频繁
     this.reportTimeout = setTimeout(() => {
-      this.report();
+      // 使用空闲时间上报，避免阻塞主线程
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => this.report(), { timeout: 3000 });
+      } else {
+        this.report();
+      }
     }, 2000);
   }
 
@@ -226,7 +247,8 @@ export class Monitor {
     };
 
     // 使用配置的错误上报地址，或者根据性能上报地址推导
-    const errorReportUrl = this.config.errorReportUrl || this.config.reportUrl.replace('performance', 'error');
+    const errorReportUrl =
+      this.config.errorReportUrl || this.config.reportUrl.replace('performance', 'error');
     navigator.sendBeacon(
       errorReportUrl,
       new Blob([JSON.stringify(errorInfo)], { type: 'application/json' }),
@@ -237,6 +259,7 @@ export class Monitor {
 // 单例模式导出
 let monitorInstance: Monitor;
 
+// 初始化监控器
 export const initMonitor = (config: MonitorConfig) => {
   if (!monitorInstance) {
     monitorInstance = new Monitor(config);
