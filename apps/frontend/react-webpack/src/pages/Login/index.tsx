@@ -59,17 +59,19 @@ const LoginContent = () => {
 
   // 初始化加密密钥
   useEffect(() => {
-    initAuth().catch(err => console.error('初始化认证失败:', err));
+    initAuth().catch((err) => console.error('初始化认证失败:', err));
   }, []);
 
   // 获取表单字段错误信息
   const getFieldError = (fieldName: string): FieldError | undefined => {
-    if (loginType === 'account' || authType === 'register') {
-      return errors[fieldName as keyof typeof errors] as FieldError | undefined;
-    } else if (loginType === 'email') {
-      return errors[fieldName as keyof typeof errors] as FieldError | undefined;
-    }
-    return undefined;
+    // if (loginType === 'account' || authType === 'register') {
+    //   return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+    // } else if (loginType === 'email') {
+    //   return errors[fieldName as keyof typeof errors] as FieldError | undefined;
+    // }
+    // return undefined;
+    const errorKey = fieldName as keyof typeof errors;
+    return errors[errorKey] as FieldError | undefined;
   };
 
   // 验证码按钮倒计时管理
@@ -154,10 +156,11 @@ const LoginContent = () => {
     return await emailLogin({ email: data.email, code: data.code });
   };
 
+  // 发送验证码
   const handleSendCode = () => {
     if (countdown > 0) return; // 防止重复点击
 
-    const email = form.getValues('email');
+    const email = form.getValues('email') as string;
 
     if (!email) {
       form.setError('email', { message: '请输入邮箱' });
