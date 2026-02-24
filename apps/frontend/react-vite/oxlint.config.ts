@@ -1,0 +1,29 @@
+import { defineConfig } from 'oxlint';
+import rootConfig from '../../../oxlint.config.ts';
+
+export default defineConfig({
+  extends: [rootConfig],
+  ignorePatterns: ['dist/**/*', 'build/**/*', 'node_modules/**/*', 'src/generated/**/*'],
+  overrides: [
+    {
+      files: ['scripts/**/*'],
+      rules: {
+        'no-console': 'off',
+        'no-undef': 'off',
+      },
+    },
+  ],
+  env: {
+    browser: true,
+    node: true,
+  },
+  rules: {
+    'no-console': 'off',
+    'typescript/no-unused-vars': 'error',
+    'react/prop-types': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    'typescript/no-explicit-any': 'off',
+  },
+});
