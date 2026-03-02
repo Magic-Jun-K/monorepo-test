@@ -31,7 +31,6 @@
     "useUnknownInCatchVariables": true, // 在 catch 子句中的变量使用 unknown 类型
 
     /* 模块解析选项 */
-    // "moduleResolution": "node", // 指定模块解析策略
     "moduleResolution": "bundler", // 指定模块解析策略
     "baseUrl": ".", // 指定基础目录以解析非相对模块名
     "paths": {
