@@ -3,7 +3,7 @@
  */
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { catchError, Observable, tap, throwError } from 'rxjs';
-import { Request, Response } from 'express';
+import { FastifyRequest, FastifyReply } from 'fastify';
 
 import { MonitoringService } from '../monitoring/monitoring.service';
 
@@ -12,17 +12,16 @@ export class PerformanceInterceptor implements NestInterceptor {
   constructor(private readonly monitoringService: MonitoringService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
     const start = Date.now();
 
     return next.handle().pipe(
       tap(() => {
         const duration = Date.now() - start;
-        const status = context.switchToHttp().getResponse<Response>().statusCode;
-        // 添加实际监控逻辑
+        const status = context.switchToHttp().getResponse<FastifyReply>().statusCode;
         this.monitoringService.recordApiLatency({
-          method: request.method,
-          path: request.url,
+          method: request.method ?? 'UNKNOWN',
+          path: request.url ?? 'UNKNOWN',
           duration,
           status,
         });
@@ -37,8 +36,8 @@ export class PerformanceInterceptor implements NestInterceptor {
             ? err.status
             : 500;
         this.monitoringService.recordApiError({
-          method: request.method,
-          path: request.url,
+          method: request.method ?? 'UNKNOWN',
+          path: request.url ?? 'UNKNOWN',
           duration,
           status,
         });
