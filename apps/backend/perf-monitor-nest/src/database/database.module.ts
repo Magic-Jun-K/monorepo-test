@@ -3,26 +3,30 @@
  */
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+// import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 
-import { InfluxModule } from './influx/influx.module';
+import { ClickHouseModule } from './clickhouse/clickhouse.module';
 import { RedisCacheModule } from './redis/redis.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(), // 确保配置模块已加载
+    ConfigModule.forRoot({
+      isGlobal: true, // 设置为全局模块
+      envFilePath: ['.env.local'],
+    }), // 确保配置模块已加载
 
-    // 时序数据库 (InfluxDB)
-    InfluxModule.registerAsync({
+    // 时序数据库 (ClickHouse)
+    ClickHouseModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        url: config.get<string>('INFLUX_URL')!,
-        token: config.get<string>('INFLUX_TOKEN')!,
-        org: config.get<string>('INFLUX_ORG')!,
-        bucket: config.get<string>('INFLUX_BUCKET_PERF')!,
+        host: config.get<string>('CLICKHOUSE_HOST', 'http://localhost'),
+        port: config.get<number>('CLICKHOUSE_PORT', 8123),
+        username: config.get<string>('CLICKHOUSE_USER', 'admin'),
+        password: config.get<string>('CLICKHOUSE_PASSWORD', 'test123'),
+        database: config.get<string>('CLICKHOUSE_DB', 'perf_monitor'),
       }),
     }),
 
@@ -44,26 +48,26 @@ import { RedisCacheModule } from './redis/redis.module';
     }),
 
     // PostgreSQL (元数据)
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('PG_HOST')!,
-        port: config.get<number>('PG_PORT')!,
-        username: config.get<string>('PG_USER')!,
-        password: config.get<string>('PG_PASSWORD')!,
-        database: config.get<string>('PG_DB_META')!,
-        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
-        extra: {
-          max: 100, // 连接池最大连接数
-          connectionTimeoutMillis: 5000, // 连接超时时间
-        },
-      }),
-    }),
+    // TypeOrmModule.forRootAsync({
+    //   imports: [ConfigModule],
+    //   inject: [ConfigService],
+    //   useFactory: (config: ConfigService) => ({
+    //     type: 'postgres',
+    //     host: config.get<string>('PG_HOST')!,
+    //     port: config.get<number>('PG_PORT')!,
+    //     username: config.get<string>('PG_USER')!,
+    //     password: config.get<string>('PG_PASSWORD')!,
+    //     database: config.get<string>('PG_DB_META')!,
+    //     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+    //     synchronize: config.get<string>('NODE_ENV') !== 'production',
+    //     extra: {
+    //       max: 100, // 连接池最大连接数
+    //       connectionTimeoutMillis: 5000, // 连接超时时间
+    //     },
+    //   }),
+    // }),
     RedisCacheModule,
   ],
-  exports: [InfluxModule, RedisCacheModule],
+  exports: [ClickHouseModule, RedisCacheModule],
 })
 export class DatabaseModule {}

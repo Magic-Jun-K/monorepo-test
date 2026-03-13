@@ -2,7 +2,7 @@
  * @description 报警模块 (alert) - 报警规则配置
  */
 import { Injectable } from '@nestjs/common';
-import { InfluxService } from '../../database/influx/influx.service';
+import { ClickHouseService } from '../../database/clickhouse/clickhouse.service';
 
 import { PerformanceDTO } from '../collector/dto/performance.dto';
 
@@ -25,7 +25,7 @@ interface AlertRule {
 export class AlertService {
   private alertRules = new Map<string, AlertRule>();
 
-  constructor(private readonly influxService: InfluxService) {
+  constructor(private readonly clickhouseService: ClickHouseService) {
     // 注册报警规则
     this.registerRule('lcp', {
       threshold: 2500,
@@ -34,18 +34,26 @@ export class AlertService {
     });
   }
 
+  /**
+   * 注册报警规则
+   * @param metric 指标名称
+   * @param rule 报警规则
+   */
   registerRule(metric: string, rule: AlertRule) {
     this.alertRules.set(metric, rule);
   }
 
+  /**
+   * 检查LCP指标的报警规则
+   * @param data 性能数据
+   */
   async checkLCPAlert(data: PerformanceDTO) {
     const rule = this.alertRules.get('lcp');
-    if (!rule) return;
+    if (!rule || !data.lcp) return;
 
-    // 检查过去5分钟内LCP超标次数
     const count = await this.getViolationCount(
       'lcp',
-      data.project,
+      data.projectId,
       data.url,
       rule.threshold,
       rule.window,
@@ -55,7 +63,7 @@ export class AlertService {
       this.triggerAlert({
         type: 'performance',
         metric: 'lcp',
-        project: data.project,
+        project: data.projectId,
         url: data.url,
         value: data.lcp,
         threshold: rule.threshold,
@@ -63,7 +71,15 @@ export class AlertService {
     }
   }
 
-  // 实现实际的查询逻辑来获取违规次数
+  /**
+   * 获取指标在指定时间窗口内的违规次数
+   * @param metric 指标名称
+   * @param project 项目ID
+   * @param url URL
+   * @param threshold 阈值
+   * @param window 时间窗口
+   * @returns 违规次数
+   */
   private async getViolationCount(
     metric: string,
     project: string,
@@ -71,18 +87,21 @@ export class AlertService {
     threshold: number,
     window: string,
   ): Promise<number> {
-    // 构建查询语句
     const query = `
-      SELECT COUNT(*) AS count
+      SELECT count() AS count
       FROM web_perf
-      WHERE project = '${project}'
-        AND url = '${url}'
-        AND ${metric} > ${threshold}
-        AND time > now() - ${window}
+      WHERE project_id = {project:String}
+        AND url = {url:String}
+        AND ${metric} > {threshold:Float32}
+        AND timestamp >= now() - INTERVAL ${window}
     `;
 
     try {
-      const results = await this.influxService.query<{ count: number }>(query);
+      const results = await this.clickhouseService.query<{ count: number }>(query, {
+        project,
+        url,
+        threshold,
+      });
       return results.length > 0 ? results[0].count : 0;
     } catch (error) {
       console.error('Error querying violation count:', error);
@@ -90,9 +109,11 @@ export class AlertService {
     }
   }
 
-  // 实现定期检查逻辑
+  /**
+   * 定期检查所有报警规则
+   */
   async runPeriodicChecks(): Promise<void> {
-    console.log('Running periodic alert checks...');
+    console.warn('Running periodic alert checks...');
     // 这里应该实现定期检查逻辑
     // 例如，查询最近一段时间内的性能数据并检查是否触发报警
 
@@ -102,24 +123,34 @@ export class AlertService {
     });
   }
 
+  /**
+   * 触发报警
+   * @param alert 报警信息
+   */
   private triggerAlert(alert: AlertPayload) {
     // 发送邮件/钉钉通知
     // 写入报警日志
-    console.log('Alert triggered:', alert);
+    console.warn('Alert triggered:', alert);
 
     // 这里应该实现实际的通知逻辑
     // 例如发送邮件、短信或调用 webhook
   }
 
-  // 添加新的报警检查方法
+  /**
+   * 检查指定指标的报警规则
+   * @param metric 指标名称
+   * @param data 性能数据
+   */
   async checkMetricAlert(metric: string, data: PerformanceDTO) {
     const rule = this.alertRules.get(metric);
     if (!rule) return;
 
-    // 检查指定时间窗口内指标超标次数
+    const metricValue = data[metric as keyof PerformanceDTO];
+    if (typeof metricValue !== 'number') return;
+
     const count = await this.getViolationCount(
       metric,
-      data.project,
+      data.projectId,
       data.url,
       rule.threshold,
       rule.window,
@@ -129,15 +160,18 @@ export class AlertService {
       this.triggerAlert({
         type: 'performance',
         metric: metric,
-        project: data.project,
+        project: data.projectId,
         url: data.url,
-        value: data[metric as keyof PerformanceDTO] as number,
+        value: metricValue,
         threshold: rule.threshold,
       });
     }
   }
 
-  // 添加获取所有报警规则的方法
+  /**
+   * 获取所有报警规则
+   * @returns 所有报警规则的记录
+   */
   getAllRules(): Record<string, AlertRule> {
     const rules: Record<string, AlertRule> = {};
     this.alertRules.forEach((value, key) => {
@@ -146,7 +180,12 @@ export class AlertService {
     return rules;
   }
 
-  // 添加更新报警规则的方法
+  /**
+   * 更新指定指标的报警规则
+   * @param metric 指标名称
+   * @param rule 新的报警规则
+   * @returns 是否更新成功
+   */
   updateRule(metric: string, rule: AlertRule): boolean {
     if (this.alertRules.has(metric)) {
       this.alertRules.set(metric, rule);
@@ -155,7 +194,11 @@ export class AlertService {
     return false;
   }
 
-  // 添加删除报警规则的方法
+  /**
+   * 删除指定指标的报警规则
+   * @param metric 指标名称
+   * @returns 是否删除成功
+   */
   removeRule(metric: string): boolean {
     return this.alertRules.delete(metric);
   }
