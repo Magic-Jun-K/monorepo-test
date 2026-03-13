@@ -1,36 +1,33 @@
 services:
-  eggshell-bmap-postgresql:
-    image: bitnami/postgresql:latest
-    container_name: eggshell-bmap-postgresql
+  eggshell-postgresql:
+    image: postgres:18-alpine
+    container_name: eggshell-postgresql
     ports:
       - '5432:5432'
     environment:
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=test123
-      - POSTGRESQL_DATABASE=bmap-nest
-      # 添加以下配置使PostgreSQL监听所有地址
-      - POSTGRESQL_POSTGRES_PASSWORD=test123
-      - POSTGRESQL_LISTEN_ADDRESSES=*
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=test123
+      - POSTGRES_DB=eggshell-nest
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      eggshell-bmap-network:
+      eggshell-network:
         aliases:
           - localhost
           - 127.0.0.1
 
   # 添加 MongoDB 服务 (内存优化配置)
-  eggshell-bmap-mongodb:
+  eggshell-mongodb:
     image: mongo:8.0
-    container_name: eggshell-bmap-mongodb
+    container_name: eggshell-mongodb
     ports:
       - '27017:27017'
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_ROOT_USERNAME=mongodb
+      - MONGO_INITDB_ROOT_PASSWORD=mongodb123
     # volumes:
     #   - ../mongodb_data:/data/db
     command: >
@@ -51,33 +48,14 @@ services:
         reservations:
           memory: 256M
     networks:
-      eggshell-bmap-network:
+      eggshell-network:
         aliases:
           - localhost
           - 127.0.0.1
-    
-  # Redis 缓存服务
-  eggshell-bmap-redis:
-    container_name: eggshell-bmap-redis
-    image: redis:8-alpine
-    environment:
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=test123
-    # volumes:
-    #   - redis_data:/data
-    ports:
-      - '6379:6379'
-    restart: always
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - eggshell-bmap-network
 
 networks:
-  eggshell-bmap-network:
-    driver: bridge
+  eggshell-network:
+    external: true
+    name: eggshell-network
 
-# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=bmap-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
+# 单行命令docker run -d --name eggshell-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=eggshell-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest

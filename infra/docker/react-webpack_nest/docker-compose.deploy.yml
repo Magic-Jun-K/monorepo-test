@@ -3,44 +3,44 @@ include:
 
 services:
   # NestJS 后端服务
-  eggshell-bmap-backend:
+  eggshell-backend:
     # 容器名称
-    container_name: eggshell-bmap-backend
+    container_name: eggshell-backend
     build:
       # 构建上下文路径
       context: ../.. # 指向项目根目录
       # Dockerfile 路径
-      dockerfile: apps/backend/bmap-nest/Dockerfile
-    image: bmap-nest:latest # 添加小写镜像名称
+      dockerfile: apps/backend/eggshell-nest/Dockerfile
+    image: eggshell-nest:latest # 添加小写镜像名称
     ports:
       - '7000:7000'
     environment:
       - NODE_ENV=production
       # 数据库连接配置
-      - DATABASE_HOST=eggshell-bmap-postgresql
+      - DATABASE_HOST=eggshell-postgresql
       - DATABASE_PORT=5432
       - DATABASE_USERNAME=postgres
       - DATABASE_PASSWORD=test123
-      - DATABASE_NAME=bmap-nest
+      - DATABASE_NAME=eggshell-nest
     # 添加重启策略，确保容器不会因错误而停止
     restart: always
     volumes:
-      - ../apps/backend/bmap-nest/public:/app/public # 挂载公共资源目录
-      - ../apps/backend/bmap-nest/upload:/app/upload # 挂载上传文件目录
+      - ../apps/backend/eggshell-nest/public:/app/public # 挂载公共资源目录
+      - ../apps/backend/eggshell-nest/upload:/app/upload # 挂载上传文件目录
     depends_on:
-      eggshell-bmap-postgresql:
+      eggshell-postgresql:
         # 依赖于 PostgreSQL 服务，且要求其健康检查
         condition: service_healthy
     networks:
-      - eggshell-bmap-network
+      - eggshell-network
     # 添加额外主机映射
     extra_hosts:
       - "localhost:172.17.0.1"
       - "127.0.0.1:172.17.0.1"
 
   # React 前端服务
-  eggshell-bmap-frontend:
-    container_name: eggshell-bmap-frontend
+  eggshell-frontend:
+    container_name: eggshell-frontend
     build:
       context: ../.. # 指向项目根目录
       dockerfile: apps/frontend/react-webpack/Dockerfile
@@ -49,10 +49,10 @@ services:
       - '8080:80'
     depends_on:
       # 依赖于后端服务
-      - eggshell-bmap-backend
+      - eggshell-backend
     networks:
-      - eggshell-bmap-network
+      - eggshell-network
 
 networks:
-  eggshell-bmap-network:
+  eggshell-network:
     driver: bridge

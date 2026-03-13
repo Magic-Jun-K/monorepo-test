@@ -1,0 +1,29 @@
+services:
+  # 搜索引擎：用于错误日志的全文检索和聚合
+  eggshell-elasticsearch:
+    image: elasticsearch:8.19.10
+    container_name: perf-monitor-elasticsearch
+    ports:
+      - '9200:9200'
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.authc.api_key.enabled=true
+      - ELASTIC_PASSWORD=changeme
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+volumes:
+  elasticsearch-data:
+
+networks:
+  eggshell-network:
+    external: true
+    name: eggshell-network

@@ -1,0 +1,26 @@
+services:
+  # Redis 缓存服务
+  eggshell-redis:
+    container_name: eggshell-redis
+    image: redis:8-alpine
+    command: redis-server /etc/redis/redis.conf --aclfile /etc/redis/users.acl
+    volumes:
+      - ./users.acl:/etc/redis/users.acl
+      - ./redis.conf:/etc/redis/redis.conf
+    environment:
+      - REDIS_PORT=6379
+    ports:
+      - '6379:6379'
+    restart: always
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eggshell-network
+
+networks:
+  eggshell-network:
+    external: true
+    name: eggshell-network

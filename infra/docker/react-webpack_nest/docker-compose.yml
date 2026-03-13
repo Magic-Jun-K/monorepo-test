@@ -1,0 +1,6 @@
+include:
+  - ./docker-compose.db.yml
+  - ./docker-compose.redis.yml
+  - ./docker-compose.kafka.yml
+  - ./docker-compose.elasticsearch.yml
+  - ./docker-compose.clickhouse.yml
