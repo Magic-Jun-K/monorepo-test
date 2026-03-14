@@ -15,7 +15,7 @@ export const loginAccountSchema = z.object({
 // 邮箱登录校验规则
 export const loginEmailSchema = z.object({
   mode: z.literal('email'),
-  email: z.string().email('请输入有效的邮箱地址'),
+  email: z.email('请输入有效的邮箱地址'),
   code: z.string().length(6, '验证码必须为6位数字'),
 });
 
@@ -24,7 +24,7 @@ export const registerSchema = z.object({
   mode: z.literal('register'),
   username: z.string().min(2, '用户名至少2个字符'),
   // phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
-  // email: z.string().email('请输入有效的邮箱地址'),
+  // email: z.email('请输入有效的邮箱地址'),
   password: z.string().min(6, '密码至少6个字符'),
 });
 

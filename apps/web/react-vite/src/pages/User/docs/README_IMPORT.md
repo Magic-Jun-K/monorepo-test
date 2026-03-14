@@ -146,6 +146,6 @@ zhaoliu
 ## 相关文件
 
 - 导入组件：`/src/pages/User/components/ImportUserModal/index.tsx`
-- 后端服务：`/apps/backend/bmap-nest/src/module/user/user.service.ts`
-- 用户实体：`/apps/backend/bmap-nest/src/entities/user.entity.ts`
+- 后端服务：`/apps/backend/eggshell-nest/src/module/user/user.service.ts`
+- 用户实体：`/apps/backend/eggshell-nest/src/entities/user.entity.ts`
 - 详细说明：`USER_IMPORT_TEMPLATE.md`
