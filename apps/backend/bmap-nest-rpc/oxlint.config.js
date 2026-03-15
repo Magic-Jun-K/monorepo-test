@@ -1,50 +1,50 @@
-import { defineConfig } from 'oxlint';
-import rootConfig from '../../oxlint.config.ts';
+// import { defineConfig } from 'oxlint';
+// import rootConfig from '../../oxlint.config.ts';
 
-module.exports = defineConfig({
-  extends: [rootConfig],
-  env: {
-    node: true,
-    jest: true,
-  },
-  globals: {
-    process: 'readonly',
-    console: 'readonly',
-    __dirname: 'readonly',
-    Buffer: 'readonly',
-    setTimeout: 'readonly',
-    clearTimeout: 'readonly',
-  },
-  ignorePatterns: [
-    'dist/**/*',
-    'build/**/*',
-    'node_modules/**/*',
-    '.eslintrc.js',
-    'src/generated/**/*',
-  ],
-  overrides: [
-    {
-      files: ['test/**/*.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
-      globals: {
-        describe: 'readonly',
-        it: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        expect: 'readonly',
-        jest: 'readonly',
-      },
-    },
-    {
-      files: ['src/test-features.ts', 'src/test-grpc.ts', 'src/scripts/**/*.ts'],
-      rules: {
-        'no-console': 'off',
-      },
-    },
-  ],
-  rules: {
-    'no-console': 'warn',
-    'typescript/no-unused-vars': 'error',
-    'typescript/no-explicit-any': 'off',
-    'typescript/no-floating-promises': 'warn',
-  },
-});
+// module.exports = defineConfig({
+//   extends: [rootConfig],
+//   env: {
+//     node: true,
+//     jest: true,
+//   },
+//   globals: {
+//     process: 'readonly',
+//     console: 'readonly',
+//     __dirname: 'readonly',
+//     Buffer: 'readonly',
+//     setTimeout: 'readonly',
+//     clearTimeout: 'readonly',
+//   },
+//   ignorePatterns: [
+//     'dist/**/*',
+//     'build/**/*',
+//     'node_modules/**/*',
+//     '.eslintrc.js',
+//     'src/generated/**/*',
+//   ],
+//   overrides: [
+//     {
+//       files: ['test/**/*.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
+//       globals: {
+//         describe: 'readonly',
+//         it: 'readonly',
+//         beforeEach: 'readonly',
+//         afterEach: 'readonly',
+//         expect: 'readonly',
+//         jest: 'readonly',
+//       },
+//     },
+//     {
+//       files: ['src/test-features.ts', 'src/test-grpc.ts', 'src/scripts/**/*.ts'],
+//       rules: {
+//         'no-console': 'off',
+//       },
+//     },
+//   ],
+//   rules: {
+//     'no-console': 'warn',
+//     'typescript/no-unused-vars': 'error',
+//     'typescript/no-explicit-any': 'off',
+//     'typescript/no-floating-promises': 'warn',
+//   },
+// });
