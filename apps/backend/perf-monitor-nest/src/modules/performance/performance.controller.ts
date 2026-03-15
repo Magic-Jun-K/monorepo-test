@@ -3,22 +3,22 @@
  */
 import { Controller, Post, Body, Get, Query, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
-import { FilterQuery } from 'mongoose';
 
 import { PerformanceService } from './performance.service';
 import { PerformanceDataDto } from './dto/performance-data.dto';
 import { ReportPerformanceSchema } from './dto/report.dto';
-import { PerformanceDocument } from './performance.schema';
 
 @ApiTags('Performance')
-@Controller('v1/ingest/performance')
+@Controller({
+  path: 'ingest/performance',
+  version: '1',
+})
 export class PerformanceController {
   constructor(private readonly performanceService: PerformanceService) {}
 
   @Post()
   @ApiBody({ type: [PerformanceDataDto] })
   async ingestPerformanceData(@Body() data: PerformanceDataDto[]) {
-    // 异步处理，立即返回202响应
     await this.performanceService.processBatch(data);
     return { status: 'accepted' };
   }
@@ -36,13 +36,12 @@ export class PerformanceController {
         success: false,
       });
     }
-    // result.data 就是校验后的数据
     await this.performanceService.handleReport(result.data);
     return { success: true };
   }
 
   @Get('list')
-  async list(@Query() query: FilterQuery<PerformanceDocument>) {
+  async list(@Query() query: Record<string, unknown>) {
     return this.performanceService.queryPerformance(query);
   }
 }

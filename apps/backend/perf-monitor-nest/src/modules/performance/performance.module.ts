@@ -12,7 +12,7 @@ import { Performance, PerformanceSchema } from './performance.schema';
   imports: [
     DatabaseModule,
     MongooseModule.forFeature([{ name: Performance.name, schema: PerformanceSchema }]),
-    BullModule.registerQueue({ name: 'performance-queue' }),
+    BullModule.registerQueue({ name: 'performance' }),
   ],
   controllers: [PerformanceController],
   providers: [PerformanceService],
