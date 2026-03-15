@@ -3,6 +3,7 @@
  */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { IResult } from 'ua-parser-js';
 
 @Schema({ timestamps: true, autoIndex: true })
 export class ErrorLog extends Document {
@@ -13,7 +14,7 @@ export class ErrorLog extends Document {
   url: string;
 
   @Prop({ type: Object })
-  userAgent: Record<string, unknown>;
+  userAgent: IResult;
 
   @Prop()
   ip: string;

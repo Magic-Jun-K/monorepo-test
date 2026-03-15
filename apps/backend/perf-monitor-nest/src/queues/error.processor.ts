@@ -1,5 +1,6 @@
 import { InjectQueue, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bullmq';
+import { UAParser, IResult } from 'ua-parser-js';
 
 import { ErrorLogService } from '../modules/error-log/error-log.service';
 
@@ -9,7 +10,7 @@ interface ErrorLogEntry {
   stackTrace?: string;
   projectId?: string;
   url?: string;
-  userAgent?: Record<string, unknown>;
+  userAgent?: IResult | string;
   ip?: string;
   errorData?: {
     message: string;
@@ -30,17 +31,28 @@ export class ErrorProcessor {
   ) {}
 
   async process(job: Job<ErrorLogEntry[]>) {
-    const transformed = job.data.map((entry) => ({
-      message: entry.errorMessage ?? '',
-      stack: entry.stackTrace ?? '',
-      timestamp: new Date(),
-      projectId: entry.projectId ?? '',
-      url: entry.url ?? '',
-      userAgent: entry.userAgent ?? {},
-      ip: entry.ip ?? '',
-      errorData: entry.errorData ?? undefined, // 改为 undefined 而不是 null
-      tags: Array.isArray(entry.tags) ? entry.tags : [],
-    }));
+    const transformed = job.data.map((entry) => {
+      let parsedUserAgent: IResult | undefined;
+      if (entry.userAgent) {
+        if (typeof entry.userAgent === 'string') {
+          parsedUserAgent = new UAParser(entry.userAgent).getResult();
+        } else {
+          parsedUserAgent = entry.userAgent;
+        }
+      }
+
+      return {
+        message: entry.errorMessage ?? '',
+        stack: entry.stackTrace ?? '',
+        timestamp: new Date(),
+        projectId: entry.projectId ?? '',
+        url: entry.url ?? '',
+        userAgent: parsedUserAgent,
+        ip: entry.ip ?? '',
+        errorData: entry.errorData ?? undefined,
+        tags: Array.isArray(entry.tags) ? entry.tags : [],
+      };
+    });
     await this.errorLogService.bulkInsert(transformed);
   }
 }
