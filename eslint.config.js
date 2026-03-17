@@ -25,6 +25,9 @@ export default defineConfig(
       'packages/**/*/*.config.*',
       'packages/**/*/uno.config.*',
       'packages/ui/tailwind/**/*',
+      'apps/api/server-koa/**/*',
+      'apps/backend/perf-monitor-nest/**/*',
+      'apps/frontend/react-webpack/**/*',
     ],
     // 自定义规则配置
     rules: {
@@ -41,11 +44,9 @@ export default defineConfig(
         // ts 项目的 tsconfig 文件位置
         project: [
           './tsconfig.json',
-          './apps/backend/eggshell-nest/tsconfig.json',
-          './apps/backend/perf-monitor-nest/tsconfig.json',
-          './apps/frontend/react-webpack/tsconfig.json',
+          './apps/api/eggshell-nest/tsconfig.json',
           './apps/frontend/react-vite/tsconfig.json',
-          './apps/frontend/react-vite-tw/tsconfig.json',
+          './apps/web/react-vite-tw/tsconfig.json',
           './apps/web/react-webpack-ie/tsconfig.json',
           './apps/web/bmap-next-15/tsconfig.json',
         ],

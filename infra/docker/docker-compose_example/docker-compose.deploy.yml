@@ -1,17 +1,17 @@
 include: docker-compose.yml
 
 services:
-  eggshell-baiduMap-server:
+  eggshell-server:
     image: bitnami/node:latest
-    container_name: eggshell-baiduMap-server
+    container_name: eggshell-server
     ports:
       - '7000:7000'
     environment:
       - NODE_ENV=production
     volumes:
-      - ../apps/backend/bmap-nest/dist:/app/backend/bmap-nest/dist
-      - ../apps/backend/bmap-nest/package.json:/app/backend/bmap-nest/package.json
-      - ../apps/backend/bmap-nest/pnpm-lock.yaml:/app/backend/bmap-nest/pnpm-lock.yaml # 必须挂载lock文件
+      - ../apps/api/eggshell-nest/dist:/app/api/eggshell-nest/dist
+      - ../apps/api/eggshell-nest/package.json:/app/api/eggshell-nest/package.json
+      - ../apps/api/eggshell-nest/pnpm-lock.yaml:/app/api/eggshell-nest/pnpm-lock.yaml # 必须挂载lock文件
     depends_on:
-      - eggshell-baiduMap-postgresql
+      - eggshell-postgresql
     command: sh -c "npm install -g pnpm && pnpm install --prod && node dist/main.js"

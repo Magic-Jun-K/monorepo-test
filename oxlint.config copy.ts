@@ -67,7 +67,7 @@ export default defineConfig({
         './apps/frontend/react-webpack/tsconfig.json',
         './apps/frontend/react-vite/tsconfig.json',
         './apps/frontend/react-vite-tw/tsconfig.json',
-        './apps/backend/eggshell-nest/tsconfig.json',
+        './apps/api/eggshell-nest/tsconfig.json',
         './packages/ui/tailwind/tsconfig.app.json',
       ],
     },

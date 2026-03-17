@@ -1,19 +1,19 @@
 services:
-  eggshell-baiduMap-postgresql:
+  eggshell-postgresql:
     image: bitnami/postgresql:latest
-    container_name: eggshell-baiduMap-postgresql
+    container_name: eggshell-postgresql
     ports:
       - "5432:5432"
     environment:
       - POSTGRESQL_USERNAME=postgres
       - POSTGRESQL_PASSWORD=test123
-      - POSTGRESQL_DATABASE=bmap-nest
+      - POSTGRESQL_DATABASE=eggshell-nest
     volumes:
       - ./postgresql_data:/bitnami/postgresql
 
 networks:
   default:
-    name: eggshell-baiduMap-network
+    name: eggshell-network
     driver: bridge
 
-# 单行命令docker run -d --name eggshell-baiduMap-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=bmap-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest
+# 单行命令docker run -d --name eggshell-postgresql -p 5432:5432 -e POSTGRESQL_USERNAME=postgres -e POSTGRESQL_PASSWORD=test123 -e POSTGRESQL_DATABASE=eggshell-nest -v ./postgresql:/bitnami/postgresql bitnami/postgresql:latest

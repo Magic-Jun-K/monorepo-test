@@ -1,0 +1,152 @@
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { Strategy } from 'passport-local';
+import { Request } from 'express';
+
+import { AuthService } from '../auth.service';
+import { LoginAttemptsService } from '../login-attempts.service';
+import { UserEntity } from '../../user/entities/user.entity';
+
+@Injectable()
+export class LocalStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(LocalStrategy.name);
+
+  constructor(
+    private readonly authService: AuthService,
+    private readonly loginAttemptsService: LoginAttemptsService,
+  ) {
+    super({
+      passReqToCallback: true, // 允许在validate方法中访问请求对象
+    });
+  }
+
+  /**
+   * 验证用户名和密码
+   * @param username 用户名
+   * @param password 密码
+   * @returns 用户对象
+   */
+  async validate(
+    request: Request, // 使用 @Req() 装饰器获取请求对象
+    username: string,
+    password: string,
+  ): Promise<Omit<UserEntity, 'password'> | null> {
+    // 获取客户端IP地址
+    const clientIp = this.getClientIp(request);
+
+    // 日志输出
+    // const displayIp =
+    //   clientIp === '::1'
+    //     ? 'localhost (IPv6)'
+    //     : clientIp === '127.0.0.1'
+    //       ? 'localhost (IPv4)'
+    //       : clientIp;
+    // console.log('客户端IP地址:', displayIp);
+
+    // 检查是否被锁定（基于用户名）
+    if (await this.loginAttemptsService.isBlocked(username)) {
+      throw new HttpException(
+        {
+          message: '账户已被临时锁定，请15分钟后重试',
+          code: 'ACCOUNT_LOCKED',
+          error: 'Too Many Requests',
+        },
+        HttpStatus.TOO_MANY_REQUESTS, // 429状态码
+      );
+    }
+
+    // 检查是否被锁定（基于IP地址）
+    if (clientIp && (await this.loginAttemptsService.isBlocked(`ip:${clientIp}`))) {
+      throw new HttpException(
+        {
+          message: '登录尝试次数过多，请15分钟后重试',
+          code: 'ACCOUNT_LOCKED',
+          error: 'Too Many Requests',
+        },
+        HttpStatus.TOO_MANY_REQUESTS, // 429状态码
+      );
+    }
+
+    let user: UserEntity | null;
+    try {
+      user = await this.authService.validateUser(username);
+      // console.log('测试local.strategy.ts validate user', user);
+    } catch (error) {
+      // 处理邮箱注册用户尝试账号密码登录的情况
+      if (
+        error instanceof UnauthorizedException &&
+        error.message.includes('只能通过邮箱验证码登录')
+      ) {
+        throw new UnauthorizedException({
+          message: '该账户只能通过邮箱验证码登录，请使用邮箱登录方式',
+          error: 'LOGIN_METHOD_NOT_ALLOWED',
+          remainingAttempts: 0,
+        });
+      }
+      throw error;
+    }
+
+    if (!user) {
+      // 记录失败尝试
+      await this.loginAttemptsService.recordFailedAttempt(username);
+      if (clientIp) {
+        await this.loginAttemptsService.recordFailedAttempt(`ip:${clientIp}`);
+      }
+
+      // 获取剩余尝试次数并添加到错误信息中
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
+      throw new UnauthorizedException({
+        message: '认证失败',
+        error: '无效凭证',
+        remainingAttempts,
+      });
+    }
+
+    // 验证密码
+    const isPasswordValid = await this.authService.verifyPasswordHash(user.password, password);
+    if (!isPasswordValid) {
+      // 记录失败尝试
+      await this.loginAttemptsService.recordFailedAttempt(username);
+      if (clientIp) {
+        await this.loginAttemptsService.recordFailedAttempt(`ip:${clientIp}`);
+      }
+
+      // 获取剩余尝试次数并添加到错误信息中
+      const remainingAttempts = await this.loginAttemptsService.getRemainingAttempts(username);
+      throw new UnauthorizedException({
+        message: '密码错误',
+        error: '无效凭证',
+        remainingAttempts, // 确保这个字段被正确返回
+      });
+    }
+
+    // 登录成功，重置尝试次数
+    await this.loginAttemptsService.resetAttempts(username);
+    if (clientIp) {
+      await this.loginAttemptsService.resetAttempts(`ip:${clientIp}`);
+    }
+
+    // 只返回需要的用户信息，不包含密码
+    const { password: _, ...userWithoutPassword } = user;
+    this.logger.log('测试local.strategy.ts validate password', _);
+    return userWithoutPassword;
+  }
+
+  // 客户端IP获取方法
+  private getClientIp(request: Request): string | undefined {
+    return (
+      request.ip ||
+      request.socket.remoteAddress ||
+      // 如果使用了代理，可能需要检查这些头部
+      (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      (request.headers['x-real-ip'] as string) ||
+      undefined
+    );
+  }
+}
