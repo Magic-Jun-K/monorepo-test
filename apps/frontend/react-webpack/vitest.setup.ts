@@ -35,6 +35,7 @@ global.IntersectionObserver = class IntersectionObserver {
   root: Element | Document | null = null;
   rootMargin: string = '0px';
   thresholds: ReadonlyArray<number> = [0];
+  scrollMargin: string = '0px';
 
   constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
     void callback; // 明确标记参数被有意忽略
