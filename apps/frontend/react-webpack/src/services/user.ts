@@ -2,6 +2,37 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { request } from '@/utils/httpClient';
 
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+export interface UserProfileData {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+  roles: unknown[];
+  profile: {
+    avatar?: string;
+    nickname?: string;
+    bio?: string;
+    gender?: string;
+  };
+  hasPassword: boolean;
+  oAuths: Array<{
+    id: number;
+    provider: string;
+    providerId: string;
+    createdAt: string;
+  }>;
+}
+
+export interface AvatarUploadData {
+  url: string;
+}
+
 /**
  * 获取用户列表
  * @param params 
@@ -71,6 +102,75 @@ export async function updateUser(id: number, data: unknown) {
  */
 export async function deleteUser(id: number) {
   return request.delete(`/users/${id}`);
+}
+
+/**
+ * 获取当前登录用户完整信息
+ */
+export async function fetchProfile() {
+  return request.get('/users/profile');
+}
+
+/**
+ * 获取登录方式
+ */
+export async function fetchAuthMethods() {
+  return request.get('/users/auth-methods');
+}
+
+/**
+ * 绑定登录方式
+ */
+export async function bindAuth(data: unknown) {
+  return request.post('/users/bind-auth', data);
+}
+
+/**
+ * 解绑登录方式
+ */
+export async function unbindAuth(data: { provider: string }) {
+  return request.delete('/users/unbind-auth', { data });
+}
+
+/**
+ * 获取个人资料
+ */
+export async function getProfile() {
+  return request.get<ApiResponse<UserProfileData>>('/users/profile');
+}
+
+/**
+ * 更新个人资料
+ * @param data 
+ */
+export async function updateProfile(data: unknown) {
+  return request.put<ApiResponse>('/users/profile', data);
+}
+
+/**
+ * 修改密码
+ * @param data 
+ */
+export async function changePassword(data: unknown) {
+  return request.put<ApiResponse>('/users/profile/password', data);
+}
+
+/**
+ * 设置密码
+ * @param data 
+ */
+export async function setPassword(data: unknown) {
+  return request.post<ApiResponse>('/users/profile/password', data);
+}
+
+/**
+ * 上传头像
+ * @param formData 
+ */
+export async function uploadAvatar(formData: FormData) {
+  return request.post<ApiResponse<AvatarUploadData>>('/users/profile/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
 }
 
 // TanStack Query hooks

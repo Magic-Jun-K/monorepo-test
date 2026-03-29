@@ -56,7 +56,14 @@ const routes = [
         <Layout />
       </AuthRoute>
     ),
-    children: generateRoutesFromMenu(),
+    children: [
+      ...generateRoutesFromMenu(),
+      {
+        path: 'user/profile',
+        lazy: () =>
+          import('../pages/User/Profile').then((module) => ({ Component: module.default })),
+      },
+    ],
   },
   {
     path: '/account/login',
