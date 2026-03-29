@@ -140,20 +140,22 @@ jobs:
         run: |
           echo "🔐 Installing ossutil..."
           
-          OSSUTIL_URL="https://gosspublic.alicdn.com/ossutil/ossutil64"
-          curl -s -o /tmp/ossutil64.tar.gz ${OSSUTIL_URL}
+          set -e
           
-          if file /tmp/ossutil64.tar.gz | grep -q "gzip"; then
-            tar -xzf /tmp/ossutil64.tar.gz -C /tmp
-          elif file /tmp/ossutil64.tar.gz | grep -q "ELF"; then
-            mv /tmp/ossutil64.tar.gz /tmp/ossutil
-            chmod +x /tmp/ossutil
-          else
-            curl -s -L -o /tmp/ossutil64.tar.gz "https://github.com/aliyun/ossutil/releases/latest/download/ossutil64.tar.gz"
-            tar -xzf /tmp/ossutil64.tar.gz -C /tmp || mv /tmp/ossutil64.tar.gz /tmp/ossutil && chmod +x /tmp/ossutil
+          OSSUTIL_URL="https://gosspublic.alicdn.com/ossutil/ossutil64"
+          rm -f /tmp/ossutil64.tar.gz /tmp/ossutil
+          
+          echo "Downloading ossutil from Aliyun CDN..."
+          curl -fsSL -o /tmp/ossutil ${OSSUTIL_URL}
+          
+          echo "Verifying ossutil binary..."
+          if ! file /tmp/ossutil | grep -q "ELF"; then
+            echo "Downloaded file is not an ELF binary, trying GitHub releases..."
+            curl -fsSL -o /tmp/ossutil "https://github.com/aliyun/ossutil/releases/download/1.7.21/ossutil64"
           fi
+          
           chmod +x /tmp/ossutil
-
+          
           echo "📝 Configuring ossutil..."
           /tmp/ossutil config \
             --endpoint ${OSS_ENDPOINT} \
