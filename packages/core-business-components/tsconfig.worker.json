@@ -3,7 +3,7 @@
   "include": ["src/**/*.worker.ts"],
   "exclude": ["node_modules", "lib"],
   "compilerOptions": {
-    // "outDir": "src/components/MapCom/worker",
+    "rootDir": "src/components/MapCom/worker",
     "outDir": "lib/worker",
     "declaration": false,
     "module": "ESNext",
