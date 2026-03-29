@@ -139,8 +139,19 @@ jobs:
           OSS_REGION: ${{ secrets.OSS_REGION }}
         run: |
           echo "🔐 Installing ossutil..."
-          curl -s -o /tmp/ossutil64.tar.gz https://gosspublic.alicdn.com/ossutil/ossutil64.tar.gz
-          tar -xzf /tmp/ossutil64.tar.gz -C /tmp
+          
+          OSSUTIL_URL="https://gosspublic.alicdn.com/ossutil/ossutil64"
+          curl -s -o /tmp/ossutil64.tar.gz ${OSSUTIL_URL}
+          
+          if file /tmp/ossutil64.tar.gz | grep -q "gzip"; then
+            tar -xzf /tmp/ossutil64.tar.gz -C /tmp
+          elif file /tmp/ossutil64.tar.gz | grep -q "ELF"; then
+            mv /tmp/ossutil64.tar.gz /tmp/ossutil
+            chmod +x /tmp/ossutil
+          else
+            curl -s -L -o /tmp/ossutil64.tar.gz "https://github.com/aliyun/ossutil/releases/latest/download/ossutil64.tar.gz"
+            tar -xzf /tmp/ossutil64.tar.gz -C /tmp || mv /tmp/ossutil64.tar.gz /tmp/ossutil && chmod +x /tmp/ossutil
+          fi
           chmod +x /tmp/ossutil
 
           echo "📝 Configuring ossutil..."
