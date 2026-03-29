@@ -1,0 +1,76 @@
+name: 前端react-webpack部署流程
+
+on:
+  push:
+    branches: [main, master] # 只在 main 和 master 分支上触发
+    paths:
+      - 'apps/frontend/react-webpack/**' # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
+      - 'packges/**' # 只在 packages 目录下的文件发生变化时触发
+      - '.github/workflows/react-webpack.yml' # 只在该工作流文件发生变化时触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 运行 Common Steps
+      - name: Run Common Steps
+        uses: ./.github/actions/common-steps
+        with:
+          ALIYUN_ACR_REGISTRY: ${{ secrets.ALIYUN_ACR_REGISTRY }}
+          ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      # 构建并推送前端镜像
+      - name: Build and push frontend image(构建并推送前端镜像)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/frontend/react-webpack/Dockerfile
+          push: true
+          # tags: ghcr.io/Magic-Jun-K/react-webpack:latest
+          tags: ${{ secrets.ALIYUN_ACR_REGISTRY }}/eggshell/react-webpack:${{ github.sha }}
+          # 添加构建参数，启用详细日志
+          # VERBOSE=true 启用详细日志
+          build-args: |
+            NODE_ENV=production
+            VERBOSE=true
+
+      # 部署前端到服务器（使用 SSH）
+      - name: Deploy to server(部署前端到服务器)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            # 手动创建目录（如果不存在）
+            mkdir -p /var/www/eggshell
+            cd /var/www/eggshell
+
+            # 登录阿里云 ACR（使用 --password-stdin 避免交互式输入）
+            echo "${{ secrets.ALIYUN_ACR_PASSWORD }}" | docker login -u "${{ secrets.ALIYUN_ACR_USERNAME }}" --password-stdin "${{ secrets.ALIYUN_ACR_REGISTRY }}" && echo "Login successful" || echo "Login failed"
+
+            # 创建 .env 文件
+            echo "ALIYUN_REGISTRY=${{ secrets.ALIYUN_ACR_REGISTRY }}" > .env
+            echo "IMAGE_TAG=${{ github.sha }}" >> .env
+
+            # 打印 .env 文件验证内容
+            cat .env
+
+            # 确保基础设施服务正在运行
+            docker-compose -f docker-compose.infra.yml up -d
+
+            # 查看 compose 配置是否正确解析变量
+            # docker-compose -f docker-compose.react-webpack.yml config
+
+            # 停止现有的前端容器
+            docker-compose -f docker-compose.react-webpack.yml stop eggshell-react-webpack
+            docker-compose -f docker-compose.react-webpack.yml rm -f eggshell-react-webpack
+
+            # 拉取并启动容器
+            docker-compose -f docker-compose.react-webpack.yml pull eggshell-react-webpack
+            docker-compose -f docker-compose.react-webpack.yml up -d eggshell-react-webpack
