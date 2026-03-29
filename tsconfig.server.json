@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0", // 忽略 TypeScript 6.0 中的警告
     /* 基本选项 */
     "target": "ES2022", // 指定 ECMAScript 目标版本
     // "module": "commonjs",

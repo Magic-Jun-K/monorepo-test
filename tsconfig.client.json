@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json", // 继承基础配置
   "compilerOptions": {
+    "ignoreDeprecations": "6.0", // 忽略 TypeScript 6.0 中的警告
     /* 基本选项 */
     "target": "ES2020", // 指定 ECMAScript 目标版本
     "module": "ESNext", // 指定生成的模块格式
@@ -55,11 +56,5 @@
     "**/*.d.ts"
   ],
   // 指定需要排除的文件
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "apps/backend/**/*"
-  ]
+  "exclude": ["node_modules", "dist", "build", "coverage", "apps/backend/**/*"]
 }
