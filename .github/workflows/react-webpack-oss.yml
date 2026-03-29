@@ -1,0 +1,190 @@
+name: 前端react-webpack部署流程-阿里云OSS
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: ''
+  APP_NAME: 'react-webpack'
+  OSS_BUCKET_NAME: 'eggshell-react-webpack'
+  OSS_REGION: 'oss-cn-hangzhou'
+  TURBO_TELEMETRY_DISABLED: 1
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/frontend/react-webpack/**'
+      - 'packages/**'
+      - '.github/workflows/react-webpack-oss.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/frontend/react-webpack/**'
+      - 'packages/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Dependencies
+        run: |
+          pnpm --filter @eggshell/ui-antd build
+          pnpm --filter @eggshell/ui-tailwind build
+          pnpm --filter @eggshell/ui-unocss build
+          pnpm --filter @eggshell/core-business-components build
+          pnpm --filter @eggshell/shared-crypto build
+
+      - name: Type Check
+        run: pnpm --filter @frontend/react-webpack typecheck
+
+      - name: Lint Check
+        run: pnpm --filter @frontend/react-webpack lint
+
+      - name: Unit Tests
+        run: pnpm test:react-webpack -- --coverage
+
+      - name: Build Test
+        run: pnpm build:react-webpack
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/coverage-final.json
+          flags: react-webpack
+          name: codecov-react-webpack-oss
+          fail_ci_if_error: false
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    env:
+      DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Dependencies
+        run: |
+          pnpm --filter @eggshell/ui-antd build
+          pnpm --filter @eggshell/ui-tailwind build
+          pnpm --filter @eggshell/ui-unocss build
+          pnpm --filter @eggshell/core-business-components build
+          pnpm --filter @eggshell/shared-crypto build
+
+      - name: Quality Checks
+        run: |
+          pnpm --filter @frontend/react-webpack typecheck
+          pnpm --filter @frontend/react-webpack lint
+
+      - name: Build Application
+        run: pnpm build:react-webpack
+
+      - name: Configure Aliyun OSS Credentials
+        uses: actions/upload-artifact@v4
+        with:
+          name: oss-credentials
+          path: |
+            ${{ github.workspace }}/apps/frontend/react-webpack/dist
+          retention-days: 1
+
+      - name: Deploy to Aliyun OSS
+        env:
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET_NAME }}
+          OSS_REGION: ${{ secrets.OSS_REGION }}
+        run: |
+          echo "🔐 Installing ossutil..."
+          curl -s -o /tmp/ossutil64.tar.gz https://gosspublic.alicdn.com/ossutil/ossutil64.tar.gz
+          tar -xzf /tmp/ossutil64.tar.gz -C /tmp
+          chmod +x /tmp/ossutil
+
+          echo "📝 Configuring ossutil..."
+          /tmp/ossutil config \
+            --endpoint ${OSS_ENDPOINT} \
+            --access-key-id ${OSS_ACCESS_KEY_ID} \
+            --access-key-secret ${OSS_ACCESS_KEY_SECRET} \
+            --signature-version ECDSA
+
+          echo "📦 Syncing files to OSS..."
+          DIST_DIR="${{ github.workspace }}/apps/frontend/react-webpack/dist"
+          TARGET_PATH="react-webpack/${{ env.DEPLOY_ENV }}/"
+
+          /tmp/ossutil rm -r oss://${OSS_BUCKET}/${TARGET_PATH} --force 2>/dev/null || true
+
+          /tmp/ossutil cp ${DIST_DIR}/ oss://${OSS_BUCKET}/${TARGET_PATH} \
+            --recursive \
+            --force \
+            --disable-crc64 \
+            --md5 \
+            --parallel 10
+
+          echo "✅ Deployment completed!"
+          echo "🌐 URL: https://${OSS_BUCKET}.${OSS_ENDPOINT}/${TARGET_PATH}"
+
+      - name: Verify OSS Deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          OSS_BUCKET="${{ secrets.OSS_BUCKET_NAME }}"
+          OSS_ENDPOINT="${{ secrets.OSS_ENDPOINT }}"
+          TARGET_PATH="react-webpack/${{ env.DEPLOY_ENV }}/"
+
+          if curl -s -o /dev/null -w "%{http_code}" "https://${OSS_BUCKET}.${OSS_ENDPOINT}/${TARGET_PATH}index.html" | grep -q "200"; then
+            echo "✅ Deployment verified successfully!"
+          else
+            echo "⚠️ Warning: Could not verify deployment. Please check manually."
+          fi
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure() && github.event_name == 'push'
+    needs: [build-and-deploy]
+
+    steps:
+      - name: Rollback to Previous Version
+        run: |
+          echo "🔄 Rollback not implemented for OSS. Previous version can be restored from Git."
