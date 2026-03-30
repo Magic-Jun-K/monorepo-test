@@ -4,8 +4,6 @@ env:
   NODE_VERSION: '22'
   PNPM_VERSION: ''
   APP_NAME: 'react-webpack'
-  OSS_BUCKET_NAME: 'eggshell-react-webpack'
-  OSS_REGION: 'oss-cn-hangzhou'
   TURBO_TELEMETRY_DISABLED: 1
 
 on:
@@ -35,7 +33,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-
     steps:
       - uses: actions/checkout@v6
 
@@ -51,7 +48,6 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        # run: pnpm install --frozen-lockfile
         run: pnpm install --no-frozen-lockfile
 
       - name: Build Dependencies
@@ -85,7 +81,6 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
     env:
       DEPLOY_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'production' }}
 
@@ -122,71 +117,109 @@ jobs:
       - name: Build Application
         run: pnpm build:react-webpack
 
-      - name: Configure Aliyun OSS Credentials
-        uses: actions/upload-artifact@v7
-        with:
-          name: oss-credentials
-          path: |
-            ${{ github.workspace }}/apps/frontend/react-webpack/dist
-          retention-days: 1
-
-      - name: Deploy to Aliyun OSS
-        env:
-          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
-          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
-          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
-          OSS_BUCKET: ${{ secrets.OSS_BUCKET_NAME }}
-          OSS_REGION: ${{ secrets.OSS_REGION }}
+      # ========== 安装 ossutil v2 ==========
+      - name: Install ossutil v2
         run: |
-          echo "🔐 Installing ossutil..."
-          
-          set -e
-          
-          echo "Downloading and installing ossutil via official install script..."
-          curl -fsSL https://gosspublic.alicdn.com/ossutil/install.sh | bash
-          
-          echo "📝 Configuring ossutil..."
-          ossutil config \
-            --endpoint ${OSS_ENDPOINT} \
-            --access-key-id ${OSS_ACCESS_KEY_ID} \
-            --access-key-secret ${OSS_ACCESS_KEY_SECRET} \
-            --signature-version ECDSA
+          set -euo pipefail
+          curl -fsSL https://gosspublic.alicdn.com/ossutil/v2-beta/2.0.3-beta.09131200/linux-amd64/ossutil -o /usr/local/bin/ossutil
+          chmod 755 /usr/local/bin/ossutil
+          ossutil --version
 
-          echo "📦 Syncing files to OSS..."
+      - name: Configure ossutil
+        run: |
+          ossutil config set \
+            --endpoint "${{ secrets.OSS_REGION }}.aliyuncs.com" \
+            --access-key-id "${{ secrets.OSS_ACCESS_KEY_ID }}" \
+            --access-key-secret "${{ secrets.OSS_ACCESS_KEY_SECRET }}"
+
+      # ========== 部署到 OSS ==========
+      - name: Deploy to Aliyun OSS
+        run: |
+          set -euo pipefail
+
           DIST_DIR="${{ github.workspace }}/apps/frontend/react-webpack/dist"
-          TARGET_PATH="react-webpack/${{ env.DEPLOY_ENV }}/"
+          OSS_BUCKET="${{ secrets.OSS_BUCKET }}"
+          OSS_REGION="${{ secrets.OSS_REGION }}"
+          TARGET="oss://${OSS_BUCKET}/react-webpack/${{ env.DEPLOY_ENV }}"
 
-          /tmp/ossutil rm -r oss://${OSS_BUCKET}/${TARGET_PATH} --force 2>/dev/null || true
+          echo "🚀 Deploying to ${TARGET}"
 
-          /tmp/ossutil cp ${DIST_DIR}/ oss://${OSS_BUCKET}/${TARGET_PATH} \
+          # Step 1: 上传带 hash 的静态资源（长期缓存）
+          echo "📦 Uploading hashed assets..."
+          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
             --recursive \
             --force \
-            --disable-crc64 \
-            --md5 \
+            --include "*.js" \
+            --include "*.css" \
+            --include "*.png" \
+            --include "*.jpg" \
+            --include "*.jpeg" \
+            --include "*.gif" \
+            --include "*.svg" \
+            --include "*.ico" \
+            --include "*.woff" \
+            --include "*.woff2" \
+            --include "*.ttf" \
+            --include "*.eot" \
+            --include "*.webp" \
+            --include "*.map" \
+            --meta "Cache-Control:public, max-age=31536000, immutable" \
+            --parallel 20
+
+          # Step 2: 上传 HTML（不缓存）
+          echo "📄 Uploading HTML files..."
+          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
+            --recursive \
+            --force \
+            --include "*.html" \
+            --meta "Cache-Control:no-cache, no-store, must-revalidate" \
             --parallel 10
 
+          # Step 3: 上传其他配置文件
+          echo "📋 Uploading config files..."
+          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
+            --recursive \
+            --force \
+            --include "*.json" \
+            --include "*.txt" \
+            --include "*.xml" \
+            --parallel 10
+
+          # Step 4: 清理旧的 hash 文件
+          echo "🧹 Cleaning stale files..."
+          ossutil rm "${TARGET}/" \
+            --recursive \
+            --include "*.js" \
+            --include "*.css" \
+            --include "*.map" \
+            --force 2>/dev/null || true
+
+          # Step 5: 重新同步确保一致性
+          echo "🔄 Final sync..."
+          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
+            --recursive \
+            --force \
+            --parallel 20
+
           echo "✅ Deployment completed!"
-          echo "🌐 URL: https://${OSS_BUCKET}.${OSS_ENDPOINT}/${TARGET_PATH}"
+          echo "🌐 https://${OSS_BUCKET}.${OSS_REGION}.aliyuncs.com/react-webpack/${{ env.DEPLOY_ENV }}/"
 
-      - name: Verify OSS Deployment
+      # ========== 部署验证 ==========
+      - name: Verify Deployment
         run: |
-          echo "🔍 Verifying deployment..."
-          OSS_BUCKET="${{ secrets.OSS_BUCKET_NAME }}"
-          OSS_ENDPOINT="${{ secrets.OSS_ENDPOINT }}"
-          TARGET_PATH="react-webpack/${{ env.DEPLOY_ENV }}/"
+          set -euo pipefail
 
-          if curl -s -o /dev/null -w "%{http_code}" "https://${OSS_BUCKET}.${OSS_ENDPOINT}/${TARGET_PATH}index.html" | grep -q "200"; then
-            echo "✅ Deployment verified successfully!"
+          OSS_BUCKET="${{ secrets.OSS_BUCKET }}"
+          OSS_REGION="${{ secrets.OSS_REGION }}"
+          DEPLOY_URL="https://${OSS_BUCKET}.${OSS_REGION}.aliyuncs.com/react-webpack/${{ env.DEPLOY_ENV }}/index.html"
+
+          echo "🔍 Verifying: ${DEPLOY_URL}"
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${DEPLOY_URL}" || echo "000")
+
+          if [ "${HTTP_CODE}" = "200" ]; then
+            echo "✅ Deployment verified! HTTP ${HTTP_CODE}"
           else
-            echo "⚠️ Warning: Could not verify deployment. Please check manually."
+            echo "⚠️ Verification returned HTTP ${HTTP_CODE}"
+            echo "Please check OSS bucket manually."
           fi
-
-  rollback:
-    runs-on: ubuntu-latest
-    if: failure() && github.event_name == 'push'
-    needs: [build-and-deploy]
-
-    steps:
-      - name: Rollback to Previous Version
-        run: |
-          echo "🔄 Rollback not implemented for OSS. Previous version can be restored from Git."
