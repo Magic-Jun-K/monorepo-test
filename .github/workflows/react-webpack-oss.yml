@@ -169,6 +169,18 @@ jobs:
             exit 1
           fi
 
+          echo "=== Checking build output ==="
+          if [ ! -d "${DIST_DIR}" ]; then
+            echo "ERROR: ${DIST_DIR} does not exist or is not a directory"
+            echo "Listing contents of apps/frontend/react-webpack/:"
+            ls -la "${{ github.workspace }}/apps/frontend/react-webpack/" 2>/dev/null || echo "Directory not found"
+            exit 1
+          fi
+
+          echo "Contents of ${DIST_DIR}:"
+          ls -la "${DIST_DIR}/" | head -20
+          echo "================================"
+
           TARGET="oss://${OSS_BUCKET}/react-webpack/${{ env.DEPLOY_ENV }}"
 
           echo "🚀 Deploying to ${TARGET}"
