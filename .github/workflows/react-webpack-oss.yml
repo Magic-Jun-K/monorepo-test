@@ -136,6 +136,7 @@ jobs:
           cat > ~/.ossutilconfig << EOF
           [Credentials]
               language = EN
+              region = ${{ secrets.OSS_REGION }}
               endpoint = ${{ secrets.OSS_REGION }}.aliyuncs.com
               accessKeyID = ${{ secrets.OSS_ACCESS_KEY_ID }}
               accessKeySecret = ${{ secrets.OSS_ACCESS_KEY_SECRET }}
