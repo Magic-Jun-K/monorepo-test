@@ -127,7 +127,7 @@ jobs:
           chmod +x /tmp/ossutil-2.2.2-linux-amd64/ossutil
           mv /tmp/ossutil-2.2.2-linux-amd64/ossutil ~/bin/ossutil
           export PATH="$HOME/bin:$PATH"
-          ossutil --version
+          ossutil version
 
       - name: Configure ossutil
         run: |
