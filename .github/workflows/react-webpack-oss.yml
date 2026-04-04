@@ -151,6 +151,24 @@ jobs:
           DIST_DIR="${{ github.workspace }}/apps/frontend/react-webpack/dist"
           OSS_BUCKET="${{ secrets.OSS_BUCKET }}"
           OSS_REGION="${{ secrets.OSS_REGION }}"
+
+          echo "=== Deployment Configuration ==="
+          echo "BUCKET: ${OSS_BUCKET}"
+          echo "REGION: ${OSS_REGION}"
+          echo "DIST_DIR: ${DIST_DIR}"
+          echo "DEPLOY_ENV: ${{ env.DEPLOY_ENV }}"
+          echo "================================"
+
+          if [ -z "${OSS_BUCKET}" ]; then
+            echo "ERROR: OSS_BUCKET secret is not set or is empty"
+            exit 1
+          fi
+
+          if [ -z "${OSS_REGION}" ]; then
+            echo "ERROR: OSS_REGION secret is not set or is empty"
+            exit 1
+          fi
+
           TARGET="oss://${OSS_BUCKET}/react-webpack/${{ env.DEPLOY_ENV }}"
 
           echo "🚀 Deploying to ${TARGET}"
