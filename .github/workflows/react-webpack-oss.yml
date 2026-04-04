@@ -187,7 +187,7 @@ jobs:
 
           # Step 0: 测试 ossutil 连接性
           echo "🔗 Testing ossutil connection..."
-          ossutil ls "oss://${OSS_BUCKET}/" --maxkeys 1 || {
+          ossutil ls "oss://${OSS_BUCKET}/" || {
             echo "ERROR: Cannot connect to OSS bucket"
             echo "Possible causes:"
             echo "  1. Wrong bucket name"
