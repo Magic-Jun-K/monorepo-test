@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 export default defineConfig({
   esbuild: {
-    jsx: 'automatic'
+    jsx: 'automatic',
   },
   test: {
     // 测试环境
@@ -21,7 +21,7 @@ export default defineConfig({
     // 测试文件匹配模式
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     // 排除文件
-    exclude: ['node_modules', 'dist', 'build', 'coverage'],
+    exclude: ['node_modules', 'dist', 'coverage'],
     // 覆盖率配置
     coverage: {
       provider: 'v8',
@@ -34,9 +34,9 @@ export default defineConfig({
           branches: 70,
           functions: 70,
           lines: 70,
-          statements: 70
-        }
-      }
+          statements: 70,
+        },
+      },
     },
     // 测试超时
     testTimeout: 10000,
@@ -45,7 +45,7 @@ export default defineConfig({
     pool: 'threads',
     maxConcurrency: 2,
     silent: false,
-    reporters: ['verbose']
+    reporters: ['verbose'],
   },
   // 路径解析 - 与 webpack 配置保持一致
   resolve: {
@@ -58,7 +58,7 @@ export default defineConfig({
       '@/services': resolve(__dirname, './src/services'),
       '@/store': resolve(__dirname, './src/store'),
       '@eggshell': resolve(__dirname, '../../../packages'),
-      '@frontend': resolve(__dirname, '../')
-    }
-  }
+      '@frontend': resolve(__dirname, '../'),
+    },
+  },
 });

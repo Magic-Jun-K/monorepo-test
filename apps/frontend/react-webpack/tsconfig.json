@@ -5,7 +5,7 @@
     "composite": true, // 启用复合模式
     "rootDir": "./", // 明确指定 rootDir 为项目根目录，包含所有源文件
     "esModuleInterop": true, // 禁用 CommonJS 和 ES 模块之间的互操作性
-    "declarationDir": "build/types", // 将 .d.ts 输出到独立目录
+    "declarationDir": "dist/types", // 将 .d.ts 输出到独立目录
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -24,5 +24,5 @@
     "playwright.config.ts"
   ],
   // 指定 不需要 编译的文件
-  "exclude": ["node_modules", "build", "public"]
+  "exclude": ["node_modules", "dist", "public"]
 }

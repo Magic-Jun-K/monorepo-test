@@ -6,7 +6,6 @@
   },
   "ignorePatterns": [
     "dist/**/*",
-    "build/**/*",
     "node_modules/**/*",
     "public/**/*",
     "scripts/**/*",
@@ -19,9 +18,9 @@
     "no-console": ["warn", { "allow": ["log", "warn", "error"] }],
     "no-debugger": "warn",
     "typescript/no-unused-vars": "error",
-    "react/prop-types": "off",
+    // "react/prop-types": "off",
+    // "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",
-    "react/jsx-uses-react": "off",
     "unicorn/require-post-message-target-origin": "off"
   }
 }

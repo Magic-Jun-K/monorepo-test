@@ -7,7 +7,7 @@ import CSSMinimizerPlugin from 'css-minimizer-webpack-plugin';
 // import ImageMinimizerPlugin from 'image-minimizer-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
-// import CompressionPlugin from 'compression-webpack-plugin';
+import CompressionPlugin from 'compression-webpack-plugin';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -92,7 +92,7 @@ const baseConfig = (env) => {
     entry: path.resolve(__dirname, 'src/index.tsx'),
     output: {
       publicPath: '/',
-      path: path.resolve(__dirname, 'build'),
+      path: path.resolve(__dirname, 'dist'),
       filename: 'js/[name].[contenthash:8].js',
       chunkFilename: 'js/[name].[contenthash:8].chunk.js',
       clean: true,
@@ -264,9 +264,9 @@ const baseConfig = (env) => {
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, 'public/index.html'),
         filename: 'index.html', // 输出文件名
-        templateParameters: {
-          isProd: isProd,
-        },
+        // templateParameters: {
+        //   isProd: isProd,
+        // },
         // 添加CSP nonce支持
         cspPlugin: {
           enabled: true,
@@ -285,7 +285,7 @@ const baseConfig = (env) => {
           org: 'your-org-name',
           project: 'eggshell/react-webpack',
           sourcemaps: {
-            assets: ['./build/js/*.js', './build/js/*.js.map'],
+            assets: ['./dist/js/*.js', './dist/js/*.js.map'],
           },
           release: {
             name: process.env.RELEASE_VERSION || 'dev',
@@ -338,168 +338,103 @@ const baseConfig = (env) => {
         }),
         process: JSON.stringify({}), // 定义 process 对象，避免 "process is not defined" 错误
       }),
+      // 分析包大小
+      analyzeMode && new BundleAnalyzerPlugin(),
+      // 生产环境开启Gzip压缩
       isProd &&
-        new BundleAnalyzerPlugin({
-          // analyzeMode为true时，打包自动打开报告页面
-          analyzerMode: analyzeMode ? 'server' : 'disabled', // 分析模式，'server' 或 'disabled'
-          openAnalyzer: analyzeMode, // 不自动打开报告页面
-          generateStatsFile: false, // 不生成stats文件
+        new CompressionPlugin({
+          test: /\.(js|css|html|svg)$/,
+          algorithm: 'gzip',
+          threshold: 10240, // 大于10kb的文件才压缩
+          minRatio: 0.8,
         }),
-      // isProd &&
-      //   new CompressionPlugin({
-      //     algorithm: 'brotliCompress',
-      //     test: /\.(js|css|html|svg|json|ico|ttf|woff2?)$/i,
-      //     threshold: 10240,
-      //     minRatio: 0.8,
-      //     deleteOriginalAssets: false,
-      //     compressionOptions: {
-      //       level: 11,
-      //     },
-      //   }),
-    ],
-    // 优化
+    ].filter(Boolean),
+    // 生产环境优化
     optimization: {
-      minimize: isProd, // 生产环境开启压缩
-      concatenateModules: false,
-      runtimeChunk: 'single',
-      moduleIds: 'deterministic',
-      removeAvailableModules: true, // 移除无用的模块
-      removeEmptyChunks: true, // 移除空块
-      mergeDuplicateChunks: true, // 合并重复模块
-      flagIncludedChunks: true, // 标记包含的块
-      // 压缩
+      minimize: isProd,
       minimizer: [
         new TerserPlugin({
           parallel: true,
           terserOptions: {
             compress: {
-              drop_console: true, // 移除 console
-              drop_debugger: true, // 移除 debugger
-              ecma: 2015,
-              passes: 3, // 压缩次数
-            },
-            format: {
-              comments: /@license/i, // 移除注释，仅保留license注释
+              drop_console: isProd,
+              drop_debugger: isProd,
             },
           },
-          extractComments: true, // 将license注释提取到单独的文件中
         }),
-        new CSSMinimizerPlugin({
-          parallel: true,
-          minimizerOptions: {
-            preset: [
-              'default',
-              {
-                discardComments: { removeAll: true },
-                cssDeclarationSorter: true,
-              },
-            ],
-          },
-        }),
+        new CSSMinimizerPlugin(),
       ],
-      // 代码分割
-      splitChunks: isProd
-        ? {
-            chunks: 'all', // 对所有类型的 chunks 进行代码分割，包括同步和异步 chunks
-            minSize: 20000, // 降低最小阈值
-            maxSize: 244000, // 设置合理的最大阈值
-            minChunks: 2, // 确保至少被引用两次
-            maxAsyncRequests: 20, // 允许同时加载的最大异步请求数
-            maxInitialRequests: 20, // 允许同时加载的最大初始请求数
-            automaticNameDelimiter: '~', // 分割块之间的分隔符
-            cacheGroups: {
-              reactVendor: {
-                test: /[\\/]node_modules[\\/](react|react-dom|react-is|scheduler|react-router|react-router-dom)[\\/]/,
-                name: 'react-core',
-                priority: 70, // 最高优先级确保独立打包
-                chunks: 'all',
-                reuseExistingChunk: true, // 允许重复使用已经打包的模块
-                enforce: true, // 强制打包
-              },
-              stylesVendor: {
-                name: 'styles',
-                test: /\.(css|scss)$/,
-                chunks: 'all',
-                enforce: true,
-                priority: 60,
-                minSize: 30000,
-              },
-              // 新增 three.js 独立包（按需加载）
-              threeVendor: {
-                test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
-                name: 'three',
-                priority: 50,
-                enforce: true,
-                chunks: 'async',
-              },
-              // AG Grid 独立包（体积较大，单独分割）
-              agGridVendor: {
-                test: /[\\/]node_modules[\\/]ag-grid-(community|react)[\\/]/,
-                name: 'ag-grid',
-                priority: 48,
-                enforce: true,
-                chunks: 'async', // 异步加载，不阻塞首屏
-              },
-              // 新增 echarts 独立包
-              echartsVendor: {
-                test: /[\\/]node_modules[\\//]echarts[\\/]/,
-                name: 'echarts',
-                priority: 45,
-                enforce: true,
-              },
-              // 低频稳定工具库 (合并)
-              utilsStable: {
-                test: /[\\/]node_modules[\\/]axios[\\/]/,
-                name: 'utils-stable',
-                priority: 35,
-                minSize: 20000,
-                maxSize: 100000,
-                enforce: true,
-              },
-              corejs: {
-                test: /[\\/]node_modules[\\/]core-js[\\/]/,
-                name: 'core-js',
-                priority: 30,
-                enforce: true,
-                reuseExistingChunk: true,
-                chunks: 'async',
-              },
-              // 自定义UI组件库分割策略
-              eggshellUI: {
-                test: /[\\/]node_modules[\\/]@eggshell[\\/]/,
-                name: 'eggshell-ui',
-                priority: 25, // 提升优先级，确保UI库被单独打包
-                chunks: 'all',
-                enforce: true,
-                minSize: 10000, // 降低阈值确保UI库被单独打包
-                maxSize: 200000,
-              },
-              // 更精确的UI组件分割
-              antdUI: {
-                test: /[\\/]node_modules[\\/]@eggshell[\\/]antd-ui[\\/]/,
-                name: 'antd-ui',
-                priority: 30,
-                chunks: 'all',
-                enforce: true,
-                minSize: 5000,
-                maxSize: 150000,
-              },
-              defaultVendors: {
-                test: /[\\/]node_modules[\\/]/,
-                name: 'vendors',
-                priority: -10,
-                reuseExistingChunk: true,
-                minSize: 20000,
-                maxSize: 244000,
-              },
-              default: {
-                minChunks: 2,
-                priority: -20,
-                reuseExistingChunk: true,
-              },
-            },
-          }
-        : false,
+      splitChunks: {
+        chunks: 'all',
+        minSize: 20000,
+        minRemainingSize: 0,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        enforceSizeThreshold: 50000,
+        cacheGroups: {
+          defaultVendors: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            reuseExistingChunk: true,
+            name: 'vendors',
+          },
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom|react-router-dom)[\\/]/,
+            name: 'react-vendors',
+            priority: 20,
+            chunks: 'all',
+          },
+          antd: {
+            test: /[\\/]node_modules[\\/](antd|@ant-design)[\\/]/,
+            name: 'antd',
+            priority: 15,
+            chunks: 'all',
+          },
+          echarts: {
+            test: /[\\/]node_modules[\\/](echarts|zrender)[\\/]/,
+            name: 'echarts',
+            priority: 25,
+            chunks: 'all',
+          },
+          three: {
+            test: /[\\/]node_modules[\\/](three)[\\/]/,
+            name: 'three',
+            priority: 25,
+            chunks: 'all',
+          },
+          agGrid: {
+            test: /[\\/]node_modules[\\/](ag-grid-community|ag-grid-react)[\\/]/,
+            name: 'ag-grid',
+            priority: 25,
+            chunks: 'all',
+          },
+          libs: {
+            test: /[\\/]node_modules[\\/](axios|dayjs|zustand|@tanstack|react-hook-form|zod|@hookform)[\\/]/,
+            name: 'libs',
+            priority: 20,
+            chunks: 'all',
+          },
+          animation: {
+            test: /[\\/]node_modules[\\/](framer-motion|gsap)[\\/]/,
+            name: 'animation',
+            priority: 20,
+            chunks: 'all',
+          },
+          sentry: {
+            test: /[\\/]node_modules[\\/](@sentry)[\\/]/,
+            name: 'sentry',
+            priority: 20,
+            chunks: 'all',
+          },
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+        },
+      },
+      runtimeChunk: 'single', // 将runtime代码单独抽离
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
