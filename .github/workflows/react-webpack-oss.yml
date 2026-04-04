@@ -185,7 +185,18 @@ jobs:
 
           echo "🚀 Deploying to ${TARGET}"
 
-          # Step 1: 上传所有文件到 OSS
+          # Step 0: 测试 ossutil 连接性
+          echo "🔗 Testing ossutil connection..."
+          ossutil ls "oss://${OSS_BUCKET}/" --maxkeys 1 || {
+            echo "ERROR: Cannot connect to OSS bucket"
+            echo "Possible causes:"
+            echo "  1. Wrong bucket name"
+            echo "  2. Wrong region"
+            echo "  3. AccessKey has no permission"
+            exit 1
+          }
+
+          # Step 1: 上传所有文件到 OSS（带重试）
           echo "📦 Uploading all files..."
           ossutil cp "${DIST_DIR}/" "${TARGET}/" \
             --recursive \
