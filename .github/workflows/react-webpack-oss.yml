@@ -132,10 +132,14 @@ jobs:
       - name: Configure ossutil
         run: |
           export PATH="$HOME/bin:$PATH"
-          ossutil config \
-            -e "${{ secrets.OSS_REGION }}.aliyuncs.com" \
-            -i "${{ secrets.OSS_ACCESS_KEY_ID }}" \
-            -k "${{ secrets.OSS_ACCESS_KEY_SECRET }}"
+          
+          cat > ~/.ossutilconfig << EOF
+          [Credentials]
+              language = EN
+              endpoint = ${{ secrets.OSS_REGION }}.aliyuncs.com
+              accessKeyID = ${{ secrets.OSS_ACCESS_KEY_ID }}
+              accessKeySecret = ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          EOF
 
       # ========== 部署到 OSS ==========
       - name: Deploy to Aliyun OSS
