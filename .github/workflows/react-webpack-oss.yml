@@ -154,11 +154,18 @@ jobs:
 
           echo "🚀 Deploying to ${TARGET}"
 
-          # Step 1: 上传带 hash 的静态资源（长期缓存）
-          echo "📦 Uploading hashed assets..."
+          # Step 1: 上传所有文件到 OSS
+          echo "📦 Uploading all files..."
           ossutil cp "${DIST_DIR}/" "${TARGET}/" \
             --recursive \
             --force \
+            --parallel 20
+
+          # Step 2: 设置静态资源长期缓存（带 hash 的文件）
+          echo "⚙️ Setting long cache headers for hashed assets..."
+          ossutil set-meta "${TARGET}/" \
+            "Cache-Control:public, max-age=31536000, immutable" \
+            -r -f \
             --include "*.js" \
             --include "*.css" \
             --include "*.png" \
@@ -172,30 +179,16 @@ jobs:
             --include "*.ttf" \
             --include "*.eot" \
             --include "*.webp" \
-            --include "*.map" \
-            --meta "Cache-Control:public, max-age=31536000, immutable" \
-            --parallel 20
+            --include "*.map"
 
-          # Step 2: 上传 HTML（不缓存）
-          echo "📄 Uploading HTML files..."
-          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
-            --recursive \
-            --force \
-            --include "*.html" \
-            --meta "Cache-Control:no-cache, no-store, must-revalidate" \
-            --parallel 10
+          # Step 3: 设置 HTML 不缓存
+          echo "⚙️ Setting no-cache headers for HTML files..."
+          ossutil set-meta "${TARGET}/" \
+            "Cache-Control:no-cache, no-store, must-revalidate" \
+            -r -f \
+            --include "*.html"
 
-          # Step 3: 上传其他配置文件
-          echo "📋 Uploading config files..."
-          ossutil cp "${DIST_DIR}/" "${TARGET}/" \
-            --recursive \
-            --force \
-            --include "*.json" \
-            --include "*.txt" \
-            --include "*.xml" \
-            --parallel 10
-
-          # Step 4: 清理旧的 hash 文件
+          # Step 4: 清理旧的 hash 文件（可选）
           echo "🧹 Cleaning stale files..."
           ossutil rm "${TARGET}/" \
             --recursive \
@@ -210,6 +203,31 @@ jobs:
             --recursive \
             --force \
             --parallel 20
+
+          # Step 6: 重新设置缓存头（因为同步可能覆盖了元数据）
+          echo "⚙️ Re-applying cache headers after sync..."
+          ossutil set-meta "${TARGET}/" \
+            "Cache-Control:public, max-age=31536000, immutable" \
+            -r -f \
+            --include "*.js" \
+            --include "*.css" \
+            --include "*.png" \
+            --include "*.jpg" \
+            --include "*.jpeg" \
+            --include "*.gif" \
+            --include "*.svg" \
+            --include "*.ico" \
+            --include "*.woff" \
+            --include "*.woff2" \
+            --include "*.ttf" \
+            --include "*.eot" \
+            --include "*.webp" \
+            --include "*.map"
+
+          ossutil set-meta "${TARGET}/" \
+            "Cache-Control:no-cache, no-store, must-revalidate" \
+            -r -f \
+            --include "*.html"
 
           echo "✅ Deployment completed!"
           echo "🌐 https://${OSS_BUCKET}.${OSS_REGION}.aliyuncs.com/react-webpack/${{ env.DEPLOY_ENV }}/"
