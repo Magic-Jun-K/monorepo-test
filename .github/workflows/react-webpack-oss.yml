@@ -136,10 +136,11 @@ jobs:
           cat > ~/.ossutilconfig << EOF
           [Credentials]
               language = EN
-              region = ${{ secrets.OSS_REGION }}
-              endpoint = ${{ secrets.OSS_REGION }}.aliyuncs.com
               accessKeyID = ${{ secrets.OSS_ACCESS_KEY_ID }}
               accessKeySecret = ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          [Bucket]
+              bucket = ${{ secrets.OSS_BUCKET }}
+              endpoint = ${{ secrets.OSS_REGION }}.aliyuncs.com
           EOF
 
       # ========== 部署到 OSS ==========
