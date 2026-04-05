@@ -133,14 +133,19 @@ jobs:
         run: |
           export PATH="$HOME/bin:$PATH"
           
+          # Extract pure region ID from OSS_REGION (e.g., "oss-cn-guangzhou" -> "cn-guangzhou")
+          RAW_REGION="${{ secrets.OSS_REGION }}"
+          REGION_ID=$(echo "${RAW_REGION}" | sed 's/^oss-//')
+          
           cat > ~/.ossutilconfig << EOF
           [Credentials]
               language = EN
+              region = ${REGION_ID}
               accessKeyID = ${{ secrets.OSS_ACCESS_KEY_ID }}
               accessKeySecret = ${{ secrets.OSS_ACCESS_KEY_SECRET }}
           [Bucket]
               bucket = ${{ secrets.OSS_BUCKET }}
-              endpoint = ${{ secrets.OSS_REGION }}.aliyuncs.com
+              endpoint = ${RAW_REGION}.aliyuncs.com
           EOF
 
       # ========== 部署到 OSS ==========
