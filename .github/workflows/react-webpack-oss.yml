@@ -214,27 +214,27 @@ jobs:
           ossutil set-meta "${TARGET}/" \
             "Cache-Control:public, max-age=31536000, immutable" \
             -r -f \
-            --include "*.js" \
-            --include "*.css" \
-            --include "*.png" \
-            --include "*.jpg" \
-            --include "*.jpeg" \
-            --include "*.gif" \
-            --include "*.svg" \
-            --include "*.ico" \
-            --include "*.woff" \
-            --include "*.woff2" \
-            --include "*.ttf" \
-            --include "*.eot" \
-            --include "*.webp" \
-            --include "*.map"
+            --include="*.js" \
+            --include="*.css" \
+            --include="*.png" \
+            --include="*.jpg" \
+            --include="*.jpeg" \
+            --include="*.gif" \
+            --include="*.svg" \
+            --include="*.ico" \
+            --include="*.woff" \
+            --include="*.woff2" \
+            --include="*.ttf" \
+            --include="*.eot" \
+            --include="*.webp" \
+            --include="*.map" || echo "⚠️ set-meta failed, continuing..."
 
           # Step 3: 设置 HTML 不缓存
           echo "⚙️ Setting no-cache headers for HTML files..."
           ossutil set-meta "${TARGET}/" \
             "Cache-Control:no-cache, no-store, must-revalidate" \
             -r -f \
-            --include "*.html"
+            --include="*.html" || echo "⚠️ set-meta failed, continuing..."
 
           # Step 4: 清理旧的 hash 文件（可选）
           echo "🧹 Cleaning stale files..."
@@ -257,25 +257,25 @@ jobs:
           ossutil set-meta "${TARGET}/" \
             "Cache-Control:public, max-age=31536000, immutable" \
             -r -f \
-            --include "*.js" \
-            --include "*.css" \
-            --include "*.png" \
-            --include "*.jpg" \
-            --include "*.jpeg" \
-            --include "*.gif" \
-            --include "*.svg" \
-            --include "*.ico" \
-            --include "*.woff" \
-            --include "*.woff2" \
-            --include "*.ttf" \
-            --include "*.eot" \
-            --include "*.webp" \
-            --include "*.map"
+            --include="*.js" \
+            --include="*.css" \
+            --include="*.png" \
+            --include="*.jpg" \
+            --include="*.jpeg" \
+            --include="*.gif" \
+            --include="*.svg" \
+            --include="*.ico" \
+            --include="*.woff" \
+            --include="*.woff2" \
+            --include="*.ttf" \
+            --include="*.eot" \
+            --include="*.webp" \
+            --include="*.map" || echo "⚠️ set-meta failed, continuing..."
 
           ossutil set-meta "${TARGET}/" \
             "Cache-Control:no-cache, no-store, must-revalidate" \
             -r -f \
-            --include "*.html"
+            --include="*.html" || echo "⚠️ set-meta failed, continuing..."
 
           echo "✅ Deployment completed!"
           echo "🌐 https://${OSS_BUCKET}.${OSS_REGION}.aliyuncs.com/react-webpack/${{ env.DEPLOY_ENV }}/"
