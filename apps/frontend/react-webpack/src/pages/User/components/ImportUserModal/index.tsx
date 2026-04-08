@@ -271,9 +271,9 @@ export default function ImportUserModal({
               <h4 style={{ margin: '0 0 8px 0', color: '#1890ff', fontSize: '14px' }}>
                 待上传文件：
               </h4>
-              {fileList.map((file, index) => (
+              {fileList.map((file) => (
                 <div
-                  key={file.uid || file.name || index}
+                  key={file.uid || file.name}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
