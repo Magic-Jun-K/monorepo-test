@@ -1,9 +1,9 @@
 {
   "categories": {
-    "correctness": "error",
-    "suspicious": "warn",
-    "perf": "warn",
-    "style": "off"
+    "correctness": "error", // 代码错误 → 必须修复
+    "suspicious": "warn", // 可疑代码 → 建议审查
+    "perf": "warn", // 性能问题 → 建议优化
+    "style": "off" // 代码风格 → 建议审查
   },
   "env": {
     "node": true,
@@ -24,6 +24,13 @@
     "apps/web/react-webpack-ie/**/*"
   ],
   "overrides": [
+    // {
+    //   "files": ["apps/web/react-webpack/**/*"],
+    //   "plugins": ["typescript", "unicorn"],
+    //   "rules": {
+    //     "react/react-in-jsx-scope": "off"
+    //   }
+    // },
     {
       "files": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/test/**"],
       "rules": {
@@ -39,7 +46,7 @@
     },
     {
       "files": ["**/*.{ts,tsx}"],
-      "plugins": ["typescript"],
+      // "plugins": ["typescript"],
       "rules": {
         "typescript/no-explicit-any": "warn",
         "typescript/no-unused-vars": "error",
@@ -55,15 +62,16 @@
     "no-await-in-loop": "off",
     "typescript/no-floating-promises": "off",
     "unicorn/filename-case": "off",
-    "unicorn/prefer-string-replace-all": "off"
+    "unicorn/prefer-string-replace-all": "off",
+    "react/react-in-jsx-scope": "off"
   },
   "settings": {
     "typescript": {
       "project": [
         "./tsconfig.json",
-        "./apps/frontend/react-webpack/tsconfig.json",
+        "./apps/web/react-webpack/tsconfig.json",
         "./apps/frontend/react-vite/tsconfig.json",
-        "./apps/frontend/react-vite-tw/tsconfig.json",
+        "./apps/web/react-vite/tsconfig.json",
         "./apps/api/eggshell-nest/tsconfig.json",
         "./packages/ui/tailwind/tsconfig.app.json"
       ]

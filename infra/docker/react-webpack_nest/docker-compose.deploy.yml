@@ -43,7 +43,7 @@ services:
     container_name: eggshell-frontend
     build:
       context: ../.. # 指向项目根目录
-      dockerfile: apps/frontend/react-webpack/Dockerfile
+      dockerfile: apps/web/react-webpack/Dockerfile
     image: react-webpack:latest # 添加小写镜像名称
     ports:
       - '8080:80'

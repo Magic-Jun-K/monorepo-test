@@ -10,13 +10,13 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'apps/frontend/react-webpack/**'
+      - 'apps/web/react-webpack/**'
       - 'packages/**'
       - '.github/workflows/react-webpack-oss.yml'
   pull_request:
     branches: [main, master]
     paths:
-      - 'apps/frontend/react-webpack/**'
+      - 'apps/web/react-webpack/**'
       - 'packages/**'
   workflow_dispatch:
     inputs:
@@ -59,10 +59,10 @@ jobs:
           pnpm --filter @eggshell/shared-crypto build
 
       - name: Type Check
-        run: pnpm --filter @frontend/react-webpack typecheck
+        run: pnpm --filter @web/react-webpack typecheck
 
       - name: Lint Check
-        run: pnpm --filter @frontend/react-webpack lint
+        run: pnpm --filter @web/react-webpack lint
 
       - name: Unit Tests
         run: pnpm test:react-webpack -- --coverage
@@ -111,8 +111,8 @@ jobs:
 
       - name: Quality Checks
         run: |
-          pnpm --filter @frontend/react-webpack typecheck
-          pnpm --filter @frontend/react-webpack lint
+          pnpm --filter @web/react-webpack typecheck
+          pnpm --filter @web/react-webpack lint
 
       - name: Build Application
         run: pnpm build:react-webpack
@@ -154,7 +154,7 @@ jobs:
           set -euo pipefail
           export PATH="$HOME/bin:$PATH"
 
-          DIST_DIR="${{ github.workspace }}/apps/frontend/react-webpack/dist"
+          DIST_DIR="${{ github.workspace }}/apps/web/react-webpack/dist"
           OSS_BUCKET="${{ secrets.OSS_BUCKET }}"
           OSS_REGION="${{ secrets.OSS_REGION }}"
 
@@ -178,8 +178,8 @@ jobs:
           echo "=== Checking build output ==="
           if [ ! -d "${DIST_DIR}" ]; then
             echo "ERROR: ${DIST_DIR} does not exist or is not a directory"
-            echo "Listing contents of apps/frontend/react-webpack/:"
-            ls -la "${{ github.workspace }}/apps/frontend/react-webpack/" 2>/dev/null || echo "Directory not found"
+            echo "Listing contents of apps/web/react-webpack/:"
+            ls -la "${{ github.workspace }}/apps/web/react-webpack/" 2>/dev/null || echo "Directory not found"
             exit 1
           fi
 

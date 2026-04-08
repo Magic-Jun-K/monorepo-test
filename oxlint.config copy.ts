@@ -64,9 +64,9 @@ export default defineConfig({
     typescript: {
       project: [
         './tsconfig.json',
-        './apps/frontend/react-webpack/tsconfig.json',
+        './apps/web/react-webpack/tsconfig.json',
         './apps/frontend/react-vite/tsconfig.json',
-        './apps/frontend/react-vite-tw/tsconfig.json',
+        './apps/web/react-vite/tsconfig.json',
         './apps/api/eggshell-nest/tsconfig.json',
         './packages/ui/tailwind/tsconfig.app.json',
       ],

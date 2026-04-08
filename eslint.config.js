@@ -27,7 +27,7 @@ export default defineConfig(
       'packages/ui/tailwind/**/*',
       'apps/api/server-koa/**/*',
       'apps/backend/perf-monitor-nest/**/*',
-      'apps/frontend/react-webpack/**/*',
+      'apps/web/react-webpack/**/*',
     ],
     // 自定义规则配置
     rules: {

@@ -24,8 +24,8 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #   push:
 #     branches: [main, master] # 只在 main 和 master 分支上触发
 #     paths:
-#       # 只在 apps/frontend/react-webpack 目录下的文件发生变化时触发
-#       - 'apps/frontend/react-webpack/**'
+#       # 只在 apps/web/react-webpack 目录下的文件发生变化时触发
+#       - 'apps/web/react-webpack/**'
 #       # 只在 packages 目录下的文件发生变化时触发
 #       - 'packages/**'
 #       # 只在该工作流文件发生变化时触发
@@ -35,7 +35,7 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #   pull_request:
 #     branches: [main, master]
 #     paths:
-#       - 'apps/frontend/react-webpack/**'
+#       - 'apps/web/react-webpack/**'
 #       - 'packages/**'
 #   # 手动触发部署流程
 #   workflow_dispatch:
@@ -90,13 +90,13 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #       - name: Type Check
 #         run: |
 #           echo "🔍 Running type check..."
-#           pnpm --filter @frontend/react-webpack typecheck
+#           pnpm --filter @web/react-webpack typecheck
 
 #       # 代码风格检查
 #       - name: Lint Check
 #         run: |
 #           echo "✨ Running linting..."
-#           pnpm --filter @frontend/react-webpack lint
+#           pnpm --filter @web/react-webpack lint
 
 #       # 单元测试
 #       - name: Unit Tests
@@ -144,7 +144,7 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #         uses: docker/build-push-action@v6
 #         with:
 #           context: .
-#           file: ./apps/frontend/react-webpack/Dockerfile
+#           file: ./apps/web/react-webpack/Dockerfile
 #           push: false
 #           tags: ${{ env.APP_NAME }}:${{ github.sha }}
 #           load: true
@@ -262,8 +262,8 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #           echo "🔍 Running quality checks..."
 #           echo "Node.js: ${{ steps.common.outputs.node-version }}"
 #           echo "pnpm: ${{ steps.common.outputs.pnpm-version }}"
-#           pnpm --filter @frontend/react-webpack typecheck
-#           pnpm --filter @frontend/react-webpack lint
+#           pnpm --filter @web/react-webpack typecheck
+#           pnpm --filter @web/react-webpack lint
 #           echo "✅ Quality checks passed!"
 
 #       # 构建应用
@@ -281,7 +281,7 @@ name: 前端react-webpack部署流程-Docker(备选方案)
 #         uses: docker/build-push-action@v6
 #         with:
 #           context: .
-#           file: ./apps/frontend/react-webpack/Dockerfile
+#           file: ./apps/web/react-webpack/Dockerfile
 #           push: true
 #           tags: |
 #             ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.sha }}
