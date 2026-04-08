@@ -114,6 +114,12 @@ const BASE_MENU_CONFIG: MenuItemTypeWithComponent[] = [
         label: '监控与安全',
         children: [
           {
+            key: 'monitor',
+            label: <Link to="/monitor">监控仪表盘</Link>,
+            component: 'Monitor',
+            requireAdmin: true,
+          },
+          {
             key: 'monitoring',
             label: '实时监控',
             children: [
