@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Code, GitBranch, Rocket, Sparkles } from 'lucide-react';
+import { Code, Sparkles } from 'lucide-react';
 
 import HeroSection from './HeroSection';
 import StatsSection from './StatsSection';
@@ -29,16 +29,10 @@ const Home: FC = () => {
               <Sparkles size={40} className="text-blue-600" />
             </div>
 
-            <p className="text-gray-600 mb-8 text-lg">
-              © 2025 Crafted with AI, React, Three.js & Passion
-            </p>
+            <p className="text-gray-600 mb-8 text-lg">© 2026 Crafted with AI, React</p>
 
             <div className="flex justify-center space-x-8">
-              {[
-                { icon: Code, label: 'Code', href: '#' },
-                { icon: GitBranch, label: 'Git', href: '#' },
-                { icon: Rocket, label: 'Deploy', href: '#' },
-              ].map((item) => (
+              {[{ icon: Code, label: 'Code', href: '#' }].map((item) => (
                 <a
                   key={item.label}
                   href={item.href}

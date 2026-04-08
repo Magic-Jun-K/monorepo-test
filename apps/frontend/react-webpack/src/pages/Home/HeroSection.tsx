@@ -3,23 +3,11 @@ import { FC, useEffect, useRef } from 'react';
 import * as Three from 'three';
 import { motion } from 'framer-motion';
 
-// import { loadScript } from '@/utils/loadScript';
-
 // Hero Section Component
 // 实现类似Dora官网的3D效果
 const HeroSection: FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // useEffect(() => {
-  //   loadScript({
-  //     // src: 'https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.min.js',
-  //     // integrity: 'sha256-l5wa5LBXnJkB6s95dgLAtG3xKdhxAsZEPRS+Sh95C3A=',
-  //     // crossorigin: 'anonymous',
-  //     src: 'https://cdn.jsdelivr.net/npm/three@0.182.0/+esm',
-  //     type: 'module',
-  //   });
-  // }, []);
 
   useEffect(() => {
     if (!heroRef.current || !canvasRef.current) return;
@@ -160,7 +148,7 @@ const HeroSection: FC = () => {
   return (
     <section
       ref={heroRef}
-      className="hero-section relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 via-white to-blue-50"
+      className="hero-section relative h-screen flex items-center justify-center overflow-hidden bg-linear-to-br from-gray-50 via-white to-blue-50"
     >
       {/* 3D Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} />
@@ -173,7 +161,7 @@ const HeroSection: FC = () => {
           transition={{ duration: 1 }}
           viewport={{ once: true }}
         >
-          <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent mb-6">
+          <h1 className="text-3xl md:text-6xl font-bold bg-linear-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent mb-6">
             Full-Stack
           </h1>
           <motion.button
@@ -181,7 +169,7 @@ const HeroSection: FC = () => {
             whileTap={{ scale: 0.95 }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
           >
-            Start with AI →
+            Start with AI
           </motion.button>
         </motion.div>
       </div>

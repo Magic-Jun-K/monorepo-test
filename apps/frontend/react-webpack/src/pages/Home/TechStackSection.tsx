@@ -14,7 +14,7 @@ import {
   MousePointer,
   Brain,
   CpuIcon,
-  Palette
+  Palette,
 } from 'lucide-react';
 
 // Register GSAP ScrollTrigger plugin
@@ -27,85 +27,85 @@ const techStack = [
     description: 'Modern UI framework with concurrent features',
     icon: Zap,
     category: 'frontend',
-    color: 'from-cyan-400 to-blue-600'
+    color: 'from-cyan-400 to-blue-600',
   },
   {
     name: 'TypeScript',
     description: 'Type-safe development with AI assistance',
     icon: Code,
     category: 'frontend',
-    color: 'from-blue-400 to-indigo-600'
+    color: 'from-blue-400 to-indigo-600',
   },
   {
     name: 'Three.js',
     description: '3D web graphics and immersive experiences',
     icon: Globe,
     category: 'visualization',
-    color: 'from-green-400 to-emerald-600'
+    color: 'from-green-400 to-emerald-600',
   },
   {
     name: 'Framer Motion',
     description: 'Advanced animation and gesture controls',
     icon: Sparkles,
     category: 'animation',
-    color: 'from-purple-400 to-pink-600'
+    color: 'from-purple-400 to-pink-600',
   },
   {
     name: 'AI Integration',
     description: 'Intelligent features and automation',
     icon: Brain,
     category: 'ai',
-    color: 'from-yellow-400 to-orange-600'
+    color: 'from-yellow-400 to-orange-600',
   },
   {
     name: 'GSAP',
     description: 'Professional-grade animation platform',
     icon: MousePointer,
     category: 'animation',
-    color: 'from-green-400 to-teal-600'
+    color: 'from-green-400 to-teal-600',
   },
   {
     name: 'NestJS',
     description: 'Progressive Node.js framework',
     icon: Server,
     category: 'backend',
-    color: 'from-red-400 to-rose-600'
+    color: 'from-red-400 to-rose-600',
   },
   {
     name: 'PostgreSQL',
     description: 'Advanced relational database',
     icon: Database,
     category: 'database',
-    color: 'from-indigo-400 to-purple-600'
+    color: 'from-indigo-400 to-purple-600',
   },
   {
     name: 'Docker',
     description: 'Containerization and deployment',
     icon: Package,
     category: 'devops',
-    color: 'from-cyan-400 to-sky-600'
+    color: 'from-cyan-400 to-sky-600',
   },
   {
     name: 'WebGL',
     description: 'High-performance 3D graphics rendering',
     icon: CpuIcon,
     category: 'visualization',
-    color: 'from-emerald-400 to-teal-600'
+    color: 'from-emerald-400 to-teal-600',
   },
   {
     name: 'Tailwind CSS',
     description: 'Utility-first CSS framework',
     icon: Palette,
     category: 'frontend',
-    color: 'from-cyan-400 to-blue-500'
+    color: 'from-cyan-400 to-blue-500',
   },
   {
     name: 'Vite',
     description: 'Next generation frontend tooling',
     icon: Rocket,
     category: 'devtools',
-    color: 'from-purple-400 to-pink-500'
-  }
+    color: 'from-purple-400 to-pink-500',
+  },
 ];
 
 // Enhanced Tech Card Component with 3D effect
@@ -122,21 +122,21 @@ const TechCard: FC<{ tech: (typeof techStack)[0]; index: number }> = ({ tech, in
       whileHover={{
         scale: 1.05,
         rotateY: 5,
-        z: 50
+        z: 50,
       }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       style={{
         transformStyle: 'preserve-3d',
-        perspective: 1000
+        perspective: 1000,
       }}
     >
       <div
-        className={`relative bg-gradient-to-br ${tech.color} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden transform-gpu`}
+        className={`relative bg-linear-to-br ${tech.color} p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer overflow-hidden transform-gpu`}
       >
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent"></div>
+          <div className="absolute inset-0 bg-linear-to-br from-white to-transparent"></div>
         </div>
 
         <div className="relative z-10 text-center">
@@ -161,7 +161,7 @@ const TechCard: FC<{ tech: (typeof techStack)[0]; index: number }> = ({ tech, in
 
         {/* Glow effect */}
         <div
-          className={`absolute -inset-1 bg-gradient-to-r ${tech.color} rounded-2xl opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-500 -z-10`}
+          className={`absolute -inset-1 bg-linear-to-r ${tech.color} rounded-2xl opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-500 -z-10`}
         ></div>
       </div>
     </motion.div>
@@ -183,16 +183,16 @@ const TechStackSection: FC = () => {
         opacity: 0,
         y: 50,
         duration: 1,
-        ease: 'power3.out'
+        ease: 'power3.out',
       }).from(
         sectionSubtitleRef.current,
         {
           opacity: 0,
           y: 30,
           duration: 0.8,
-          ease: 'power3.out'
+          ease: 'power3.out',
         },
-        '-=0.5'
+        '-=0.5',
       );
     }
 
@@ -204,20 +204,20 @@ const TechStackSection: FC = () => {
           opacity: 0,
           y: 30,
           duration: 0.6,
-          stagger: 0.1
+          stagger: 0.1,
         });
       }
     }
 
     return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
 
   return (
     <section
       ref={techStackRef}
-      className="tech-stack-section px-6 bg-gradient-to-br from-gray-50 via-white to-blue-50 relative"
+      className="tech-stack-section px-6 bg-linear-to-br from-gray-50 via-white to-blue-50 relative"
       style={{ paddingTop: '72px', paddingBottom: '72px' }}
     >
       {/* 背景图案 */}
@@ -226,7 +226,7 @@ const TechStackSection: FC = () => {
           className="absolute inset-0"
           style={{
             backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-                             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+                             radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`,
           }}
         />
       </div>
@@ -241,7 +241,7 @@ const TechStackSection: FC = () => {
         >
           <h2
             ref={sectionTitleRef}
-            className="section-title text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent mb-6"
+            className="section-title text-5xl md:text-6xl font-bold bg-linear-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent mb-6"
           >
             AI-Powered Tech Stack
           </h2>
