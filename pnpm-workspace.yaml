@@ -2,22 +2,22 @@ packages:
   - 'apps/**'
   - 'packages/**'
 
-catalog:
-  '@types/node': ^25
-  typescript: ^6
-  'vite': latest
-  'vitest': latest
+# catalog:
+#   '@types/node': ^25
+#   typescript: ^6
+#   'vite': latest
+#   'vitest': latest
 
 # catalogMode: prefer
-catalogMode: catalog
+# catalogMode: catalog
 
 overrides:
   '@types/react': '^18'
   '@types/react-dom': '^18'
   react: '18.3.1'
   react-dom: '18.3.1'
-  vite: 'catalog:'
-  vitest: 'catalog:'
+  # vite: 'catalog:'
+  # vitest: 'catalog:'
 
 peerDependencyRules:
   allowAny:
