@@ -1,12 +1,36 @@
 import type { UserConfig } from 'cz-git';
-import fg from 'fast-glob';
+import { readdirSync } from 'node:fs';
 
-// 用于获取所有包的名称
-const getPackages = (packagePath: string) =>
-  fg.sync('*', { cwd: packagePath, onlyDirectories: true, deep: 2 });
+/**
+ * 获取指定目录下的直接子目录名称
+ * @param packagePath 要扫描的目录路径
+ * @returns 所有直接子目录名称的数组
+ */
+const getPackages = (packagePath: string): string[] => {
+  const result: string[] = [];
 
-// 用于获取带前缀的包名
-const getPrefixedPackages = (packagePath: string, prefix: string) => {
+  try {
+    const entries = readdirSync(packagePath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        result.push(entry.name);
+      }
+    }
+  } catch (error) {
+    console.error(`Error scanning directory ${packagePath}:`, error);
+  }
+
+  return result;
+};
+
+/**
+ * 为指定目录下的所有子目录添加前缀
+ * @param packagePath 要处理的目录路径
+ * @param prefix 要添加的前缀
+ * @returns 所有子目录路径的数组，每个路径都添加了前缀
+ */
+const getPrefixedPackages = (packagePath: string, prefix: string): string[] => {
   const packages = getPackages(packagePath);
   return packages.map((pkg) => `${prefix}:${pkg}`);
 };
@@ -16,9 +40,10 @@ const scopes = [
   ...getPrefixedPackages('packages', 'packages'),
   ...getPrefixedPackages('packages/ui', 'ui'),
   ...getPrefixedPackages('packages/shared', 'shared'),
-  ...getPrefixedPackages('apps/frontend', 'frontend'),
+  ...getPrefixedPackages('apps/api', 'api'),
   ...getPrefixedPackages('apps/backend', 'backend'),
   ...getPrefixedPackages('apps/web', 'web'),
+  ...getPrefixedPackages('apps/frontend', 'frontend'),
   'docs', // 当你修改项目文档时使用，例如 README、API 文档、使用说明等
   'project', // 当你修改项目整体配置或结构时使用，例如修改项目根目录下的配置文件、调整项目架构等
   'style', // 当你进行代码风格调整但不影响功能时使用，例如格式化代码、调整缩进、修改 CSS 样式等
@@ -35,6 +60,7 @@ export default {
     'scope-enum': [2, 'always', scopes],
   },
   prompt: {
+    // 修复文档中的拼写错误
     alias: { fd: 'docs: fix typos' },
     messages: {
       type: '选择你要提交的类型 :',
@@ -79,40 +105,41 @@ export default {
         name: 'chore:    其他修改 | Other changes that do not modify src or test files',
       },
     ],
-    useEmoji: false,
-    emojiAlign: 'center',
-    useAI: false,
-    aiNumber: 1,
-    themeColorCode: '',
+    useEmoji: false, // 禁用 emoji 图标
+    emojiAlign: 'center', // 居中对齐 emoji
+    useAI: false, // 禁用 AI 功能
+    aiNumber: 1, // 限制 AI 建议数量为 1
+    themeColorCode: '', // 不使用主题颜色
     // scopes: [],
-    scopes: scopes,
-    allowCustomScopes: true,
+    scopes: scopes, // 启用自定义范围
+    allowCustomScopes: true, // 允许自定义范围
     // allowEmptyScopes: true,
-    allowEmptyScopes: false,
-    customScopesAlign: 'bottom',
-    customScopesAlias: 'custom',
-    emptyScopesAlias: 'empty',
-    upperCaseSubject: false,
-    markBreakingChangeMode: false,
-    allowBreakingChanges: ['feat', 'fix'],
-    breaklineNumber: 100,
-    breaklineChar: '|',
-    skipQuestions: [],
+    allowEmptyScopes: false, // 禁用空范围
+    customScopesAlign: 'bottom', // 自定义范围底部对齐
+    customScopesAlias: 'custom', // 自定义范围别名
+    emptyScopesAlias: 'empty', // 空范围别名
+    upperCaseSubject: false, // 不将 subject 转换为大写
+    markBreakingChangeMode: false, // 不标记重大变更
+    allowBreakingChanges: ['feat', 'fix'], // 允许在 feat 和 fix 类型中添加重大变更
+    breaklineNumber: 100, // 限制每行字符数为 100
+    breaklineChar: '|', // 使用 | 换行
+    skipQuestions: [], // 跳过问题
+    // issue 前缀配置
     issuePrefixes: [
       // 如果使用 gitee 作为开发管理
       { value: 'link', name: 'link:     链接 ISSUES 进行中' },
       { value: 'closed', name: 'closed:   标记 ISSUES 已完成' },
     ],
-    customIssuePrefixAlign: 'top',
-    emptyIssuePrefixAlias: 'skip',
-    customIssuePrefixAlias: 'custom',
-    allowCustomIssuePrefix: true,
-    allowEmptyIssuePrefix: true,
-    confirmColorize: true,
-    scopeOverrides: undefined,
-    defaultBody: '',
-    defaultIssues: '',
-    defaultScope: '',
-    defaultSubject: '',
+    customIssuePrefixAlign: 'top', // 自定义 issue 前缀顶部对齐
+    emptyIssuePrefixAlias: 'skip', // 空 issue 前缀别名
+    customIssuePrefixAlias: 'custom', // 自定义 issue 前缀别名
+    allowCustomIssuePrefix: true, // 允许自定义 issue 前缀
+    allowEmptyIssuePrefix: true, // 允许空 issue 前缀
+    confirmColorize: true, // 确认提交时使用颜色
+    scopeOverrides: undefined, // 作用域覆盖配置
+    defaultBody: '', // 默认 body 为空
+    defaultIssues: '', // 默认 issues 为空
+    defaultScope: '', // 默认 scope 为空
+    defaultSubject: '', // 默认 subject 为空
   },
 } satisfies UserConfig;
