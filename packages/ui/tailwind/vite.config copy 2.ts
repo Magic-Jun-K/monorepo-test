@@ -58,13 +58,38 @@
 //     // PostCSS配置
 //     postcss: './postcss.config.js',
 //   },
-//   esbuild: {
-//     drop: ['console', 'debugger'], // 移除console和debugger语句
-//     legalComments: 'none', // 移除所有注释
-//     minifyIdentifiers: true, // 压缩标识符
-//     minifySyntax: true, // 压缩语法
-//     minifyWhitespace: true, // 压缩空白字符
+//   // esbuild: {
+//   //   drop: ['console', 'debugger'], // 移除console和debugger语句
+//   //   legalComments: 'none', // 移除所有注释
+//   //   minifyIdentifiers: true, // 压缩标识符
+//   //   minifySyntax: true, // 压缩语法
+//   //   minifyWhitespace: true, // 压缩空白字符
+//   //   target: 'es2022', // 启用额外的压缩选项
+//   // },
+//   oxc: {
 //     target: 'es2022', // 启用额外的压缩选项
+//     // assumptions: {
+//     //   setPublicClassFields: true, // 假设类字段是公共的
+//     // },
+//     // jsx: {
+//     //   runtime: 'automatic', // 自动运行时
+//     //   development: false, // 生产环境
+//     //   throwIfNamespace: true, // 抛出命名空间错误
+//     //   pure: true, // 假设所有函数都是纯函数
+//     //   importSource: 'react', // 导入React
+//     //   pragma: 'React.createElement', // .createElement
+//     //   pragmaFrag: 'React.Fragment', // .Fragment
+//     //   refresh: false, // 禁用刷新
+//     // },
+//     // // When transforming TSX files（在转换TSX文件时）:
+//     // typescript: {
+//     //   jsxPragma: 'React.createElement',
+//     //   jsxPragmaFrag: 'React.Fragment',
+//     //   onlyRemoveTypeImports: false, // 不移除类型导入
+//     //   allowNamespaces: true, // 允许使用命名空间
+//     //   removeClassFieldsWithoutInitializer: false, // 不移除没有初始化器的类字段
+//     //   rewriteImportExtensions: false, // 不重写导入扩展
+//     // },
 //   },
 //   // 优化构建性能
 //   optimizeDeps: {
